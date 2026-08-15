@@ -11,11 +11,11 @@ use std::path::PathBuf;
 use std::sync::LazyLock;
 
 mod core;
-use core::*;
+pub use core::*;
 mod store_impl;
-use store_impl::*;
+pub use store_impl::*;
 mod ops;
-use ops::*;
+pub use ops::*;
 mod organizer;
 #[cfg(test)]
 mod tests;

@@ -14,9 +14,9 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tokio::process::Command;
 
 mod store;
-use store::*;
+pub use store::*;
 mod kb_tools;
-use kb_tools::*;
+pub use kb_tools::*;
 #[cfg(test)]
 mod tests;
 pub fn register(registry: &mut ToolRegistry, config: AppConfig, paths: GQYPaths) {
