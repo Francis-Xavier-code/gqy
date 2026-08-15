@@ -790,15 +790,15 @@ pub(crate) struct ResponsesUsage {
 #[derive(Debug, Deserialize)]
 pub(crate) struct ResponsesInputTokenDetails {
     #[serde(default)]
-    cached_tokens: Option<u64>,
+    pub(crate) cached_tokens: Option<u64>,
     #[serde(default)]
-    cache_write_tokens: Option<u64>,
+    pub(crate) cache_write_tokens: Option<u64>,
 }
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct ResponsesOutputTokenDetails {
     #[serde(default)]
-    reasoning_tokens: Option<u64>,
+    pub(crate) reasoning_tokens: Option<u64>,
 }
 
 #[derive(Debug, Deserialize)]

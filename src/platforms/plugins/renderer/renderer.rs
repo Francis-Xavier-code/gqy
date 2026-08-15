@@ -1405,8 +1405,8 @@ pub(crate) struct LayoutTableRow {
 
 pub(crate) struct LayoutTableCell {
     pub(crate) buffer: Buffer,
-    x: u32,
-    width: u32,
+    pub(crate) x: u32,
+    pub(crate) width: u32,
     pub(crate) default_color: Color,
     pub(crate) inline_code_background: [u8; 4],
 }
