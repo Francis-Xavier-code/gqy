@@ -2,8 +2,9 @@
 #![cfg(test)]
 
 use super::*;
-use std::net::TcpListener;
 use std::sync::atomic::AtomicUsize;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::TcpListener;
 
 #[test]
 fn typed_failures_drive_endpoint_cooldowns() {

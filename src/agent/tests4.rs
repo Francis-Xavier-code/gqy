@@ -6,7 +6,8 @@ use super::*;
 use crate::config::ProviderConfig;
 use crate::platforms::{ConversationKind, PlatformConversation};
 use crate::tools::{empty_parameters, ToolSpec};
-use std::net::{TcpListener, TcpStream};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::{TcpListener, TcpStream};
 
 #[tokio::test]
 async fn queued_prompts_are_consumed_after_tools_with_dispatch_time_mode() {
