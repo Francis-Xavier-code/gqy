@@ -39,7 +39,12 @@ impl RateWindow {
         self.available_at(Instant::now(), conversation, limit)
     }
 
-    pub(crate) fn available_at(&mut self, now: Instant, conversation: &str, limit: PlatformRateLimit) -> bool {
+    pub(crate) fn available_at(
+        &mut self,
+        now: Instant,
+        conversation: &str,
+        limit: PlatformRateLimit,
+    ) -> bool {
         self.prune_at(now);
         if limit.max_messages == 0 {
             return true;
@@ -107,6 +112,7 @@ impl RateWindow {
 /// Finds or creates the dedicated user session for a stable external
 /// conversation identity. The visible session name can be edited freely;
 /// routing never depends on it after the binding has been created.
+/// Per-conversation fixed-window rate limiter shared by all platforms.
 pub(crate) fn resolve_platform_session(
     state: &DaemonState,
     conversation: &PlatformConversation,
@@ -503,7 +509,11 @@ pub(crate) fn format_platform_tool_started_log(run_id: &str, data: &Value) -> St
     format_platform_tool_started_log_for(run_id, data, crate::i18n::locale())
 }
 
-pub(crate) fn format_platform_tool_started_log_for(run_id: &str, data: &Value, locale: Locale) -> String {
+pub(crate) fn format_platform_tool_started_log_for(
+    run_id: &str,
+    data: &Value,
+    locale: Locale,
+) -> String {
     let tool_id = data
         .get("tool_id")
         .and_then(Value::as_str)
@@ -549,7 +559,11 @@ pub(crate) fn format_platform_tool_finished_log(run_id: &str, data: &Value) -> S
     format_platform_tool_finished_log_for(run_id, data, crate::i18n::locale())
 }
 
-pub(crate) fn format_platform_tool_finished_log_for(run_id: &str, data: &Value, locale: Locale) -> String {
+pub(crate) fn format_platform_tool_finished_log_for(
+    run_id: &str,
+    data: &Value,
+    locale: Locale,
+) -> String {
     let tool_id = data
         .get("tool_id")
         .and_then(Value::as_str)
@@ -1050,4 +1064,3 @@ pub(crate) async fn download_capped(
     }
     Ok((bytes, content_type))
 }
-
