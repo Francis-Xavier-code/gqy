@@ -279,11 +279,14 @@ pub(crate) struct PersonaFormValues {
 
 /// 人格附属文件现值:防失忆提示(hints/<scope>.md)与预设对话
 /// (dialogs/<scope>.md)。
-pub(crate) fn persona_aux_values(paths: &GQYPaths, config: &AppConfig, scope: &str) -> (String, String) {
-    let hint =
-        std::fs::read_to_string(crate::persona_hint::manual_hint_path(config, paths, scope))
-            .map(|text| text.trim().to_string())
-            .unwrap_or_default();
+pub(crate) fn persona_aux_values(
+    paths: &GQYPaths,
+    config: &AppConfig,
+    scope: &str,
+) -> (String, String) {
+    let hint = std::fs::read_to_string(crate::persona_hint::manual_hint_path(config, paths, scope))
+        .map(|text| text.trim().to_string())
+        .unwrap_or_default();
     let dialogs = crate::persona_hint::dialogs_raw(config, paths, scope);
     (hint, dialogs)
 }
@@ -691,7 +694,12 @@ pub(crate) fn read_identity(paths: &GQYPaths, config: &AppConfig, name: &str) ->
     }
 }
 
-pub(crate) fn write_identity(paths: &GQYPaths, config: &AppConfig, name: &str, content: &str) -> Result<()> {
+pub(crate) fn write_identity(
+    paths: &GQYPaths,
+    config: &AppConfig,
+    name: &str,
+    content: &str,
+) -> Result<()> {
     let path = config.identity_path(paths, name);
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
@@ -774,7 +782,12 @@ pub(crate) fn read_persona(paths: &GQYPaths, config: &AppConfig, name: &str) -> 
     }
 }
 
-pub(crate) fn write_persona(paths: &GQYPaths, config: &AppConfig, name: &str, content: &str) -> Result<()> {
+pub(crate) fn write_persona(
+    paths: &GQYPaths,
+    config: &AppConfig,
+    name: &str,
+    content: &str,
+) -> Result<()> {
     let path = config.persona_path(paths, name);
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
@@ -1395,4 +1408,3 @@ pub(crate) fn fetch_models(provider: &ProviderConfig) -> Result<Vec<String>> {
         .filter(|id| !id.is_empty())
         .collect())
 }
-

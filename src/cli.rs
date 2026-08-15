@@ -20,8 +20,7 @@ use clap::{Arg, ArgAction, Args, CommandFactory, FromArgMatches, Parser, Subcomm
 use crossterm::cursor::{self, Hide, MoveTo, Show};
 use crossterm::event::{
     self, DisableBracketedPaste, DisableFocusChange, EnableBracketedPaste, EnableFocusChange,
-    Event, KeyCode, KeyEvent, KeyEventKind,
-    KeyModifiers,
+    Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers,
 };
 use crossterm::style::{Color, Print, Stylize};
 use crossterm::terminal::{self, BeginSynchronizedUpdate, Clear, ClearType, EndSynchronizedUpdate};
@@ -36,7 +35,6 @@ use std::time::{Duration, Instant};
 use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::UnicodeWidthStr;
 use vte::{Params as VteParams, Parser as VteParser, Perform as VtePerform};
-
 
 mod defs;
 use defs::*;
@@ -62,6 +60,10 @@ mod jobs;
 use jobs::*;
 mod repl_ui;
 use repl_ui::*;
+mod keyboard_enhancement;
 #[cfg(test)]
 mod tests;
-mod keyboard_enhancement;
+#[cfg(test)]
+mod tests2;
+#[cfg(test)]
+mod tests3;

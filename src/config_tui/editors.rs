@@ -68,7 +68,10 @@ pub(crate) fn select_platform_conversation_kind(
     Ok(())
 }
 
-pub(crate) fn edit_conversation_extra_prompt(stdout: &mut io::Stdout, prompt: &mut String) -> Result<()> {
+pub(crate) fn edit_conversation_extra_prompt(
+    stdout: &mut io::Stdout,
+    prompt: &mut String,
+) -> Result<()> {
     edit_textarea(stdout, prompt)?;
     Ok(())
 }
@@ -235,7 +238,10 @@ pub(crate) fn select_qq_model_pool(
     )
 }
 
-pub(crate) fn select_non_whitelist_model_pool(stdout: &mut io::Stdout, config: &mut AppConfig) -> Result<()> {
+pub(crate) fn select_non_whitelist_model_pool(
+    stdout: &mut io::Stdout,
+    config: &mut AppConfig,
+) -> Result<()> {
     let choices = config.text_provider_model_choices();
     select_model_pool(
         stdout,
@@ -930,7 +936,10 @@ pub(crate) fn edit_real_context_active_reply(
     }
 }
 
-pub(crate) fn edit_active_judgement_skip_ids(stdout: &mut io::Stdout, state: &StateStore) -> Result<()> {
+pub(crate) fn edit_active_judgement_skip_ids(
+    stdout: &mut io::Stdout,
+    state: &StateStore,
+) -> Result<()> {
     let original = match active_judgement_skip_ids(state) {
         Ok(ids) => ids,
         Err(error) => {
@@ -1469,4 +1478,3 @@ pub(crate) fn edit_real_context_moderation(
         }
     }
 }
-

@@ -10,8 +10,8 @@ use crate::config::{
     ProviderModelChoice, QqMemeCollectorPluginSettings, QqMessageHistoryPluginSettings,
     RealContextIdentityMapping, RealContextPluginSettings, MAX_COMMAND_OUTPUT_LINES,
     MAX_PLATFORM_COMMAND_PREFIX_CHARS, MAX_PLATFORM_SESSION_QUEUED, MAX_PLATFORM_SESSION_RUNNING,
-    MAX_REPL_REPLAY_TURNS,
-    QQ_MEME_COLLECTOR_PLUGIN_ID, QQ_MESSAGE_HISTORY_PLUGIN_ID, REAL_CONTEXT_PLUGIN_ID,
+    MAX_REPL_REPLAY_TURNS, QQ_MEME_COLLECTOR_PLUGIN_ID, QQ_MESSAGE_HISTORY_PLUGIN_ID,
+    REAL_CONTEXT_PLUGIN_ID,
 };
 use crate::default_models::{OPENCODE_DEFAULT_VISION_MODEL, OPENCODE_PROVIDER_ID};
 use crate::i18n::{is_zh, text as t};
@@ -187,7 +187,11 @@ pub(crate) fn edit_plugins(stdout: &mut io::Stdout, config: &mut AppConfig) -> R
     }
 }
 
-pub(crate) fn draw_plugin_menu(stdout: &mut io::Stdout, config: &AppConfig, selected: usize) -> Result<()> {
+pub(crate) fn draw_plugin_menu(
+    stdout: &mut io::Stdout,
+    config: &AppConfig,
+    selected: usize,
+) -> Result<()> {
     let (cols, rows) = terminal::size()?;
     let width = cols.saturating_sub(4).max(60);
     let height = rows.saturating_sub(2).max(10);
@@ -315,7 +319,10 @@ pub(crate) fn plugin_names() -> [(&'static str, &'static str, &'static str); 13]
         (
             "brew",
             "Homebrew",
-            t("Homebrew status and package lookup", "Homebrew 状态与包查询"),
+            t(
+                "Homebrew status and package lookup",
+                "Homebrew 状态与包查询",
+            ),
         ),
         (
             "man",
@@ -385,7 +392,11 @@ pub(crate) fn toggle_plugin(config: &mut AppConfig, index: usize) {
     }
 }
 
-pub(crate) fn edit_plugin_detail(stdout: &mut io::Stdout, config: &mut AppConfig, index: usize) -> Result<()> {
+pub(crate) fn edit_plugin_detail(
+    stdout: &mut io::Stdout,
+    config: &mut AppConfig,
+    index: usize,
+) -> Result<()> {
     if index == 13 {
         return edit_api_quota(stdout, config);
     }
@@ -681,7 +692,10 @@ pub(crate) fn plugin_fields(config: &AppConfig, index: usize) -> Vec<Field> {
             )
             .sensitive(),
             Field::textarea(
-                t("Exa API Keys (optional; keyless free quota)", "Exa API Keys（可留空用免费额度）"),
+                t(
+                    "Exa API Keys (optional; keyless free quota)",
+                    "Exa API Keys（可留空用免费额度）",
+                ),
                 config.plugins.web.exa_api_keys.join("\n"),
             )
             .sensitive(),
@@ -1082,7 +1096,11 @@ pub(crate) fn plugin_fields(config: &AppConfig, index: usize) -> Vec<Field> {
     }
 }
 
-pub(crate) fn apply_plugin_fields(config: &mut AppConfig, index: usize, fields: &[Field]) -> Result<()> {
+pub(crate) fn apply_plugin_fields(
+    config: &mut AppConfig,
+    index: usize,
+    fields: &[Field],
+) -> Result<()> {
     match index {
         0 => {
             config.plugins.web.enabled = parse_bool_field(&fields[0].value)?;
@@ -1288,10 +1306,7 @@ pub(crate) fn edit_custom_prompts(
             t(" CUSTOM PROMPTS ", " 自定义提示词 "),
             &options,
             selected,
-            t(
-                "[Enter]select/toggle [q]back",
-                "[Enter]选择/切换 [q]返回",
-            ),
+            t("[Enter]select/toggle [q]back", "[Enter]选择/切换 [q]返回"),
         )?;
         match read_key()? {
             KeyCode::Esc | KeyCode::Char('q') => return Ok(()),
@@ -1393,7 +1408,11 @@ pub(crate) fn edit_dev_prompt(stdout: &mut io::Stdout, paths: &GQYPaths) -> Resu
     Ok(())
 }
 
-pub(crate) fn edit_personas(stdout: &mut io::Stdout, paths: &GQYPaths, config: &mut AppConfig) -> Result<()> {
+pub(crate) fn edit_personas(
+    stdout: &mut io::Stdout,
+    paths: &GQYPaths,
+    config: &mut AppConfig,
+) -> Result<()> {
     manage_personas(stdout, paths, config, PersonaMenuTarget::Global)?;
     Ok(())
 }
@@ -1402,4 +1421,3 @@ pub(crate) enum PersonaMenuTarget {
     Global,
     Platform(PlatformPersonaOverride),
 }
-
