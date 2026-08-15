@@ -1,0 +1,36 @@
+{
+  "name": "run_command",
+  "display_name": "运行命令",
+  "description": "运行 shell 命令或复杂 shell 脚本，用于测试、构建、检查和脚本化任务。长时命令（构建、dev server、批处理）用 background=true 后台运行并附一个短 title：立即返回短 job_id，用 job_status 查询进度和输出、job_stop 停止；命令完成后系统会自动通知你跟进。编辑文件优先使用 apply_patch；不要用 shell heredoc/cat/tee 写源代码文件，除非用户明确要求。脚本内可用 `miyu tool-call <name> --stdin` 以本会话身份调用结构化工具(知识库/记忆/goal 等),用 --list/--describe 查目录与合同——bash 循环+管道即编排层,中间数据不经模型上下文。",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "command": {
+        "type": "string",
+        "description": "要运行的 shell 命令或脚本。可以包含多行复杂命令；文件编辑优先使用 apply_patch。"
+      },
+      "timeout_seconds": {
+        "type": "integer",
+        "description": "可选超时时间，单位秒。background=true 时忽略。"
+      },
+      "background": {
+        "type": "boolean",
+        "description": "后台分离运行并立即返回短 job_id。适用于预计超过约 30 秒的命令。"
+      },
+      "title": {
+        "type": "string",
+        "description": "后台命令的短标题（不超过 16 字），用于界面状态行显示，例如“release 构建”。background=true 时建议提供。"
+      }
+    },
+    "required": [
+      "command"
+    ]
+  },
+  "permission": "readonly",
+  "always_loaded": true,
+  "load_policy": "summary",
+  "groups": [
+    "shell"
+  ],
+  "timeout_seconds": 0
+}

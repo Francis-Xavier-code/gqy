@@ -1,0 +1,19 @@
+{
+  "name": "apply_patch",
+  "display_name": "编辑文件",
+  "description": "唯一的文件编辑工具：新建、修改、删除文件都用它。使用 *** Begin Patch / *** End Patch 包裹补丁，内含一个或多个 Add File / Update File / Delete File 段；一次补丁可以覆盖多个文件与多处修改。",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "patchText": {
+        "type": "string",
+        "description": "完整补丁文本。格式：*** Begin Patch；一个或多个文件操作；*** End Patch。Add File 每行内容必须以 + 开头；Update File 使用 @@ hunk，行以空格、- 或 + 开头；Delete File 删除文件。"
+      }
+    },
+    "required": ["patchText"]
+  },
+  "permission": "writes",
+  "always_loaded": true,
+  "load_policy": "group",
+  "groups": ["dev"]
+}

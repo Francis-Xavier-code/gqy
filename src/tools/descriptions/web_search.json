@@ -1,0 +1,35 @@
+{
+  "name": "web_search",
+  "display_name": "网络搜索",
+  "description": "搜索网络",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "query": {
+        "type": "string"
+      },
+      "max_results": {
+        "type": "integer"
+      },
+      "provider": {
+        "type": "string",
+        "enum": [
+          "auto",
+          "tavily",
+          "firecrawl",
+          "anysearch",
+          "exa",
+          "searxng",
+          "duckduckgo",
+          "script"
+        ]
+      }
+    }
+  },
+  "permission": "readonly",
+  "always_loaded": true,
+  "load_policy": "summary",
+  "groups": [
+    "web"
+  ]
+}
