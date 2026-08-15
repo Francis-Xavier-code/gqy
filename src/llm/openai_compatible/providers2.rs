@@ -1,6 +1,6 @@
 //! providers2 — 自 src/llm/openai_compatible/providers.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 impl AnthropicToolAccumulator {
     pub(crate) fn start(&mut self, index: usize, block: AnthropicStreamBlock) -> Option<String> {
@@ -421,6 +421,8 @@ pub(crate) fn split_tag_pair(
     ))
 }
 
+#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn handle_sse_line<F>(
     line: &str,
     content: &mut String,

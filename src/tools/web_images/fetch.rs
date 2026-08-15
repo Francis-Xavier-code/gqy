@@ -1,6 +1,6 @@
 //! fetch — 自 src/tools/web_images.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn valid_cached_file(
     path: &Path,

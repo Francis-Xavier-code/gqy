@@ -1,9 +1,9 @@
 //! renderer — 自 src/platforms/plugins/renderer.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 use anyhow::{anyhow, bail, Context, Result};
-use cosmic_text::{Align as TextAlign, Buffer, Color, FontSystem, Style as FontStyle, SwashCache};
+use cosmic_text::{Buffer, Color, FontSystem, SwashCache};
 
 use fontdb::Database as FontDatabase;
 

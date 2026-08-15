@@ -1,10 +1,11 @@
 //! tests — 自 src/platforms/plugins/renderer.rs 外移。
 #![cfg(test)]
 
-use super::*;
+pub(crate) use super::*;
 
 use std::path::PathBuf;
 use std::time::Duration;
+#[allow(clippy::empty_line_after_outer_attr)]
 #[cfg(test)]
 
 fn render(markdown: &str, raw_config: &RenderConfig) -> Result<Vec<RenderedImage>> {

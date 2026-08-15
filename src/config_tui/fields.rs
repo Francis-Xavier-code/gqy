@@ -1,6 +1,6 @@
 //! fields — 自 src/config_tui.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn auto_configure_model_tags(
     paths: &GQYPaths,

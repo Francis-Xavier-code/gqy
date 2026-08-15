@@ -1,6 +1,6 @@
 //! migration — 自 src/paths.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn ensure_no_conflicts(source: &Path, destination: &Path) -> Result<()> {
     let source_meta = fs::symlink_metadata(source)?;

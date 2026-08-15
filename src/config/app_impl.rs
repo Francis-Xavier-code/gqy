@@ -1,6 +1,6 @@
 //! app_impl — 自 src/config.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 impl AppConfig {
     pub fn display_language_hint(paths: &GQYPaths) -> Option<String> {

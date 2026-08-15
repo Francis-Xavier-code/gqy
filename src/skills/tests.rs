@@ -1,7 +1,7 @@
 //! tests — 自 src/skills.rs 外移。
 #![cfg(test)]
 
-use super::*;
+pub(crate) use super::*;
 
 fn test_paths(root: &Path) -> GQYPaths {
     GQYPaths {

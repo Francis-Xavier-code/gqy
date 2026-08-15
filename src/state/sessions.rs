@@ -1,6 +1,6 @@
 //! sessions — 自 src/state/mod.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn artifact_media_type(path: &Path) -> (&'static str, &'static str) {
     match path

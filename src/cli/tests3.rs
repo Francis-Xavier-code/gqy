@@ -1,7 +1,7 @@
 //! tests3 — 自 src/cli/tests.rs 拆分。
 #![cfg(test)]
 
-use super::*;
+pub(crate) use super::*;
 
 #[cfg(test)]
 mod default_kb_progress_tests {
@@ -22,6 +22,7 @@ mod default_kb_progress_tests {
 }
 
 /// `gqy reset-memory`:清空当前人格的长期记忆。daemon 在跑走 IPC,
+#[allow(clippy::empty_line_after_doc_comments)]
 /// 否则本地直清;终端确认后执行。
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 //! plugins — 自 src/config_tui.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 impl PersonaMenuTarget {
     pub(crate) fn custom_offset(&self) -> usize {
@@ -843,6 +843,7 @@ pub(crate) fn format_text_file(content: &str) -> String {
 
 pub(crate) fn parse_key_list(value: &str) -> Vec<String> {
     value
+#[allow(clippy::manual_pattern_char_comparison)]
         .split(|ch| ch == ',' || ch == '\n' || ch == '\r')
         .map(str::trim)
         .filter(|item| !item.is_empty())
@@ -1332,6 +1333,7 @@ impl<'a> ProviderBrowser<'a> {
             .to_string()
         };
         let status = if self.loading {
+#[allow(clippy::useless_format)]
             format!("{}", self.status)
         } else {
             self.status.clone()

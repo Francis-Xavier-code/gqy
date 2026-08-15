@@ -1,6 +1,6 @@
 //! layout — 自 src/paths.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 use crate::i18n::text as t;
 use anyhow::{bail, Context, Result};

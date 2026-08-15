@@ -2,7 +2,7 @@
 #![cfg(test)]
 
 use super::tests::*;
-use super::*;
+pub(crate) use super::*;
 
 #[test]
 fn tool_summary_suppresses_subagent_reasoning_even_when_reasoning_is_full() {

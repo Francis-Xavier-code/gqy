@@ -1,7 +1,7 @@
 //! tests2 — 自 src/cli/tests.rs 拆分。
 #![cfg(test)]
 
-use super::*;
+pub(crate) use super::*;
 
 mod repl_input_tests2 {
     use super::*;

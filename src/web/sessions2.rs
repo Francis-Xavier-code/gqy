@@ -1,6 +1,6 @@
 //! sessions2 — 自 src/web.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn active_persona_scope(state: &DaemonState) -> String {
     state.manager.lock().unwrap().config.active_persona_scope()

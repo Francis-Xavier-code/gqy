@@ -1,6 +1,6 @@
 // registry — 自 src/platforms/mod.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 // IM platform bridges.
 //
@@ -441,6 +441,7 @@ impl SessionTurnTicket {
                     if self
                         .state
                         .waiting
+#[allow(clippy::incompatible_msrv)]
                         .try_update(Ordering::AcqRel, Ordering::Acquire, |waiting| {
                             (waiting < self.state.max_queued).then_some(waiting + 1)
                         })

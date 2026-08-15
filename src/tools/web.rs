@@ -8,13 +8,13 @@ use std::time::{Duration, Instant};
 use urlencoding::decode as url_decode;
 
 mod cooldown;
-pub use cooldown::*;
+pub(crate) use cooldown::*;
 mod providers;
-pub use providers::*;
+pub(crate) use providers::*;
 mod crawlers;
-pub use crawlers::*;
+pub(crate) use crawlers::*;
 mod parse;
-pub use parse::*;
+pub(crate) use parse::*;
 #[cfg(test)]
 mod tests;
 const MAX_RESPONSE_SIZE: usize = 5 * 1024 * 1024;
@@ -29,7 +29,7 @@ static SOGOU_BLOCKED_UNTIL: Mutex<Option<Instant>> = Mutex::new(None);
 static SEARCH_SCHEDULER: LazyLock<Mutex<SearchScheduler>> =
     LazyLock::new(|| Mutex::new(SearchScheduler::default()));
 
-struct CrawlerResult {
+pub(crate) struct CrawlerResult {
     title: String,
     url: String,
     snippet: String,
@@ -37,7 +37,7 @@ struct CrawlerResult {
 }
 
 #[derive(Clone, Copy)]
-enum SearchProvider {
+pub(crate) enum SearchProvider {
     Tavily,
     Firecrawl,
     AnySearch,

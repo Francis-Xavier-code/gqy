@@ -32,7 +32,7 @@ use std::time::{Duration, Instant};
 use tokio::sync::{mpsc, oneshot};
 
 mod core;
-pub use core::*;
+pub(crate) use core::*;
 mod compact;
 
 mod conversation;
@@ -48,9 +48,9 @@ mod agent_impl3;
 mod agent_impl4;
 
 mod research;
-pub use research::*;
+pub(crate) use research::*;
 mod tasks;
-pub use tasks::*;
+pub(crate) use tasks::*;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

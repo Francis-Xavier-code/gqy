@@ -1,6 +1,6 @@
 //! handler — 自 src/platforms/plugins/renderer.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 #[derive(Clone, Copy)]
 pub(crate) struct TaskBox {
@@ -437,6 +437,7 @@ pub(crate) fn attrs_for<'a>(
         Family::SansSerif
     };
     let family = named.map(Family::Name).unwrap_or(fallback);
+#[allow(clippy::if_same_then_else)]
     let foreground = if matches!(kind, BlockKind::Code) {
         palette.code_text
     } else if style.code {

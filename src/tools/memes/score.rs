@@ -1,6 +1,6 @@
 //! score — 自 src/tools/memes.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn required_str<'a>(args: &'a Value, key: &str) -> Result<&'a str> {
     let value = args
@@ -54,6 +54,7 @@ fn search_terms(query: &str) -> Vec<String> {
         if token.chars().count() > 1 {
             terms.push(token.to_string());
         }
+#[allow(clippy::unnecessary_to_owned)]
         if token.chars().any(|ch| !ch.is_ascii()) {
             let chars = token.chars().collect::<Vec<_>>();
             for pair in chars.windows(2) {

@@ -15,11 +15,11 @@ use std::sync::{Arc, Mutex, OnceLock, RwLock};
 use std::time::SystemTime;
 
 mod score;
-pub use score::*;
+pub(crate) use score::*;
 mod validate;
-pub use validate::*;
+pub(crate) use validate::*;
 mod store;
-pub use store::*;
+pub(crate) use store::*;
 const BUILTIN_MEMES_DIR: &str = "/usr/share/gqy/memes";
 const MIN_SHORT_MEME_ID_LEN: usize = 7;
 
@@ -55,7 +55,7 @@ pub(crate) enum MemeCollectionOutcome {
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct MemeClassification {
+pub(crate) struct MemeClassification {
     save: bool,
     confidence: u8,
     positive_gates: PositiveGates,
@@ -90,7 +90,7 @@ struct RiskGates {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum ValidatedImageFormat {
+pub(crate) enum ValidatedImageFormat {
     Jpeg,
     Png,
     Gif,
@@ -118,7 +118,7 @@ impl ValidatedImageFormat {
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-struct MemeIndex {
+pub(crate) struct MemeIndex {
     #[serde(default)]
     library: String,
     #[serde(default)]
@@ -130,7 +130,7 @@ struct MemeIndex {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct MemeItem {
+pub(crate) struct MemeItem {
     id: String,
     name: LocalizedName,
     file: String,
@@ -180,7 +180,7 @@ struct LocalizedName {
 }
 
 #[derive(Debug, Clone)]
-struct LoadedMeme {
+pub(crate) struct LoadedMeme {
     item: MemeItem,
     path: PathBuf,
     source: MemeSource,
@@ -887,8 +887,10 @@ fn meme_print_size(args: &Value, config: &MemesPluginConfig) -> Option<String> {
 
 pub(crate) fn configured_meme_size(config: &MemesPluginConfig) -> Option<String> {
     let (cols, rows) = crossterm::terminal::size().ok()?;
+#[allow(clippy::manual_clamp)]
     let width = ((cols as u32 * config.width_percent as u32) / 100)
         .max(1)
+#[allow(clippy::manual_clamp)]
         .min(160);
     let height = ((rows as u32 * config.height_percent as u32) / 100)
         .max(1)

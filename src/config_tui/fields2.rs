@@ -1,6 +1,6 @@
 //! fields2 — 自 src/config_tui/fields.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn parse_keyword_lines(value: &str) -> std::result::Result<Vec<String>, String> {
     let mut parsed = Vec::new();

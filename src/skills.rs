@@ -11,11 +11,11 @@ use yaml_rust2::scanner::{Scanner, Token, TokenType};
 use yaml_rust2::{Yaml, YamlLoader};
 
 mod parse;
-pub use parse::*;
+pub(crate) use parse::*;
 mod store;
-pub use store::*;
+pub(crate) use store::*;
 mod install;
-pub use install::*;
+pub(crate) use install::*;
 #[cfg(test)]
 mod tests;
 /// Skills compiled into the binary: (name, raw SKILL.md). A user skill of
@@ -107,13 +107,13 @@ impl SkillScope {
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-enum DraftKind {
+pub(crate) enum DraftKind {
     Create,
     Update,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-struct DraftManifest {
+pub(crate) struct DraftManifest {
     version: u32,
     id: String,
     name: String,

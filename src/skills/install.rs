@@ -1,6 +1,6 @@
 //! install — 自 src/skills.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) struct StagedDirectory {
     path: PathBuf,

@@ -1,6 +1,6 @@
 //! client_impl — 自 src/llm/openai_compatible.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 impl OpenAiCompatibleClient {
     /// 当前主 provider id,用量历史记账用(具体模型以 ChatResult 为准)。
@@ -268,6 +268,7 @@ impl OpenAiCompatibleClient {
 
     pub fn available_thinking_variants(&self) -> Vec<String> {
         let options = self.thinking_variant_options();
+#[allow(clippy::obfuscated_if_else)]
         (options.len() == 1)
             .then(|| options[0].variants.clone())
             .unwrap_or_default()

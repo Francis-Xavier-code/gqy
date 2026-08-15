@@ -1,6 +1,6 @@
 // core — 自 src/platforms/onebot.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 // OneBot v11 bridge (NapCat / QQ).
 //

@@ -1,6 +1,6 @@
 //! groups — 自 src/platforms/onebot.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 /// its per-conversation route (私聊/群聊专属配置), creating the route if needed.
 /// `/models` lists the globally configured models; `/models <index|provider/model>`

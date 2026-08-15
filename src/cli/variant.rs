@@ -1,6 +1,6 @@
 //! variant — 自 src/cli.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn draw_inline_single_variant(
     stdout: &mut io::Stdout,
@@ -84,6 +84,8 @@ pub(crate) fn single_variant_content_width(item: &VariantMenuItem) -> usize {
         .unwrap_or(1)
 }
 
+#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn draw_inline_variant(
     stdout: &mut io::Stdout,
     anchor_y: u16,

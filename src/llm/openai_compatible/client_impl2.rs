@@ -1,6 +1,6 @@
 //! client_impl2 — 自 src/llm/openai_compatible/client_impl.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 impl OpenAiCompatibleClient {
     pub fn selected_reasoning_variant(&self) -> Option<(ModelReasoningInfo, ReasoningVariant)> {

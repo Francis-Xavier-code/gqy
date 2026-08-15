@@ -12,15 +12,15 @@ use std::collections::BTreeMap;
 use std::io::{self, IsTerminal, Write};
 
 mod core;
-pub use core::*;
+pub(crate) use core::*;
 pub(crate) mod math;
 mod render_impl;
 pub(crate) mod wait_spinner;
 
 mod widgets;
-pub use widgets::*;
+pub(crate) use widgets::*;
 mod tools;
-pub use tools::*;
+pub(crate) use tools::*;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

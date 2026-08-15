@@ -38,7 +38,7 @@ pub(super) struct JudgeRequest<'a> {
 }
 
 #[derive(Clone, Debug, Default)]
-pub(super) struct ModerationResult {
+pub(crate) struct ModerationResult {
     pub(super) violation: bool,
     pub(super) severity: f64,
     pub(super) category: String,

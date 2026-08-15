@@ -505,6 +505,7 @@ fn apply_hunk(path: &Path, content: &str, hunk: &Hunk) -> Result<String> {
     let start_index = hunk
         .context
         .as_ref()
+#[allow(clippy::useless_to_owned)]
         .and_then(|context| seek_sequence(&current_lines, &[context.to_string()], 0, false))
         .map(|index| index + 1)
         .unwrap_or(0);
@@ -551,6 +552,7 @@ fn apply_insertion_hunk(path: &Path, content: &str, hunk: &Hunk, new: &str) -> R
     let insert = content_lines(new);
     let index = if hunk.end_of_file {
         lines.len()
+#[allow(clippy::useless_to_owned)]
     } else if let Some(context) = &hunk.context {
         seek_sequence(&lines, &[context.to_string()], 0, false)
             .map(|index| index + 1)

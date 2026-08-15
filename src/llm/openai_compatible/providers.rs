@@ -1,6 +1,6 @@
 //! providers — 自 src/llm/openai_compatible.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn stream_chunk_commits_attempt(
     chunk: &ChatStreamChunk,

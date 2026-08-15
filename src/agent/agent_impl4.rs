@@ -1,8 +1,10 @@
 //! agent_impl4 — 自 src/agent/agent_impl2.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 impl Agent {
+#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments)]
     pub async fn chat_with_tools<F>(
         &mut self,
         current_turn_id: &str,

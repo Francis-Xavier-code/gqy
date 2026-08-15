@@ -1,6 +1,6 @@
 //! core — 自 src/platforms/plugins/real_context/mod.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) const TRIGGER_KEY: &str = "real_context.trigger";
 pub(crate) const MODERATION_NOTICE_KEY: &str = "real_context.moderation_notice";

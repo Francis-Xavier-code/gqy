@@ -1,6 +1,6 @@
 //! plugin_impl — 自 src/platforms/plugins/real_context/mod.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 impl RealContextPlugin {
     pub(crate) fn new() -> Self {

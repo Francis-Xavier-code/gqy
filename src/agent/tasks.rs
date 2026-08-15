@@ -1,6 +1,6 @@
 //! tasks — 自 src/agent/mod.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn compact_one_line(value: &str) -> String {
     value.split_whitespace().collect::<Vec<_>>().join(" ")
@@ -239,6 +239,7 @@ pub(crate) fn with_runtime_system_context(mut system_prompt: String, context: &[
 /// Only owner sessions get it. A QQ reply has no use for kernel versions, and
 /// skipping the append outright — rather than adding an empty block — keeps
 /// those sessions' system prompt byte-identical to what the provider already
+#[allow(clippy::empty_line_after_doc_comments)]
 /// has cached, so the platform side sees no cold start at all.
 
 /// 模式选提示词源:Dev=一行可编辑开发提示词(无人格全家、无用户身份,

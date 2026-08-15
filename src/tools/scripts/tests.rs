@@ -1,7 +1,7 @@
 //! tests — 自 src/tools/scripts.rs 外移。
 #![cfg(test)]
 
-use super::*;
+pub(crate) use super::*;
 
 fn auto_detect_script(path: &Path) -> Option<ScriptEntry> {
     let detected = inspect_script(path)?;

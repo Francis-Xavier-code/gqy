@@ -1,6 +1,6 @@
 //! core — 自 src/state/mod.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 /// Newest `conversation.db` schema this build can open — the gate an import
 /// checks before restoring a database written by a newer GQY.

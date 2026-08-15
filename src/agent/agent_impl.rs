@@ -1,6 +1,6 @@
 //! agent_impl — 自 src/agent/mod.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 impl Agent {
     pub fn new(
@@ -581,6 +581,8 @@ impl Agent {
         estimate_tool_definition_tokens(&definitions)
     }
 
+#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments)]
     pub async fn consume_queued_prompts<F>(
         &mut self,
         current_turn_id: &str,

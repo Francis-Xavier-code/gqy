@@ -1,6 +1,6 @@
 //! jobs — 自 src/cli.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 type JobsOverviewSnapshot = (
     Vec<crate::tools::jobs::JobOverview>,
@@ -710,6 +710,8 @@ pub(crate) fn read_repl_input(
     history: &[String],
     footer: &ReplFooterStatus,
     show_shortcut_hint: bool,
+#[allow(clippy::type_complexity)]
+#[allow(clippy::too_many_arguments)]
 ) -> Result<
     Option<(
         AgentMode,
@@ -903,7 +905,7 @@ pub(crate) fn read_repl_input(
                         pasted_images.clear();
                         pasted_texts.clear();
                     } else {
-                        cursor = repl_move_cursor_vertical(&plain_prefix, &input, cursor, -1);
+                        cursor = repl_move_cursor_vertical(plain_prefix, &input, cursor, -1);
                     }
                     render_repl_input(
                         &mut stdout,
@@ -932,7 +934,7 @@ pub(crate) fn read_repl_input(
                         pasted_images.clear();
                         pasted_texts.clear();
                     } else {
-                        cursor = repl_move_cursor_vertical(&plain_prefix, &input, cursor, 1);
+                        cursor = repl_move_cursor_vertical(plain_prefix, &input, cursor, 1);
                     }
                     render_repl_input(
                         &mut stdout,
@@ -1234,8 +1236,10 @@ pub(crate) fn read_repl_input(
             _ => {}
         }
     }
+#[allow(clippy::too_many_arguments)]
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn render_repl_input_with_footer(
     stdout: &mut io::Stdout,
     input_row: &mut u16,

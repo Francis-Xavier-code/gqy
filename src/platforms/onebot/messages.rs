@@ -1,6 +1,6 @@
 //! messages — 自 src/platforms/onebot.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn parse_cq_string(raw: &str, self_id: i64) -> InboundMessage {
     let mut parsed = InboundMessage::default();

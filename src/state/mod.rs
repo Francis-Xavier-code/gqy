@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 mod core;
-pub use core::*;
+pub(crate) use core::*;
 mod conversation_db;
 mod migrations;
 pub use migrations::DEFAULT_SESSION_ID;
@@ -21,7 +21,7 @@ pub(crate) mod usage;
 mod state_impl2;
 
 mod sessions;
-pub use sessions::*;
+pub(crate) use sessions::*;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

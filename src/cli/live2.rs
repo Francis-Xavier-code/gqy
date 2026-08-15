@@ -1,6 +1,6 @@
 //! live2 — 自 src/cli/live.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn repl_input_rendered_rows(
     input: &str,

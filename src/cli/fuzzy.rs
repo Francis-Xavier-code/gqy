@@ -1,6 +1,6 @@
 //! fuzzy — 自 src/cli.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 /// Single-select variant of the inline fuzzy menu: Tab marks a row (radio),
 /// Enter confirms the marked row (or the highlighted one when nothing is
@@ -118,6 +118,8 @@ pub(crate) fn fuzzy_matches(
     matches
 }
 
+#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn draw_inline_fuzzy(
     stdout: &mut io::Stdout,
     anchor_y: u16,

@@ -1,6 +1,6 @@
 //! ops — 自 src/memory/mod.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn init_data_db(conn: &Connection) -> Result<()> {
     conn.execute_batch(

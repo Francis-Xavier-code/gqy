@@ -1,6 +1,6 @@
 //! agent_impl3 — 自 src/agent/agent_impl2.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 impl Agent {
     pub async fn handle_overflow<F>(

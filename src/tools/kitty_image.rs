@@ -62,7 +62,7 @@ pub(crate) fn kitty_sequence_with_grid(
     let image_id = image_id.max(1);
     let mut buffer = Vec::new();
     write_image(&mut buffer, &resized, image_id, cols, rows)?;
-    Ok(String::from_utf8(buffer).context("kitty sequence is not utf-8")?)
+    String::from_utf8(buffer).context("kitty sequence is not utf-8")
 }
 
 /// 渲染成 Kitty 序列,撑满 max 框(看图语义,print_image 用)。

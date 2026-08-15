@@ -19,8 +19,8 @@ use std::time::{Duration, Instant};
 use tokio::sync::Mutex as AsyncMutex;
 
 mod images;
-pub use images::*;
+pub(crate) use images::*;
 mod fetch;
-pub use fetch::*;
+pub(crate) use fetch::*;
 #[cfg(test)]
 mod tests;

@@ -1,6 +1,6 @@
 //! handlers — 自 src/platforms/onebot.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) async fn handle_message_with_activity(
     state: DaemonState,

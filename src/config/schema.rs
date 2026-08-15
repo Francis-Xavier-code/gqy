@@ -1,6 +1,6 @@
 //! schema — 自 src/config.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn validate_api_quota_accounts(
     provider: &str,

@@ -248,6 +248,7 @@ fn todo_update(args: Value, todos: TodoList) -> Result<String> {
             "add" => {
                 let todo = todo_from_update(update)?;
                 let insert_at = match update.get("index").and_then(Value::as_u64) {
+#[allow(clippy::redundant_guard)]
                     Some(index) if index == 0 => anyhow::bail!("index must be 1-based"),
                     Some(index) => (index as usize - 1).min(list.len()),
                     None => list.len(),

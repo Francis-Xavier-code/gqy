@@ -15,7 +15,7 @@ use std::time::{Duration, Instant};
 use tokio::sync::broadcast;
 
 mod registry;
-pub use registry::*;
+pub(crate) use registry::*;
 pub(crate) mod access_control;
 mod adapters;
 pub(crate) mod assets;
@@ -25,7 +25,7 @@ pub(crate) mod onebot;
 pub(crate) mod plugins;
 mod tool;
 mod types;
-pub use adapters::*;
+pub(crate) use adapters::*;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

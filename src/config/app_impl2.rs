@@ -1,6 +1,6 @@
 //! app_impl2 — 自 src/config/app_impl.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 impl AppConfig {
     pub fn remove_active_model_references(&mut self, provider_id: &str, model: &str) {

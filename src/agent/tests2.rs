@@ -3,7 +3,7 @@
 
 use super::tests::*;
 use super::tests4::*;
-use super::*;
+pub(crate) use super::*;
 use crate::config::{ActiveProviderModelConfig, ProviderConfig};
 use crate::platforms::{ConversationKind, PlatformConversation};
 use crate::tools::{empty_parameters, ToolSpec};
@@ -368,7 +368,7 @@ fn overflow_check_disabled_when_no_window() {
 #[test]
 fn overflow_check_estimate_triggers() {
     let check = overflow::OverflowCheck::new(Some(1_000), 0.9, None);
-    let big_msg = ChatMessage::plain("user", &"token ".repeat(2_000));
+    let big_msg = ChatMessage::plain("user", "token ".repeat(2_000));
     let small_msg = ChatMessage::plain("user", "hi");
     assert!(check.check_estimate(&[big_msg]));
     assert!(!check.check_estimate(&[small_msg]));

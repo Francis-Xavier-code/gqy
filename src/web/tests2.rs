@@ -3,7 +3,7 @@
 #![cfg(test)]
 
 use super::tests::*;
-use super::*;
+pub(crate) use super::*;
 use crate::question::{QuestionOption, QuestionPrompt};
 use crate::state::PlatformSessionBindingKey;
 
@@ -528,8 +528,8 @@ pub(crate) fn config_response_never_serializes_secret_values() {
     assert!(!serialized.contains("image-secret"));
     assert!(!serialized.contains("deepseek-secret"));
     assert!(!serialized.contains("openrouter-secret"));
-    assert_eq!(response.secret_states["providers.0.api_key"], true);
-    assert_eq!(response.secret_states["plugins.web.tavily_api_keys"], true);
+    assert!(response.secret_states["providers.0.api_key"]);
+    assert!(response.secret_states["plugins.web.tavily_api_keys"]);
     assert_eq!(
         response.secret_states["plugins.api_quota.deepseek.accounts.0.api_key"],
         true

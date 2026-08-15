@@ -1,6 +1,6 @@
 //! widgets — 自 src/render/mod.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn stream_needs_terminating_newline(
     mode: Option<ChatStreamKind>,
@@ -905,6 +905,7 @@ pub(crate) fn render_inline(text: &str) -> String {
                             output.push_str(": ");
                             output.push_str(&alt);
                         }
+#[allow(clippy::single_char_push_str)]
                         output.push_str("]");
                         output.push_str(RESET);
                         output.push('(');
@@ -953,6 +954,7 @@ pub(crate) fn render_inline(text: &str) -> String {
                 index = end + 1;
                 continue;
             }
+#[allow(clippy::collapsible_if)]
         }
         if chars[index] == '_' {
             if is_emphasis_start(&chars, index) {

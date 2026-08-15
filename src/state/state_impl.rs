@@ -1,6 +1,6 @@
 //! state_impl — 自 src/state/mod.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 impl StateStore {
     pub fn new(paths: &GQYPaths) -> Result<Self> {
@@ -665,6 +665,8 @@ impl StateStore {
         Ok(())
     }
 
+#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments)]
     pub fn complete_turn_with_usage_and_model(
         &self,
         turn_id: &str,

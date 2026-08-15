@@ -2,7 +2,7 @@
 #![cfg(test)]
 
 use super::tests::*;
-use super::*;
+pub(crate) use super::*;
 use std::sync::atomic::Ordering as AtomicOrdering;
 
 use crate::config::AppConfig;

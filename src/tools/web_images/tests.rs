@@ -1,7 +1,7 @@
 //! tests — 自 src/tools/web_images.rs 外移。
 #![cfg(test)]
 
-use super::*;
+pub(crate) use super::*;
 
 use std::collections::HashMap;
 #[cfg(test)]

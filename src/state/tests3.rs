@@ -3,7 +3,7 @@
 
 use super::tests::*;
 use super::tests2::*;
-use super::*;
+pub(crate) use super::*;
 
 #[test]
 fn queued_prompts_survive_prompt_changes_but_not_a_new_store_session() {
@@ -631,7 +631,8 @@ fn prune_folds_old_tool_reports_behind_the_harvest_gate() {
         store.start_turn(id, id, 999999).unwrap();
         store
             .conv_db
-            .append_tool_reports(id, &[big_report.clone()])
+#[allow(clippy::cloned_instead_of_copied)]
+            .append_tool_reports(id, std::slice::from_ref(&big_report))
             .unwrap();
         store.complete_turn(id, "reply", None).unwrap();
     }

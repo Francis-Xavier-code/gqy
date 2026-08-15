@@ -1,6 +1,6 @@
 //! tools — 自 src/render/mod.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn render_code_block(lang: &str, lines: &[String]) -> String {
     let label = if lang.is_empty() {

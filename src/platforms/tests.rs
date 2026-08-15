@@ -1,7 +1,7 @@
 //! tests — 自 src/platforms/mod.rs 外移。
 #![cfg(test)]
 
-use super::*;
+pub(crate) use super::*;
 
 use crate::paths::GQYPaths;
 use futures_util::future::BoxFuture;

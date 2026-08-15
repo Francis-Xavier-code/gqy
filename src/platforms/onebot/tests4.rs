@@ -2,7 +2,7 @@
 #![cfg(test)]
 
 use super::tests3::*;
-use super::*;
+pub(crate) use super::*;
 
 #[tokio::test]
 async fn adapter_uses_the_new_connection_after_reconnect() {

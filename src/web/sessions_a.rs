@@ -1,6 +1,6 @@
 //! sessions_a — 自 src/web.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]

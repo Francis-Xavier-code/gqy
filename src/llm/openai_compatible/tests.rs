@@ -2,7 +2,7 @@
 #![cfg(test)]
 
 use super::tests3::*;
-use super::*;
+pub(crate) use super::*;
 
 #[cfg(test)]
 use crate::llm::{ChatContent, ChatContentPart, ImageUrlContent};

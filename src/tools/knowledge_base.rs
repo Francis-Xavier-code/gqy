@@ -16,7 +16,7 @@ use tokio::process::Command;
 mod store;
 
 mod kb_tools;
-pub use kb_tools::*;
+pub(crate) use kb_tools::*;
 #[cfg(test)]
 mod tests;
 pub fn register(registry: &mut ToolRegistry, config: AppConfig, paths: GQYPaths) {
@@ -567,7 +567,7 @@ pub struct EditResult {
     semantic_refreshed: bool,
 }
 
-struct SearchResult {
+pub(crate) struct SearchResult {
     path: String,
     score: f32,
     snippets: Vec<String>,
@@ -596,7 +596,7 @@ impl SearchResult {
     }
 }
 
-struct Chunk {
+pub(crate) struct Chunk {
     index: usize,
     start: usize,
     end: usize,
