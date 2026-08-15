@@ -322,7 +322,6 @@ pub(crate) fn format_active_reply_skip_log_for(
     }
 }
 
-#[allow(clippy::needless_lifetimes)]
 pub(crate) fn localized_affection_level<'a>(level: &'a str, locale: Locale) -> &'a str {
     if locale == Locale::Zh {
         return level;

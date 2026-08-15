@@ -1046,7 +1046,6 @@ fn strip_tagged_sections(mut text: String, tag: &str) -> String {
     let open = format!("<{tag}>");
     let close = format!("</{tag}>");
     let open_prefix = format!("<{tag}");
-#[allow(clippy::while_let_loop)]
     loop {
         let Some(start) = text.find(&open_prefix) else {
             break;

@@ -1,3 +1,4 @@
+#![allow(clippy::manual_contains, clippy::needless_return)]
 use super::{ToolRegistry, ToolSpec};
 use anyhow::{bail, Result};
 use chrono::{FixedOffset, Utc};
@@ -43,7 +44,6 @@ async fn query_deepseek_status(args: Value) -> Result<String> {
 
 async fn fetch_status_html() -> Result<String> {
     match fetch_status_html_with_curl().await {
-#[allow(clippy::needless_return)]
         Ok(html) => return Ok(html),
         Err(curl_err) => match fetch_status_html_with_reqwest().await {
             Ok(html) => Ok(html),
@@ -205,7 +205,6 @@ fn build_response(raw: &Value, include_incidents: bool, max_incidents: usize) ->
         for component in &mut components {
             let Some(id) = component.get("id").and_then(Value::as_str) else {
                 continue;
-#[allow(clippy::unnecessary_iter_contains)]
             };
             if affected_ids.iter().any(|affected| *affected == id) {
                 component["status"] = Value::String(change_status.to_string());

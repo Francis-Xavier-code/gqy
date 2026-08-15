@@ -1,3 +1,4 @@
+#![allow(clippy::unnecessary_sort_by)]
 use anyhow::Result;
 use base64::Engine;
 use sha2::Digest;
@@ -287,8 +288,6 @@ pub fn parse_clipboard_path(text: &str) -> Option<ClipboardPath> {
     };
     let path_str = if raw.starts_with('/') {
         raw.to_string()
-#[allow(clippy::question_mark)]
-#[allow(clippy::question_mark)]
     } else if let Some(rest) = raw.strip_prefix("~/") {
         if let Some(home) = directories::BaseDirs::new().map(|d| d.home_dir().to_path_buf()) {
             home.join(rest).display().to_string()
@@ -363,7 +362,6 @@ fn cleanup_clipboard_images_with_max(dir: &Path, max_bytes: u64) {
 
     if total <= max_bytes {
         return;
-#[allow(clippy::unnecessary_sort_by)]
     }
 
     files.sort_by(|a, b| a.2.cmp(&b.2));

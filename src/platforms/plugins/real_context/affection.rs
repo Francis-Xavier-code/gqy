@@ -846,8 +846,6 @@ fn log_profile_initialized(
     );
 }
 
-#[allow(clippy::too_many_arguments)]
-#[allow(clippy::too_many_arguments)]
 fn format_affection_initialized_log(
     account_id: &str,
     group_id: &str,
@@ -998,7 +996,6 @@ fn format_affection_update_log(
     lines.join("\n")
 }
 
-#[allow(clippy::too_many_arguments)]
 fn format_affection_skipped_log(
     account_id: &str,
     group_id: &str,
@@ -1060,7 +1057,6 @@ fn format_affection_skipped_log(
     lines.join("\n")
 }
 
-#[allow(clippy::too_many_arguments)]
 fn format_affection_failure_log(
     account_id: &str,
     group_id: &str,

@@ -378,7 +378,6 @@ impl Default for DisplayConfig {
     }
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for PluginsConfig {
     fn default() -> Self {
         Self {
@@ -428,7 +427,6 @@ impl Default for ApiQuotaProviderConfig {
         }
     }
 }
-#[allow(clippy::derivable_impls)]
 
 impl Default for McpConfig {
     fn default() -> Self {

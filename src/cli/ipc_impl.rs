@@ -73,8 +73,6 @@ pub(crate) fn display_session_name(name: &str) -> &str {
     }
 }
 
-#[allow(clippy::too_many_arguments)]
-#[allow(clippy::too_many_arguments)]
 pub(crate) async fn apply_repl_session_switch(
     paths: &GQYPaths,
     config: &AppConfig,

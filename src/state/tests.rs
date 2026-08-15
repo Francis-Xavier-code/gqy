@@ -1,5 +1,6 @@
 //! tests — 自 src/state/mod.rs 外移。
 #![cfg(test)]
+#![allow(clippy::op_ref)]
 
 pub(crate) use super::*;
 
@@ -676,14 +677,12 @@ fn user_attachment_moves_from_staged_to_turn_and_cascades() {
     store.save_user_attachment(&attachment, b"content").unwrap();
     assert_eq!(
         store
-#[allow(clippy::cloned_instead_of_copied)]
             .load_staged_user_attachments(std::slice::from_ref(&attachment.attachment_id))
             .unwrap()[0]
             .bytes,
         b"content"
     );
 
-#[allow(clippy::cloned_instead_of_copied)]
     store
         .reserve_user_attachments(std::slice::from_ref(&attachment.attachment_id), "run_test")
         .unwrap();
@@ -698,7 +697,6 @@ fn user_attachment_moves_from_staged_to_turn_and_cascades() {
         .unwrap();
     let turns = store.load_turns().unwrap();
     assert_eq!(turns[0].display_content, "visible");
-#[allow(clippy::cloned_instead_of_copied)]
     assert_eq!(turns[0].attachments, vec![attachment.clone()]);
     assert!(store
         .load_staged_user_attachments(std::slice::from_ref(&attachment.attachment_id))
@@ -737,7 +735,6 @@ fn session_crud_switching_and_persona_adoption() {
     assert_eq!(&*reopened.session_id(), created.session_id.as_str());
 
     let listed = store.list_sessions("gqy").unwrap();
-#[allow(clippy::op_ref)]
     assert_eq!(listed.len(), 2);
     let default_overview = listed
         .iter()

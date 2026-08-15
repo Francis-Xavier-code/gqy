@@ -1,5 +1,6 @@
 //! search — 自 src/state/conversation_db.rs 拆分。
 
+#![allow(clippy::redundant_closure)]
 pub(crate) use super::*;
 
 impl ConversationDb {
@@ -16,8 +17,6 @@ impl ConversationDb {
         Ok(attachments)
     }
 
-#[allow(clippy::too_many_arguments)]
-#[allow(clippy::too_many_arguments)]
     pub fn consume_queued_prompts(
         &self,
         session_id: &str,
@@ -42,7 +41,6 @@ impl ConversationDb {
         )
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub fn consume_queued_prompts_with_checkpoint(
         &self,
         session_id: &str,
@@ -377,7 +375,6 @@ impl ConversationDb {
         Ok(prompts)
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub fn begin_redo(
         &self,
         session_id: &str,
@@ -1395,9 +1392,7 @@ impl ConversationDb {
         tx.commit()?;
         Ok(PruneStats { turns, saved_chars })
     }
-#[allow(clippy::too_many_arguments)]
 
-#[allow(clippy::too_many_arguments)]
     pub fn replace_visible_with_summary(
         &self,
         session_id: &str,
@@ -1643,8 +1638,6 @@ impl ConversationDb {
         )?;
         if running > 0 {
             tx.rollback()?;
-#[allow(clippy::type_complexity)]
-#[allow(clippy::too_many_arguments)]
             return Ok((0, None));
         }
         let last: Option<(String, i64, String, bool, bool, Option<i64>, Option<String>)> = tx
@@ -1811,9 +1804,7 @@ impl ConversationDb {
         )?;
         Ok(count > 0)
     }
-#[allow(clippy::type_complexity)]
 
-#[allow(clippy::too_many_arguments)]
     pub fn running_turn_queue_target(
         &self,
         session_id: &str,

@@ -533,7 +533,6 @@ pub(crate) fn thinking_variant_preferences_file(paths: &GQYPaths) -> PathBuf {
 pub(crate) fn lock_thinking_variant_preferences(paths: &GQYPaths) -> Result<File> {
     let lock_path = paths.state_dir.join("thinking-variants.lock");
     let lock = OpenOptions::new()
-#[allow(clippy::create_dir)]
         .create(true)
         .read(true)
         .write(true)

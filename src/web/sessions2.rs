@@ -463,7 +463,6 @@ pub(crate) fn resolve_turn_session(
     }
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) async fn handle_ipc_turn(
     state: &DaemonState,
     stream: &mut tokio::net::UnixStream,

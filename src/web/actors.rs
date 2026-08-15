@@ -1,5 +1,6 @@
 //! actors — 自 src/web.rs 拆分。
 
+#![allow(clippy::op_ref)]
 pub(crate) use super::*;
 
 pub(crate) async fn set_models(
@@ -113,7 +114,6 @@ pub(crate) async fn reset_conversation(
     }
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn spawn_actor(
     config: AppConfig,
     paths: GQYPaths,
@@ -156,7 +156,6 @@ pub(crate) fn spawn_actor(
     Ok((sender, join))
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) async fn actor_loop(
     mut config: AppConfig,
     paths: GQYPaths,
@@ -601,7 +600,6 @@ impl Drop for AttachmentRunGuard {
 /// Executes one turn as a self-contained task. Multiple turn tasks run
 /// concurrently on the actor's LocalSet — each with its own Agent, a
 /// StateStore pinned to the turn's session, and an independent cancel signal.
-#[allow(clippy::too_many_arguments)]
 pub(crate) async fn run_turn_task(
     mut config: AppConfig,
     paths: GQYPaths,
@@ -1235,12 +1233,10 @@ pub(crate) fn sanitize_session_title(raw: &str) -> String {
     cleaned.chars().take(20).collect()
 }
 
-#[allow(clippy::large_enum_variant)]
 pub(crate) enum TurnOutcome {
     Finished(Result<ChatResult>),
     Cancelled,
 }
-#[allow(clippy::large_enum_variant)]
 
 pub(crate) enum OverflowOutcome {
     Finished(Result<Option<ChatResult>>),
@@ -1330,7 +1326,6 @@ pub(crate) fn apply_thinking_variant_updates(
     Ok(())
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn rebuild_for_models(
     agent: &mut Option<Agent>,
     config: &mut AppConfig,
@@ -1381,7 +1376,6 @@ pub(crate) fn rebuild_for_models(
     Ok(())
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn session_for_persona(
     state_store: &StateStore,
     manager: &Arc<Mutex<ManagerState>>,

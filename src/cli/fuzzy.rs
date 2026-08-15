@@ -118,8 +118,6 @@ pub(crate) fn fuzzy_matches(
     matches
 }
 
-#[allow(clippy::too_many_arguments)]
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn draw_inline_fuzzy(
     stdout: &mut io::Stdout,
     anchor_y: u16,
@@ -425,7 +423,6 @@ pub(crate) fn inline_single_select_deletable(
     }
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn draw_inline_single(
     stdout: &mut io::Stdout,
     anchor_y: u16,

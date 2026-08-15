@@ -1,3 +1,4 @@
+#![allow(clippy::io_other_error)]
 use crate::paths::GQYPaths;
 use crate::question::QuestionAnswers;
 use anyhow::{bail, Context, Result};

@@ -517,7 +517,6 @@ impl StateStore {
         self.conv_db.delete_platform_meme_ref(library, meme_id)
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub fn record_subagent_usage(
         &self,
         session_id: &str,
@@ -665,8 +664,6 @@ impl StateStore {
         Ok(())
     }
 
-#[allow(clippy::too_many_arguments)]
-#[allow(clippy::too_many_arguments)]
     pub fn complete_turn_with_usage_and_model(
         &self,
         turn_id: &str,
@@ -688,7 +685,6 @@ impl StateStore {
         )
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub fn complete_turn_revision_with_usage_and_model(
         &self,
         turn_id: &str,
@@ -739,7 +735,6 @@ impl StateStore {
         self.conv_db.set_turn_context_messages(turn_id, messages)
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub fn append_turn_journal_event(
         &self,
         turn_id: &str,

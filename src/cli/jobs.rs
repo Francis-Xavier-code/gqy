@@ -710,8 +710,6 @@ pub(crate) fn read_repl_input(
     history: &[String],
     footer: &ReplFooterStatus,
     show_shortcut_hint: bool,
-#[allow(clippy::type_complexity)]
-#[allow(clippy::too_many_arguments)]
 ) -> Result<
     Option<(
         AgentMode,
@@ -1236,10 +1234,8 @@ pub(crate) fn read_repl_input(
             _ => {}
         }
     }
-#[allow(clippy::too_many_arguments)]
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn render_repl_input_with_footer(
     stdout: &mut io::Stdout,
     input_row: &mut u16,

@@ -263,7 +263,6 @@ pub(crate) fn persona_identity(config: &AppConfig, prompts: &PromptDocuments) ->
         .personas
         .iter()
         .find(|document| document.name == active);
-#[allow(clippy::bind_instead_of_map)]
     let avatar_url = document
         .and_then(|document| document.avatar_path.as_deref())
         .filter(|path| !path.trim().is_empty())
@@ -643,7 +642,6 @@ pub(crate) fn parse_secret_list(
     field: &str,
 ) -> std::result::Result<Vec<String>, ApiError> {
     validate_secret_text(value, field)?;
-#[allow(clippy::manual_pattern_char_comparison)]
     Ok(value
         .split([',', '\n', '\r'])
         .map(str::trim)

@@ -1,5 +1,6 @@
 //! tests2 — 自 src/agent/mod.rs 外移。
 #![cfg(test)]
+#![allow(clippy::needless_borrows_for_generic_args)]
 
 use super::tests::*;
 use super::tests4::*;

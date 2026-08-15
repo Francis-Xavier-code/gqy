@@ -1,5 +1,6 @@
 //! tests — 自 src/cli.rs 外移。
 #![cfg(test)]
+#![allow(clippy::cmp_owned)]
 
 pub(crate) use super::*;
 

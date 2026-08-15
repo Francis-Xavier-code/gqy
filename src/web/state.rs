@@ -1,8 +1,8 @@
 //! state — 自 src/web.rs 拆分。
 
+#![allow(clippy::doc_lazy_continuation)]
 pub(crate) use super::*;
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn rebuild_for_config(
     agent: &mut Option<Agent>,
     config: &mut AppConfig,
@@ -399,7 +399,6 @@ pub(crate) fn clear_actor_session_content(
 /// 订阅 run 生命周期事件,在会话空闲检查点推进 armed 的 active 目标:
 /// - run.completed → 尝试认领下一轮(四道栅栏见 maybe_continue_goal)
 /// - run.failed → disarm(异常不自动重试,dsh 同款;等人 resume)
-#[allow(clippy::doc_lazy_continuation)]
 /// 取消→pause 的语义在 ipc Cancel 处理器里(那里能拿到被取消 run 的来源)。
 pub(crate) fn install_background_job_hook(state: &DaemonState) {
     let started_state = state.clone();
@@ -520,8 +519,6 @@ pub(crate) enum TtyWriteOp {
 /// 由 daemon 直接写 tty 设备。三道闸全过才动笔:
 /// 1. `notifications.job_writeback_to_terminal` 开关(默认开);
 /// 2. 触发 shell 还活着且 stdin 仍指向记录的 tty——终端关闭、pid 复用都拦下;
-#[allow(clippy::doc_lazy_continuation)]
-#[allow(clippy::doc_lazy_continuation)]
 /// 3. shell 空闲在前台提示符(tpgid==pgrp)——正开着 vim/htop 时绝不能撕屏。
 /// 追加式输出,无光标控制;每次落笔前重查第 3 道闸,中途被占立即收笔并补
 /// 桌面通知。物理写入走专职线程,^S 流控卡死也只占一根线程。
@@ -923,7 +920,6 @@ pub(crate) fn wake_local_session_for_job(
     // running reply instead of colliding with it.
     let queued = {
         let manager = state.manager.lock().unwrap();
-#[allow(clippy::op_ref)]
         manager
             .active_runs
             .iter()
@@ -1151,7 +1147,6 @@ pub(crate) fn finish_cancelled_run(
     events.publish("run.cancelled", payload);
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn finish_failed_run(
     manager: &Arc<Mutex<ManagerState>>,
     events: &EventHub,
@@ -1178,7 +1173,6 @@ pub(crate) fn finish_failed_run(
     );
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn finish_completed_with_context_error(
     manager: &Arc<Mutex<ManagerState>>,
     events: &EventHub,

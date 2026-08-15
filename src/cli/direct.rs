@@ -1,5 +1,6 @@
 //! direct — 自 src/cli.rs 拆分。
 
+#![allow(clippy::type_complexity)]
 pub(crate) use super::*;
 
 pub(crate) fn direct_mode_requested() -> bool {
@@ -397,7 +398,6 @@ pub(crate) async fn run_direct_repl(paths: &GQYPaths, initial_mode: AgentMode) -
         if input.starts_with('/') {
             let known = REPL_COMMAND_TABLE
                 .iter()
-#[allow(clippy::needless_borrow)]
                 .any(|spec| spec.name.eq_ignore_ascii_case(&command));
             if known {
                 println!(
@@ -693,9 +693,6 @@ impl VariantMenuItem {
 
 pub(crate) fn inline_variant_select(
     options: &[ThinkingVariantOptions],
-#[allow(clippy::type_complexity)]
-#[allow(clippy::type_complexity)]
-#[allow(clippy::too_many_arguments)]
 ) -> Result<Option<Vec<(String, String, Option<String>)>>> {
     let mut items = options
         .iter()
@@ -779,11 +776,8 @@ pub(crate) fn inline_variant_select(
         }
     }
 }
-#[allow(clippy::type_complexity)]
 
-#[allow(clippy::type_complexity)]
 pub(crate) fn inline_single_variant_select(
-#[allow(clippy::too_many_arguments)]
     mut item: VariantMenuItem,
 ) -> Result<Option<Vec<(String, String, Option<String>)>>> {
     let menu_lines = inline_fuzzy_lines(item.options.len());

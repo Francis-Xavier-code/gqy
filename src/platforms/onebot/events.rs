@@ -56,7 +56,8 @@ pub(crate) struct FileRef {
 /// leak digests into each other and fail depending on scheduling order.
 #[cfg(test)]
 pub(crate) fn unique_test_conversation(target: Target) -> PlatformConversation {
-    pub(crate) static NEXT_ACCOUNT: std::sync::atomic::AtomicI64 = std::sync::atomic::AtomicI64::new(10_000);
+    pub(crate) static NEXT_ACCOUNT: std::sync::atomic::AtomicI64 =
+        std::sync::atomic::AtomicI64::new(10_000);
     platform_conversation(
         target,
         NEXT_ACCOUNT.fetch_add(1, std::sync::atomic::Ordering::Relaxed),

@@ -565,7 +565,6 @@ pub(crate) struct ContextSnapshot {
     pub(crate) cumulative_cache_read_tokens: u64,
 }
 
-#[allow(clippy::large_enum_variant)]
 pub(crate) enum ActorCommand {
     StartTurn {
         run_id: String,
@@ -901,9 +900,7 @@ pub(crate) struct ActiveTool {
     command_output: Option<crate::render::CommandOutputTail>,
 }
 
-#[allow(clippy::too_many_arguments)]
 impl RunEventMapper {
-#[allow(clippy::too_many_arguments)]
     pub(crate) fn new(
         run_id: String,
         events: EventHub,
