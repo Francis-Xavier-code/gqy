@@ -7,7 +7,8 @@ use super::*;
 use crate::config::{ActiveProviderModelConfig, ProviderConfig};
 use crate::platforms::{ConversationKind, PlatformConversation};
 use crate::tools::{empty_parameters, ToolSpec};
-use std::net::{TcpListener, TcpStream};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::{TcpListener, TcpStream};
 
 fn visible_association_lines_collects_only_replayed_memory_blocks() {
     let block = "<associative-memory>\n以下是根据当前输入联想到的完整人格记忆。\n\n曾经记住的相关知识点：\n- [2026-08-10] [公共知识] Homebrew 镜像只读\n</associative-memory>";
