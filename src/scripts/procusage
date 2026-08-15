@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 显示名称：查询进程占用
-# 描述：查询进程的CPU和内存占用，还能列出最高资源占用排名。
-# description: Rank all processes, or list CPU/memory usage for one app.
+# 描述：查询进程的CPU和内存占用，还能列出最高资源占用排名。(macOS)
+# description: Rank all processes, or list CPU/memory usage for one app. (macOS)
 
 set -euo pipefail
 
@@ -31,9 +31,13 @@ EOF
 err() { printf 'error: %s\n' "$*" >&2; }
 die() { err "$*"; exit 1; }
 
+lower() {
+  printf '%s' "${1:-}" | tr '[:upper:]' '[:lower:]'
+}
+
 is_zh_locale() {
   local locale_value="${LC_ALL:-${LC_MESSAGES:-${LANG:-}}}"
-  [[ "${locale_value,,}" == zh* ]]
+  [[ "$(lower "$locale_value")" == zh* ]]
 }
 
 is_positive_int() {
@@ -115,227 +119,11 @@ strip_quotes() {
 }
 
 same_token() {
-  [[ "${1,,}" == "${2,,}" ]]
+  [[ "$(lower "$1")" == "$(lower "$2")" ]]
 }
 
 contains_token() {
-  [[ "${1,,}" == *"${2,,}"* ]]
-}
-
-desktop_dirs() {
-  printf '%s\n' \
-    "$HOME/.local/share/applications" \
-    "$HOME/.local/share/flatpak/exports/share/applications" \
-    "/usr/local/share/applications" \
-    "/usr/share/applications" \
-    "/var/lib/flatpak/exports/share/applications"
-}
-
-desktop_id() {
-  local path="${1##*/}"
-  printf '%s' "${path%.desktop}"
-}
-
-first_exec_word() {
-  local exec_line="${1:-}" token
-  exec_line="${exec_line//%[fFuUdDnNickvm]/}"
-  exec_line="$(trim "$exec_line")"
-  [[ -n "$exec_line" ]] || return 1
-
-  if [[ "$exec_line" == '"'* ]]; then
-    token="${exec_line#\"}"
-    token="${token%%\"*}"
-  elif [[ "$exec_line" == "'"* ]]; then
-    token="${exec_line#\'}"
-    token="${token%%\'*}"
-  else
-    token="${exec_line%%[[:space:]]*}"
-  fi
-
-  token="$(strip_quotes "$token")"
-  [[ -n "$token" ]] || return 1
-  printf '%s' "$token"
-}
-
-resolve_exec_path() {
-  local exec_word="$1" resolved
-
-  if [[ "$exec_word" == */* ]]; then
-    readlink -f "$exec_word" 2>/dev/null || printf '%s' "$exec_word"
-    return 0
-  fi
-
-  if resolved="$(command -v -- "$exec_word" 2>/dev/null)"; then
-    readlink -f "$resolved" 2>/dev/null || printf '%s' "$resolved"
-    return 0
-  fi
-
-  printf '%s' "$exec_word"
-}
-
-resolve_wrapper_exec_path() {
-  local path="$1" depth="${2:-0}"
-  local line token resolved nested base dir sibling
-
-  (( depth < 5 )) || return 1
-  [[ -r "$path" && -f "$path" ]] || return 1
-  IFS= read -r line < "$path" || return 1
-  [[ "$line" == '#!'* ]] || return 1
-
-  while IFS= read -r line; do
-    line="$(trim "$line")"
-    [[ "$line" == exec[[:space:]]/* ]] || continue
-
-    token="${line#exec }"
-    token="${token%%[[:space:]]*}"
-    token="$(strip_quotes "$token")"
-    [[ -n "$token" ]] || continue
-
-    resolved="$(resolve_exec_path "$token")"
-    nested="$(resolve_wrapper_exec_path "$resolved" "$((depth + 1))" 2>/dev/null || true)"
-    printf '%s' "${nested:-$resolved}"
-    return 0
-  done < "$path"
-
-  base="${path##*/}"
-  dir="${path%/*}"
-  sibling="$dir/../$base"
-  if [[ "$dir" == */bin && -x "$sibling" ]]; then
-    readlink -f "$sibling" 2>/dev/null || printf '%s' "$sibling"
-    return 0
-  fi
-
-  return 1
-}
-
-parse_desktop() {
-  local file="$1"
-  local line key value name="" name_l10n="" exec_line="" tryexec="" wmclass=""
-
-  [[ -r "$file" ]] || return 1
-  while IFS= read -r line; do
-    [[ "$line" == *=* ]] || continue
-    key="${line%%=*}"
-    value="${line#*=}"
-    case "$key" in
-      Name) [[ -z "$name" ]] && name="$value" ;;
-      Name\[*\]) [[ -z "$name_l10n" ]] && name_l10n="$value" ;;
-      Exec) [[ -z "$exec_line" ]] && exec_line="$value" ;;
-      TryExec) [[ -z "$tryexec" ]] && tryexec="$value" ;;
-      StartupWMClass) [[ -z "$wmclass" ]] && wmclass="$value" ;;
-    esac
-  done < "$file"
-
-  [[ -n "$exec_line" ]] || return 1
-  printf '%s\t%s\t%s\t%s\t%s\n' "$exec_line" "$tryexec" "$name" "$name_l10n" "$wmclass"
-}
-
-desktop_score() {
-  local file="$1" query="$2" parsed="$3"
-  local id exec_line tryexec name name_l10n wmclass exec_word exec_base score=0
-
-  id="$(desktop_id "$file")"
-  IFS=$'\t' read -r exec_line tryexec name name_l10n wmclass <<< "$parsed"
-  exec_word="$(first_exec_word "$exec_line" 2>/dev/null || true)"
-  exec_base="${exec_word##*/}"
-
-  same_token "$id" "$query" && ((score += 150))
-  [[ -n "$name" ]] && same_token "$name" "$query" && ((score += 140))
-  [[ -n "$name_l10n" ]] && same_token "$name_l10n" "$query" && ((score += 140))
-  [[ -n "$exec_base" ]] && same_token "$exec_base" "$query" && ((score += 150))
-  [[ -n "$tryexec" ]] && same_token "${tryexec##*/}" "$query" && ((score += 130))
-  [[ -n "$wmclass" ]] && same_token "$wmclass" "$query" && ((score += 120))
-
-  if (( ${#query} >= 4 )); then
-    contains_token "$id" "$query" && ((score += 25))
-    [[ -n "$name" ]] && contains_token "$name" "$query" && ((score += 30))
-    [[ -n "$name_l10n" ]] && contains_token "$name_l10n" "$query" && ((score += 30))
-    [[ -n "$exec_base" ]] && contains_token "$exec_base" "$query" && ((score += 25))
-  fi
-
-  printf '%s' "$score"
-}
-
-desktop_result() {
-  local file="$1" parsed="$2"
-  local exec_line tryexec name name_l10n wmclass exec_word resolved wrapper names
-
-  IFS=$'\t' read -r exec_line tryexec name name_l10n wmclass <<< "$parsed"
-  exec_word="$(first_exec_word "$exec_line" 2>/dev/null || true)"
-  [[ -n "$exec_word" ]] || return 1
-
-  resolved="$(resolve_exec_path "$exec_word")"
-  wrapper="$(resolve_wrapper_exec_path "$resolved" 2>/dev/null || true)"
-  [[ -n "$wrapper" ]] && resolved="$wrapper"
-
-  names="$name"
-  [[ -n "$name_l10n" ]] && names+="|$name_l10n"
-  [[ -n "$wmclass" ]] && names+="|$wmclass"
-  names+="|$(desktop_id "$file")|${exec_word##*/}|${resolved##*/}"
-
-  printf '%s\t%s\n' "$resolved" "$names"
-}
-
-desktop_by_exact_id() {
-  local query="$1" dir file parsed
-
-  while IFS= read -r dir; do
-    [[ -d "$dir" ]] || continue
-    for file in "$dir/$query.desktop" "$dir/${query,,}.desktop"; do
-      [[ -f "$file" ]] || continue
-      parsed="$(parse_desktop "$file" 2>/dev/null || true)"
-      [[ -n "$parsed" ]] || continue
-      desktop_result "$file" "$parsed"
-      return 0
-    done
-  done < <(desktop_dirs)
-
-  return 1
-}
-
-desktop_by_scan() {
-  local query="$1" dir file parsed score
-  local best_score=0 best_file="" best_parsed=""
-
-  shopt -s nullglob
-  while IFS= read -r dir; do
-    [[ -d "$dir" ]] || continue
-    for file in "$dir"/*.desktop; do
-      parsed="$(parse_desktop "$file" 2>/dev/null || true)"
-      [[ -n "$parsed" ]] || continue
-      score="$(desktop_score "$file" "$query" "$parsed")"
-      (( score > best_score )) || continue
-
-      best_score="$score"
-      best_file="$file"
-      best_parsed="$parsed"
-    done
-  done < <(desktop_dirs)
-  shopt -u nullglob
-
-  (( best_score >= 80 )) || return 1
-  desktop_result "$best_file" "$best_parsed"
-}
-
-command_target() {
-  local query="$1" resolved wrapper
-
-  resolved="$(resolve_exec_path "$query")"
-  [[ "$resolved" != "$query" || "$query" == */* ]] || return 1
-
-  wrapper="$(resolve_wrapper_exec_path "$resolved" 2>/dev/null || true)"
-  [[ -n "$wrapper" ]] && resolved="$wrapper"
-
-  printf '%s\t%s\n' "$resolved" "${query##*/}|${resolved##*/}"
-}
-
-find_app_target() {
-  local query="$1"
-
-  desktop_by_exact_id "$query" && return 0
-  command_target "$query" && return 0
-  desktop_by_scan "$query" && return 0
-  return 1
+  [[ "$(lower "$1")" == *"$(lower "$2")"* ]]
 }
 
 short_cmd() {
@@ -361,30 +149,64 @@ emit_row() {
     "$cpu" "$mem_pct" "$rss_kb" "$pid" "$ppid" "$user" "$comm" "$argv0_base" "$(short_cmd "$args")"
 }
 
+ps_all_rows() {
+  ps -Aww -o pid=,ppid=,user=,%cpu=,%mem=,rss=,comm=,args=
+}
+
 collect_all_rows() {
   local pid ppid user cpu mem_pct rss_kb comm args
-  local -a ps_args=(
-    ww
-    -eo
-    pid=,ppid=,user=,pcpu=,pmem=,rss=,comm=,args=
-    --no-headers
-  )
 
   while read -r pid ppid user cpu mem_pct rss_kb comm args; do
     emit_row "$cpu" "$mem_pct" "$rss_kb" "$pid" "$ppid" "$user" "$comm" "$args"
-  done < <(ps "${ps_args[@]}")
+  done < <(ps_all_rows)
+}
+
+macos_app_bundles() {
+  local dir app plist exe display base
+  for dir in "$HOME/Applications" /Applications /System/Applications; do
+    [[ -d "$dir" ]] || continue
+    shopt -s nullglob
+    for app in "$dir"/*.app; do
+      plist="$app/Contents/Info.plist"
+      [[ -f "$plist" ]] || continue
+      exe="$(plutil -extract CFBundleExecutable raw -o - "$plist" 2>/dev/null || true)"
+      [[ -n "$exe" ]] || continue
+      base="${app##*/}"
+      base="${base%.app}"
+      display="$(plutil -extract CFBundleDisplayName raw -o - "$plist" 2>/dev/null || true)"
+      [[ -n "$display" ]] || display="$base"
+      printf '%s\t%s\t%s\n' "$exe" "$display" "$base"
+    done
+    shopt -u nullglob
+  done
+}
+
+app_target() {
+  local query="$1" exe display base best_score=0 best_exe="" best_display="" score
+  while IFS=$'\t' read -r exe display base; do
+    score=0
+    same_token "$display" "$query" && score=$((score + 150))
+    same_token "$base" "$query" && score=$((score + 150))
+    same_token "$exe" "$query" && score=$((score + 150))
+    if (( ${#query} >= 3 )); then
+      contains_token "$display" "$query" && score=$((score + 30))
+      contains_token "$base" "$query" && score=$((score + 30))
+      contains_token "$exe" "$query" && score=$((score + 30))
+    fi
+    (( score > best_score )) || continue
+    best_score="$score"
+    best_exe="$exe"
+    best_display="$display"
+  done < <(macos_app_bundles)
+
+  (( best_score >= 80 )) || return 1
+  printf '%s\t%s\n' "$best_exe" "$best_display"
 }
 
 collect_app_rows() {
-  local query="$1" expected_exec="$2" names="$3" expected_base="$4"
+  local query="$1" expected_exe="$2" names="$3"
   local pid ppid user cpu mem_pct rss_kb comm args argv0 argv0_base
-  local exe_base exe_path matched name row
-  local -a ps_args=(
-    ww
-    -eo
-    pid=,ppid=,user=,pcpu=,pmem=,rss=,comm=,args=
-    --no-headers
-  )
+  local matched name row
   local -a name_parts=()
 
   IFS='|' read -r -a name_parts <<< "$names"
@@ -398,21 +220,13 @@ collect_app_rows() {
     argv0_base="${argv0##*/}"
     matched=0
 
-    if [[ -n "$expected_exec" ]]; then
-      exe_base="${expected_exec##*/}"
-      exe_path="$(readlink -f "/proc/$pid/exe" 2>/dev/null || true)"
-      if [[ "$exe_path" == "$expected_exec" ]]; then
-        matched=1
-      fi
-    fi
-
-    if [[ -n "$expected_base" ]]; then
-      same_token "$comm" "$expected_base" && matched=1
-      same_token "$argv0_base" "$expected_base" && matched=1
-    fi
-
     same_token "$comm" "$query" && matched=1
     same_token "$argv0_base" "$query" && matched=1
+
+    if [[ -n "$expected_exe" ]]; then
+      same_token "$comm" "$expected_exe" && matched=1
+      same_token "$argv0_base" "$expected_exe" && matched=1
+    fi
 
     for name in "${name_parts[@]}"; do
       name="$(trim "$name")"
@@ -421,7 +235,7 @@ collect_app_rows() {
       same_token "$argv0_base" "$name" && matched=1
     done
 
-    if (( matched == 0 && ${#query} >= 4 )) && [[ -z "$expected_base" ]]; then
+    if (( matched == 0 && ${#query} >= 4 )); then
       contains_token "$comm" "$query" && matched=1
       contains_token "$argv0_base" "$query" && matched=1
       contains_token "$args" "$query" && matched=1
@@ -431,7 +245,7 @@ collect_app_rows() {
 
     row="$(emit_row "$cpu" "$mem_pct" "$rss_kb" "$pid" "$ppid" "$user" "$comm" "$args")"
     [[ -n "$row" ]] && printf '%s\n' "$row"
-  done < <(ps "${ps_args[@]}")
+  done < <(ps_all_rows)
 }
 
 sort_rows() {
@@ -457,9 +271,9 @@ print_rank_rows() {
 }
 
 print_app_rows() {
-  local app="$1" expected_exec="$2" names="$3" expected_base="$4" rows total_cpu total_mem_mb count
+  local app="$1" expected_exe="$2" names="$3" rows total_cpu total_mem_mb count
 
-  rows="$(collect_app_rows "$app" "$expected_exec" "$names" "$expected_base" | sort_rows cpu)"
+  rows="$(collect_app_rows "$app" "$expected_exe" "$names" | sort_rows cpu)"
   [[ -n "$rows" ]] || die "no matching process found for '$app'"
 
   total_cpu="$(printf '%s\n' "$rows" | awk -F '\t' '{ s += $1 } END { printf "%.1f", s }')"
@@ -480,7 +294,10 @@ parse_args() {
   limit=10
 
   if [[ $# -eq 0 && ! -t 0 ]]; then
-    mapfile -t stdin_args < <(argv_from_stdin "$(cat)" 2>/dev/null || true)
+    stdin_args=()
+    while IFS= read -r line; do
+      stdin_args+=("$line")
+    done < <(argv_from_stdin "$(cat)" 2>/dev/null || true)
     if ((${#stdin_args[@]} > 0)); then
       set -- "${stdin_args[@]}"
     fi
@@ -520,7 +337,7 @@ parse_args() {
 
 main() {
   local mode app sort_by limit app_target
-  local expected_exec="" names="" expected_base=""
+  local expected_exe="" names="" display=""
 
   parse_args "$@"
 
@@ -529,16 +346,16 @@ main() {
     return 0
   fi
 
-  app_target="$(find_app_target "$app" 2>/dev/null || true)"
+  app_target="$(app_target "$app" 2>/dev/null || true)"
   if [[ -n "$app_target" ]]; then
-    expected_exec="${app_target%%$'\t'*}"
-    names="${app_target#*$'\t'}"
-    expected_base="${expected_exec##*/}"
+    expected_exe="${app_target%%$'\t'*}"
+    display="${app_target#*$'\t'}"
+    names="$expected_exe|$display|$app"
   else
     names="$app"
   fi
 
-  print_app_rows "$app" "$expected_exec" "$names" "$expected_base"
+  print_app_rows "$app" "$expected_exe" "$names"
 }
 
 main "$@"

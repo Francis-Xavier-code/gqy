@@ -48,7 +48,6 @@
         "type": "string",
         "enum": [
           "auto",
-          "linux",
           "macos"
         ]
       },

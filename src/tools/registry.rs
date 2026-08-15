@@ -911,24 +911,24 @@ mod tests {
         assert!(error.to_string().contains("1"));
     }
 
-    /// AUR 互斥迁入 guard 后语义不变:同轮先 review 再 install 被拒,
+    /// Homebrew 互斥迁入 guard 后语义不变:同轮先 review 再 install 被拒,
     /// 拒绝理由与原循环特判逐字一致;无 review 上下文时放行。
     #[tokio::test]
-    async fn aur_guard_denies_install_after_review_in_same_turn() {
+    async fn brew_guard_denies_install_after_review_in_same_turn() {
         let mut registry = ToolRegistry::new();
         registry.register(ToolSpec::new(
-            "install_aur_package",
+            "install_brew_package",
             "installs",
             json!({"type":"object","properties":{}}),
             |_| async { Ok("installed".to_string()) },
         ));
-        registry.add_guard(crate::tools::aur_review_install_guard());
+        registry.add_guard(crate::tools::brew_review_install_guard());
 
         let (sender, _receiver) = mpsc::unbounded_channel();
-        let used = vec!["review_aur_package".to_string(), "install_aur_package".to_string()];
+        let used = vec!["review_brew_package".to_string(), "install_brew_package".to_string()];
         let denied = registry
             .call_with_progress_future(
-                "install_aur_package",
+                "install_brew_package",
                 "{}",
                 sender.clone(),
                 &GuardCtx { used_tools: &used },
@@ -938,10 +938,10 @@ mod tests {
             .unwrap_err();
         assert!(denied.to_string().contains("cannot run in the same turn"));
 
-        let clean = vec!["install_aur_package".to_string()];
+        let clean = vec!["install_brew_package".to_string()];
         let allowed = registry
             .call_with_progress_future(
-                "install_aur_package",
+                "install_brew_package",
                 "{}",
                 sender,
                 &GuardCtx { used_tools: &clean },

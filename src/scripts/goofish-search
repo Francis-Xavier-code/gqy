@@ -157,7 +157,7 @@ def browser_search(keyword: str, capture_to=None, max_items=30, max_pages=1):
             launch_kw["channel"] = "chromium"
         else:
             # channel="chromium" 只指 playwright 自带的构建; 系统 chromium
-            # (pacman 等安装) 必须走 executable_path, 否则 preflight 通过但启动失败
+            # (brew 等安装) 必须走 executable_path, 否则 preflight 通过但启动失败
             _, sys_path = find_system_chromium()
             if sys_path:
                 launch_kw["executable_path"] = sys_path
@@ -414,9 +414,9 @@ def preflight():
     """依赖/环境预检, 返回 (ok, 问题列表)"""
     problems = []
     if not playwright_available():
-        problems.append("playwright 未安装 → 运行: goofish setup (或 sudo pacman -S python-playwright)")
+        problems.append("playwright 未安装 → 运行: goofish setup (或 pip install playwright)")
     if not chromium_bundled() and not find_system_chromium()[0]:
-        problems.append("没有可用浏览器(需 Chromium 系) → 运行: goofish setup (或 sudo pacman -S chromium)")
+        problems.append("没有可用浏览器(需 Chromium 系) → 运行: goofish setup (或 brew install --cask chromium)")
     if problems:
         return False, problems
     return True, []
@@ -485,7 +485,7 @@ def setup():
             except Exception:
                 continue
         else:
-            print("  pip 安装失败, Arch 可用: sudo pacman -S python-playwright")
+            print("  pip 安装失败, macOS 可用: pip install playwright")
             ok = False
     if not chromium_bundled():
         sys_name, _ = find_system_chromium()
@@ -499,7 +499,7 @@ def setup():
                                env=env, capture_output=True, text=True, timeout=900)
             if r.returncode != 0:
                 print(r.stderr[-500:])
-                print("  也可: sudo pacman -S chromium 然后复用系统浏览器")
+                print("  也可: brew install --cask chromium 然后复用系统浏览器")
                 ok = False
     print("安装后复检:")
     good, probs = preflight()
@@ -513,7 +513,7 @@ def setup():
     print("完成 ✅" if ok else "部分失败, 请按提示处理 ❌")
 
 
-# ---------------------------------------------------------------- Miyu stdin-JSON 模式
+# ---------------------------------------------------------------- GQY stdin-JSON 模式
 
 def doctor_text():
     """捕获 doctor() 输出为字符串(供 JSON 错误附带)"""
@@ -529,7 +529,7 @@ def doctor_text():
 
 
 def stdin_json_mode():
-    """Miyu script 工具入口: 无命令行参数且 stdin 为 JSON 时启用。
+    """GQY script 工具入口: 无命令行参数且 stdin 为 JSON 时启用。
     输入: {"action": "search"|"monitor-init"|"monitor-query", "keyword": "...", "pages": N}
     输出: 纯 JSON(stdout), 进度静默。"""
     global QUIET
@@ -596,7 +596,7 @@ KNOWN_CMDS = {"search", "monitor-init", "monitor-query", "doctor", "setup"}
 
 def main():
     global QUIET
-    # Miyu script 工具模式: 无参数 + stdin 非终端 → 按 stdin JSON 处理
+    # GQY script 工具模式: 无参数 + stdin 非终端 → 按 stdin JSON 处理
     if len(sys.argv) == 1 and not sys.stdin.isatty():
         stdin_json_mode()
         return

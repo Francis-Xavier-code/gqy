@@ -1,11 +1,11 @@
 mod alarm;
 mod api_quota;
 mod apply_patch;
-mod archlinux;
+mod applegamingwiki_query;
 mod artifact;
 mod ask_question;
+mod brew;
 mod calculator;
-mod caniplayonlinux_query;
 mod clipboard;
 mod deep_research;
 mod deepseek_status;
@@ -14,7 +14,6 @@ pub(crate) use default_tools::TOOL_SUMMARY_PREFIX;
 mod diagnostics;
 mod edit_replace;
 mod exchange_rate;
-mod fcitx_wiki;
 mod hash_codec;
 mod html_conversion;
 mod http_response;
@@ -30,7 +29,6 @@ mod memory;
 mod moegirl;
 mod package_advisor;
 mod patch_preview;
-mod protondb_query;
 mod registry;
 pub(crate) mod repeat_reminder;
 mod scripts;
@@ -50,7 +48,7 @@ mod xuanxue;
 
 use crate::config::AppConfig;
 use crate::i18n::{is_zh, text as t};
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use std::collections::HashMap;
 use std::sync::RwLock;
 
@@ -182,8 +180,7 @@ fn builtin_readable_tool_name(name: &str) -> Option<&'static str> {
         "read_clipboard" => t("Read clipboard", "读取剪贴板"),
         "web_search" => t("Web search", "网络搜索"),
         "web_fetch" => t("Fetch webpage", "读取网页"),
-        "fcitx5_input_method_wiki_qurey" => t("Query Fcitx5 Wiki", "查询 Fcitx5 Wiki"),
-        "search_web_images" => t("Search images", "搜索图片"),
+                "search_web_images" => t("Search images", "搜索图片"),
         "analyze_image" | "vision_analyze" => t("Analyze image", "分析图片"),
         "print_image" => t("Display image", "显示图片"),
         "generate_image" => t("Generate image", "生成图片"),
@@ -211,16 +208,12 @@ fn builtin_readable_tool_name(name: &str) -> Option<&'static str> {
         "recall_memory" | "recall_memories" => t("Recall memories", "召回记忆"),
         "forget_memory" | "forget_memories" => t("Forget memories", "删除记忆"),
         "list_memory" | "list_memories" => t("List memories", "列出记忆"),
-        "aur_search_packages" => t("Search AUR", "搜索 AUR"),
-        "aur_get_package_info" => t("View AUR package", "查看 AUR 包"),
-        "aur_check_status" => t("Check AUR status", "查询 AUR 状态"),
-        "archlinux_official_package_query" => t("Query Arch package", "查询 Arch 官方包"),
+        "brew_search_packages" => t("Search Homebrew", "搜索 Homebrew"),
+        "brew_get_package_info" => t("View Homebrew package", "查看 Homebrew 包"),
+        "brew_check_status" => t("Check Homebrew status", "查询 Homebrew 状态"),
         "query_deepseek_status" => t("Check DeepSeek status", "查询 DeepSeek 状态"),
         "query_api_quota" => t("Query API quota", "查询大模型 API 额度"),
-        "pacman_search" => t("Search packages", "搜索软件包"),
-        "archwiki_query" => t("Query ArchWiki", "查询 ArchWiki"),
-        "archlinux_news" => t("Arch news", "Arch 新闻"),
-        "online_man_search" | "man_search" => t("Search online manuals", "搜索在线手册"),
+                "online_man_search" | "man_search" => t("Search online manuals", "搜索在线手册"),
         "online_man_get_page" | "man_read" => t("Read online manual", "读取在线手册"),
         "moegirl_query" | "query_moegirl" => t("Query Moegirlpedia", "查询萌娘百科"),
         "calculate" | "calculator" | "scientific_calculator" => {
@@ -230,8 +223,7 @@ fn builtin_readable_tool_name(name: &str) -> Option<&'static str> {
         "decode_encoded_text" => t("Decode text", "解码文本"),
         "exchange_rate" | "get_exchange_rate" => t("Exchange rates", "汇率查询"),
         "weather" | "get_weather" => t("Weather", "天气查询"),
-        "query_caniplayonlinux" => t("Check Linux compatibility", "查询是否能在Linux上玩"),
-        "protondb_query" => t("Query ProtonDB", "查询 ProtonDB"),
+        "query_applegamingwiki" => t("Check macOS compatibility", "查询 macOS 游戏兼容性"),
         "xuanxue_pick" => t("Divination choice", "玄学选择"),
         "xuanxue_divine" => t("Divination", "玄学占卜"),
         "draw_zhouyi_hexagram" => t("Draw I Ching hexagram", "周易起卦"),
@@ -249,9 +241,8 @@ fn builtin_readable_tool_name(name: &str) -> Option<&'static str> {
         "unregister_script" => t("Unregister script", "注销脚本"),
         "todowrite" => t("Todo list", "任务列表"),
         "todoupdate" => t("Update todos", "更新任务"),
-        "review_aur_package" => t("Review AUR package", "审查 AUR 包"),
-        "install_aur_package" => t("Install AUR package", "安装 AUR 包"),
-        "review_pkgbuild_directory" => t("Review PKGBUILD directory", "审查 PKGBUILD 目录"),
+        "review_brew_package" => t("Review Homebrew package", "审查 Homebrew 包"),
+        "install_brew_package" => t("Install Homebrew package", "安装 Homebrew 包"),
         "register_deep_research_topic_title" => t("Register research title", "注册研究标题"),
         "register_deep_research_reference" => t("Register reference", "注册引用来源"),
         "remove_deep_research_reference" => t("Remove reference", "移除引用来源"),
@@ -264,7 +255,7 @@ fn builtin_readable_group_name(group: &str) -> Option<&'static str> {
         "acg" => t("ACG tools", "ACG 工具组"),
         "agent" => t("Subagent tools", "子代理工具组"),
         "alarms" => t("Alarm tools", "闹钟工具组"),
-        "arch" => t("Arch / AUR tools", "Arch / AUR 工具组"),
+        "brew" => t("Homebrew tools", "Homebrew 工具组"),
         "dev" => t("Development tools", "开发修改工具组"),
         "dev-read" => t("Code search tools", "代码检索工具组"),
         "diagnostics" => t("Diagnostic tools", "诊断工具组"),
@@ -273,7 +264,7 @@ fn builtin_readable_group_name(group: &str) -> Option<&'static str> {
         "images" => t("Image tools", "图片工具组"),
         "knowledge" => t("Knowledge base tools", "知识库工具组"),
         "knowledge-admin" => t("Knowledge base management", "知识库管理工具组"),
-        "linux-docs" => t("Linux documentation", "Linux 文档工具组"),
+        "man-docs" => t("Manual documentation", "手册文档工具组"),
         "memory" => t("Memory tools", "记忆工具组"),
         "memes" => t("Meme tools", "表情包工具组"),
         "planning" => t("Planning tools", "任务规划工具组"),
@@ -290,19 +281,19 @@ fn builtin_readable_group_name(group: &str) -> Option<&'static str> {
     })
 }
 
-pub fn clear_aur_review_state(paths: &MiyuPaths) -> anyhow::Result<()> {
-    package_advisor::clear_aur_review_state(paths)
+pub fn clear_brew_review_state(paths: &GQYPaths) -> anyhow::Result<()> {
+    package_advisor::clear_brew_review_state(paths)
 }
 
-/// AUR 装包互斥:review 与 install 不同轮,逼一次"给用户看过再装"的确认。
+/// Homebrew 装包互斥:review 与 install 不同轮,逼一次"给用户看过再装"的确认。
 /// 原为 chat_with_tools 循环里的硬编码特判,迁入 guard 层后对所有分发路径
 /// (主循环/子代理/工具桥)一致生效。
-pub(crate) fn aur_review_install_guard() -> ToolGuard {
+pub(crate) fn brew_review_install_guard() -> ToolGuard {
     std::sync::Arc::new(|tool, _args, ctx| {
-        (tool.name == "install_aur_package"
-            && ctx.used_tools.iter().any(|name| name == "review_aur_package"))
+        (tool.name == "install_brew_package"
+            && ctx.used_tools.iter().any(|name| name == "review_brew_package"))
         .then(|| {
-            "install_aur_package cannot run in the same turn as review_aur_package; \
+            "install_brew_package cannot run in the same turn as review_brew_package; \
              ask the user to confirm installation first"
                 .to_string()
         })
@@ -331,11 +322,11 @@ pub(crate) fn command_deny_guard(patterns: Vec<String>) -> ToolGuard {
 }
 
 fn install_builtin_guards(registry: &mut ToolRegistry, config: &AppConfig) {
-    registry.add_guard(aur_review_install_guard());
+    registry.add_guard(brew_review_install_guard());
     registry.add_guard(command_deny_guard(config.tools.command_deny.clone()));
 }
 
-pub fn builtin_registry(config: &AppConfig, paths: &MiyuPaths) -> ToolRegistry {
+pub fn builtin_registry(config: &AppConfig, paths: &GQYPaths) -> ToolRegistry {
     let mut registry = ToolRegistry::new();
     registry.set_default_timeout_secs(config.tools.default_timeout_secs);
     install_builtin_guards(&mut registry, config);
@@ -349,14 +340,12 @@ pub fn builtin_registry(config: &AppConfig, paths: &MiyuPaths) -> ToolRegistry {
     alarm::register(&mut registry, paths.clone());
     clipboard::register(&mut registry, paths.clone());
     web::register_fetch(&mut registry);
-    fcitx_wiki::register(&mut registry);
     weather::register(&mut registry);
-    caniplayonlinux_query::register(&mut registry);
-    protondb_query::register(&mut registry);
+    applegamingwiki_query::register(&mut registry);
     exchange_rate::register(&mut registry, config.plugins.exchange_rate.clone());
     xuanxue::register(&mut registry);
-    if config.plugins.archlinux.enabled {
-        archlinux::register(&mut registry, paths);
+    if config.plugins.brew.enabled {
+        brew::register(&mut registry);
     }
     if config.plugins.man.enabled {
         man::register(&mut registry);
@@ -414,20 +403,20 @@ pub fn builtin_registry(config: &AppConfig, paths: &MiyuPaths) -> ToolRegistry {
 
 pub fn register_webui_artifact_tools(
     registry: &mut ToolRegistry,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     session_id: &str,
 ) {
     artifact::register_webui(registry, paths, session_id);
 }
 
-pub fn webui_artifact_manifest(paths: &MiyuPaths, session_id: &str) -> anyhow::Result<String> {
+pub fn webui_artifact_manifest(paths: &GQYPaths, session_id: &str) -> anyhow::Result<String> {
     artifact::managed_manifest(paths, session_id)
 }
 
 pub(crate) fn rescope_platform_memory_tools(
     registry: &mut ToolRegistry,
     config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     context: &crate::platforms::PlatformTurnContext,
     readonly: bool,
 ) {
@@ -495,7 +484,7 @@ pub fn uses_load_tools(mode: &str) -> bool {
 /// (验收三轮裁剪)。人格/娱乐/平台类一概不存在。记忆工具**注册**,
 /// 但作用域切到保留人格 "dev" 的独立命名空间(`dev_scoped`)。
 /// ask_question 等界面胶水与 normal 同路,由 daemon/CLI 按 surface 追加。
-pub fn dev_registry(config: &AppConfig, paths: &MiyuPaths) -> ToolRegistry {
+pub fn dev_registry(config: &AppConfig, paths: &GQYPaths) -> ToolRegistry {
     let mut registry = ToolRegistry::new();
     registry.set_default_timeout_secs(config.tools.default_timeout_secs);
     install_builtin_guards(&mut registry, config);
@@ -532,13 +521,12 @@ pub fn dev_registry(config: &AppConfig, paths: &MiyuPaths) -> ToolRegistry {
 /// knowledge-base, MCP, scripts, and tools that persist arbitrary downloads.
 /// `generate_image` is the one Writes exception: it only saves its own API
 /// output under the plugin's output directory, never an arbitrary host path.
-pub fn restricted_platform_registry(config: &AppConfig, paths: &MiyuPaths) -> ToolRegistry {
+pub fn restricted_platform_registry(config: &AppConfig, paths: &GQYPaths) -> ToolRegistry {
     let mut registry = ToolRegistry::new();
     registry.set_default_timeout_secs(config.tools.default_timeout_secs);
     web::register_fetch(&mut registry);
     weather::register(&mut registry);
-    caniplayonlinux_query::register(&mut registry);
-    protondb_query::register(&mut registry);
+    applegamingwiki_query::register(&mut registry);
     exchange_rate::register(&mut registry, config.plugins.exchange_rate.clone());
     xuanxue::register(&mut registry);
     moegirl::register(&mut registry);
@@ -569,8 +557,8 @@ pub fn restricted_platform_registry(config: &AppConfig, paths: &MiyuPaths) -> To
 mod tests {
     use super::*;
 
-    fn test_paths(root: &std::path::Path) -> MiyuPaths {
-        MiyuPaths {
+    fn test_paths(root: &std::path::Path) -> GQYPaths {
+        GQYPaths {
             root_dir: root.to_path_buf(),
             config_dir: root.join("config"),
             config_file: root.join("config/config.jsonc"),
@@ -579,7 +567,7 @@ mod tests {
             cache_dir: root.join("cache"),
             state_dir: root.join("state"),
             pictures_dir: root.join("pictures"),
-            fish_hook_file: root.join("config/fish/conf.d/miyu.fish"),
+            fish_hook_file: root.join("config/fish/conf.d/gqy.fish"),
             bash_hook_file: root.join("config/shell/bash-hook.sh"),
             zsh_hook_file: root.join("config/shell/zsh-hook.zsh"),
             scripts_dir: root.join("config/scripts"),
@@ -801,7 +789,7 @@ mod tier_schema_probe {
     #[test]
     fn task_definition_includes_tier() {
         let config = crate::config::AppConfig::default();
-        let paths = crate::paths::MiyuPaths::new().unwrap();
+        let paths = crate::paths::GQYPaths::new().unwrap();
         let registry = super::builtin_registry(&config, &paths);
         let defs = registry.definitions();
         let task = defs
@@ -835,7 +823,7 @@ mod tier_schema_probe {
         config
             .toggle_subagent_tier_model(crate::config::ModelTier::Balanced, &provider_id, "mini-b")
             .unwrap();
-        let paths = crate::paths::MiyuPaths::new().unwrap();
+        let paths = crate::paths::GQYPaths::new().unwrap();
         let registry = super::builtin_registry(&config, &paths);
         let defs = registry.definitions();
         let task = defs.iter().find(|d| d.function.name == "task").unwrap();

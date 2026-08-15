@@ -231,8 +231,8 @@ mod tests {
         );
         registry.register(
             ToolSpec::new(
-                "protondb_query",
-                "Query ProtonDB compatibility",
+                "query_applegamingwiki",
+                "Query AppleGamingWiki compatibility",
                 json!({"type":"object","properties":{}}),
                 |_| async { Ok(String::new()) },
             )
@@ -248,7 +248,7 @@ mod tests {
             .await
             .unwrap();
         let value: Value = serde_json::from_str(&output).unwrap();
-        assert_eq!(value["loaded_tools"][0], "protondb_query");
+        assert_eq!(value["loaded_tools"][0], "query_applegamingwiki");
         assert!(value["skipped"][0]
             .as_str()
             .unwrap()
@@ -384,8 +384,8 @@ mod tests {
         register(&mut registry);
         registry.register(
             ToolSpec::new(
-                "protondb_query",
-                "Query ProtonDB compatibility",
+                "query_applegamingwiki",
+                "Query AppleGamingWiki compatibility",
                 json!({"type":"object","properties":{"game":{"type":"string"}}}),
                 |_| async { Ok(String::new()) },
             )
@@ -396,7 +396,7 @@ mod tests {
 
         let description = dynamic_description(&registry, &BTreeSet::new());
         assert!(description.contains("group:gaming"));
-        assert!(description.contains("protondb_query"));
+        assert!(description.contains("query_applegamingwiki"));
 
         let output = registry
             .call("load_tools", r#"{"names":["group:gaming"]}"#)
@@ -413,7 +413,7 @@ mod tests {
             value["loaded_tools"].as_array().unwrap()[0]
                 .as_str()
                 .unwrap(),
-            "protondb_query"
+            "query_applegamingwiki"
         );
     }
 }

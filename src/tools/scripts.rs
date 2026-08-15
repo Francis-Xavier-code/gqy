@@ -1,7 +1,7 @@
 use super::registry::UnregisteredScript;
 use super::{ToolRegistry, ToolSpec};
 use crate::i18n::{agent_is_zh, agent_text as t, is_zh};
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use crate::tools::tool_descriptions::LoadPolicy;
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
@@ -72,7 +72,7 @@ struct ScriptDisplayNames {
     en: Option<String>,
 }
 
-pub fn register(registry: &mut ToolRegistry, paths: &MiyuPaths) {
+pub fn register(registry: &mut ToolRegistry, paths: &GQYPaths) {
     let dirs = [
         paths.system_scripts_dir.as_path(),
         paths.scripts_dir.as_path(),
@@ -81,17 +81,17 @@ pub fn register(registry: &mut ToolRegistry, paths: &MiyuPaths) {
         Ok(scan) => {
             let specs = script_specs(&scan.entries, &paths.scripts_dir);
             if let Err(error) = registry.replace_script_tools(specs, scan.unregistered) {
-                tracing::warn!(error = %error, "failed to register Miyu script tools");
+                tracing::warn!(error = %error, "failed to register GQY script tools");
             }
         }
         Err(error) => {
-            tracing::warn!(error = %error, "failed to scan Miyu script directories during tool registration");
+            tracing::warn!(error = %error, "failed to scan GQY script directories during tool registration");
         }
     }
     register_script_tools(registry, paths.scripts_dir.clone());
 }
 
-pub fn rescan_scripts(registry: &mut ToolRegistry, paths: &MiyuPaths) {
+pub fn rescan_scripts(registry: &mut ToolRegistry, paths: &GQYPaths) {
     let dirs = [
         paths.system_scripts_dir.as_path(),
         paths.scripts_dir.as_path(),
@@ -99,13 +99,13 @@ pub fn rescan_scripts(registry: &mut ToolRegistry, paths: &MiyuPaths) {
     let scan = match scan_scripts(&dirs) {
         Ok(scan) => scan,
         Err(error) => {
-            tracing::warn!(error = %error, "failed to rescan Miyu script directories");
+            tracing::warn!(error = %error, "failed to rescan GQY script directories");
             return;
         }
     };
     let specs = script_specs(&scan.entries, &paths.scripts_dir);
     if let Err(error) = registry.replace_script_tools(specs, scan.unregistered) {
-        tracing::warn!(error = %error, "failed to replace Miyu script tools");
+        tracing::warn!(error = %error, "failed to replace GQY script tools");
     }
 }
 
@@ -264,7 +264,7 @@ fn resolve_script_path(path_str: &str, scripts_dir: &Path) -> PathBuf {
             }
         }
         if let Some(base) = directories::BaseDirs::new() {
-            let legacy = base.config_dir().join("miyu/scripts");
+            let legacy = base.config_dir().join("gqy/scripts");
             if let Ok(relative) = p.strip_prefix(&legacy) {
                 return scripts_dir.join(relative);
             }
@@ -681,7 +681,7 @@ fn register_script_tools(registry: &mut ToolRegistry, scripts_dir: PathBuf) {
                 },
                 "description": {
                     "type": "string",
-                    "description": t("Optional tool description override. If omitted, Miyu reads the script header lines `Description:`/`description:` or `描述：` and sends only one localized description to the AI.", "可选的工具描述覆盖。省略时 Miyu 会读取脚本头部的 `Description:`/`description:` 或 `描述：`，并只向 AI 提供一条本地化描述。")
+                    "description": t("Optional tool description override. If omitted, GQY reads the script header lines `Description:`/`description:` or `描述：` and sends only one localized description to the AI.", "可选的工具描述覆盖。省略时 GQY 会读取脚本头部的 `Description:`/`description:` 或 `描述：`，并只向 AI 提供一条本地化描述。")
                 },
                 "path": {
                     "type": "string",
@@ -1063,24 +1063,24 @@ mod tests {
 
     #[test]
     fn extracts_bilingual_script_descriptions() {
-        let raw = "#!/bin/bash\n# 描述： Pacman/AUR安装软件的TUI\n# Description: Pacman/AUR pkg installation TUI\n\necho ok";
+        let raw = "#!/bin/bash\n# 描述： Homebrew安装软件的TUI\n# Description: Homebrew pkg installation TUI\n\necho ok";
         assert_eq!(
             extract_metadata(raw).descriptions,
             ScriptDescriptions {
-                zh: Some("Pacman/AUR安装软件的TUI".to_string()),
-                en: Some("Pacman/AUR pkg installation TUI".to_string()),
+                zh: Some("Homebrew安装软件的TUI".to_string()),
+                en: Some("Homebrew pkg installation TUI".to_string()),
             }
         );
     }
 
     #[test]
     fn extracts_lowercase_english_description() {
-        let raw = "#!/bin/bash\n# description: Pacman/AUR pkg installation TUI\n\necho ok";
+        let raw = "#!/bin/bash\n# description: Homebrew pkg installation TUI\n\necho ok";
         assert_eq!(
             extract_metadata(raw).descriptions,
             ScriptDescriptions {
                 zh: None,
-                en: Some("Pacman/AUR pkg installation TUI".to_string()),
+                en: Some("Homebrew pkg installation TUI".to_string()),
             }
         );
     }
@@ -1207,7 +1207,7 @@ mod tests {
         let scripts_dir = temp.path();
         std::fs::write(
             scripts_dir.join("pkg.sh"),
-            "#!/bin/bash\n# Description: Pacman/AUR pkg installation TUI\n\necho ok",
+            "#!/bin/bash\n# Description: Homebrew pkg installation TUI\n\necho ok",
         )
         .unwrap();
 
@@ -1226,7 +1226,7 @@ mod tests {
         assert_eq!(index.scripts.len(), 1);
         assert_eq!(
             index.scripts[0].description,
-            "Pacman/AUR pkg installation TUI"
+            "Homebrew pkg installation TUI"
         );
     }
 
