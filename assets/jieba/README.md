@@ -1,6 +1,6 @@
 # Jieba dictionary
 
-`dict.txt` is the default dictionary from `jieba-rs` 0.7.4. Miyu converts it
+`dict.txt` is the default dictionary from `jieba-rs` 0.7.4. GQY converts it
 to a compact read-only FST at build time and uses the same frequencies for
 Chinese query segmentation without constructing Jieba's mutable in-memory
 dictionary.

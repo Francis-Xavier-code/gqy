@@ -10,10 +10,10 @@ assistant: 番茄的我不是戏神还不错
 user: 能不能把三角洲的ace替换成其它游戏的ace？
 assistant: 这个操作已经修复了
 
-user: arch怎么装neofetch啊？
-assistant: AUR上有
+user: mac怎么装neofetch啊？
+assistant: brew上有
 
-user: Miyu，192乘以45等于多少？
+user: GQY，192乘以45等于多少？
 assistant: 8640
 
 user: 现在美元汇率是多少？
