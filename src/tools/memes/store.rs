@@ -2,7 +2,7 @@
 
 use super::*;
 
-fn load_library(paths: &GQYPaths, library: &str) -> Result<Vec<LoadedMeme>> {
+pub(crate) fn load_library(paths: &GQYPaths, library: &str) -> Result<Vec<LoadedMeme>> {
     let builtin_dir = builtin_library_dir(library);
     let user_dir = user_library_dir(paths, library);
     let builtin_index = builtin_dir.join("index.json");
@@ -61,11 +61,11 @@ fn index_mtime(path: &Path) -> Option<SystemTime> {
         .ok()
 }
 
-fn find_meme(paths: &GQYPaths, library: &str, id: &str) -> Result<Option<LoadedMeme>> {
+pub(crate) fn find_meme(paths: &GQYPaths, library: &str, id: &str) -> Result<Option<LoadedMeme>> {
     find_meme_in(load_library(paths, library)?, id)
 }
 
-fn find_meme_in(memes: Vec<LoadedMeme>, id: &str) -> Result<Option<LoadedMeme>> {
+pub(crate) fn find_meme_in(memes: Vec<LoadedMeme>, id: &str) -> Result<Option<LoadedMeme>> {
     let requested = id_hash_part(id);
     if requested.is_empty() {
         return Ok(None);
@@ -86,14 +86,51 @@ fn find_meme_in(memes: Vec<LoadedMeme>, id: &str) -> Result<Option<LoadedMeme>> 
     }
 }
 
-fn load_index(path: &Path) -> Result<Option<MemeIndex>> {
+pub(crate) fn is_full_hash(value: &str) -> bool {
+    value.len() == 64 && value.chars().all(|ch| ch.is_ascii_hexdigit())
+}
+
+pub(crate) fn meme_ids(memes: &[LoadedMeme]) -> Vec<String> {
+    memes.iter().map(|meme| meme.item.id.clone()).collect()
+}
+
+pub(crate) fn id_hash_part(value: &str) -> &str {
+    let value = value.trim();
+    value.strip_prefix("sha256:").unwrap_or(value)
+}
+
+pub(crate) fn ids_match(stored: &str, requested: &str) -> bool {
+    let stored = id_hash_part(stored);
+    let requested = id_hash_part(requested);
+    !requested.is_empty() && stored.starts_with(requested)
+}
+
+pub(crate) fn unique_short_id_from_ids(ids: &[String], id: &str) -> String {
+    let hash = id_hash_part(id);
+    if hash.len() <= MIN_SHORT_MEME_ID_LEN {
+        return hash.to_string();
+    }
+    for len in MIN_SHORT_MEME_ID_LEN..=hash.len() {
+        let prefix = &hash[..len];
+        let matches = ids
+            .iter()
+            .filter(|candidate| id_hash_part(candidate).starts_with(prefix))
+            .count();
+        if matches <= 1 {
+            return prefix.to_string();
+        }
+    }
+    hash.to_string()
+}
+
+pub(crate) fn load_index(path: &Path) -> Result<Option<MemeIndex>> {
     if !path.is_file() {
         return Ok(None);
     }
     Ok(Some(serde_json::from_str(&std::fs::read_to_string(path)?)?))
 }
 
-fn save_index(path: &Path, index: &MemeIndex) -> Result<()> {
+pub(crate) fn save_index(path: &Path, index: &MemeIndex) -> Result<()> {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
         let mut temp = tempfile::NamedTempFile::new_in(parent)?;
@@ -108,7 +145,7 @@ fn save_index(path: &Path, index: &MemeIndex) -> Result<()> {
     bail!("meme index path has no parent: {}", path.display())
 }
 
-fn selected_library(args: &Value, config: &AppConfig) -> String {
+pub(crate) fn selected_library(args: &Value, config: &AppConfig) -> String {
     args.get("library")
         .and_then(Value::as_str)
         .map(str::trim)
@@ -153,7 +190,7 @@ pub(crate) async fn delete_meme_reference(
     }
 }
 
-fn library_lock(library: &str) -> Arc<tokio::sync::Mutex<()>> {
+pub(crate) fn library_lock(library: &str) -> Arc<tokio::sync::Mutex<()>> {
     let key = sanitize_library(library);
     let mut locks = MEME_LIBRARY_LOCKS
         .get_or_init(|| Mutex::new(HashMap::new()))
@@ -165,7 +202,7 @@ fn library_lock(library: &str) -> Arc<tokio::sync::Mutex<()>> {
         .clone()
 }
 
-fn sanitize_library(value: &str) -> String {
+pub(crate) fn sanitize_library(value: &str) -> String {
     let value = value
         .chars()
         .map(|ch| {
@@ -196,11 +233,11 @@ fn builtin_library_dir(library: &str) -> PathBuf {
     PathBuf::from(BUILTIN_MEMES_DIR).join(library)
 }
 
-fn user_library_dir(paths: &GQYPaths, library: &str) -> PathBuf {
+pub(crate) fn user_library_dir(paths: &GQYPaths, library: &str) -> PathBuf {
     paths.data_dir.join("memes").join(sanitize_library(library))
 }
 
-fn expand_path(value: &str) -> PathBuf {
+pub(crate) fn expand_path(value: &str) -> PathBuf {
     if let Some(rest) = value.trim().strip_prefix("~/") {
         if let Some(home) = directories::BaseDirs::new().map(|dirs| dirs.home_dir().to_path_buf()) {
             return home.join(rest);
@@ -210,6 +247,6 @@ fn expand_path(value: &str) -> PathBuf {
     if path.is_absolute() {
         path.to_path_buf()
     } else {
-        super::workspace::effective_workdir().join(path)
+        crate::tools::workspace::effective_workdir().join(path)
     }
 }
