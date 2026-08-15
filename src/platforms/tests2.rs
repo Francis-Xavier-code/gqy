@@ -1,7 +1,9 @@
 //! tests2 — 自 src/platforms/mod.rs 外移。
 #![cfg(test)]
 
+use super::tests::*;
 use super::*;
+use std::sync::atomic::Ordering as AtomicOrdering;
 
 #[tokio::test]
 async fn adaptive_response_target_is_identical_on_primary_and_fallback() {

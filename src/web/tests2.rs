@@ -2,7 +2,10 @@
 
 #![cfg(test)]
 
+use super::tests::*;
 use super::*;
+use crate::question::{QuestionOption, QuestionPrompt};
+use crate::state::PlatformSessionBindingKey;
 
 #[test]
 pub(crate) fn startup_repairs_a_platform_owned_current_session() {

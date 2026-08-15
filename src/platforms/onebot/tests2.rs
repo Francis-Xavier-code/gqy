@@ -1,7 +1,10 @@
 //! tests2 — 自 src/platforms/onebot.rs 外移。
 #![cfg(test)]
 
+use super::tests::*;
+use super::tests3::*;
 use super::*;
+use crate::web::TurnOutcome;
 
 fn group_trigger_matrix() {
     let at_only = OneBotConfig::default();

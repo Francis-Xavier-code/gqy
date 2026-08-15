@@ -1,6 +1,7 @@
 //! tests3 — 自 src/config.rs 外移。
 #![cfg(test)]
 
+use super::tests::*;
 use super::*;
 
 #[test]

@@ -1,7 +1,12 @@
 //! tests4 — 自 src/agent/mod.rs 外移。
 #![cfg(test)]
 
+use super::tests::*;
 use super::*;
+use crate::config::ProviderConfig;
+use crate::platforms::{ConversationKind, PlatformConversation};
+use crate::tools::{empty_parameters, ToolSpec};
+use std::net::{TcpListener, TcpStream};
 
 #[tokio::test]
 async fn queued_prompts_are_consumed_after_tools_with_dispatch_time_mode() {
@@ -545,7 +550,7 @@ async fn round_usage_event_fires_per_model_request() {
     server.await.unwrap();
 }
 
-async fn read_test_http_request(stream: &mut TcpStream) -> Vec<u8> {
+pub(crate) async fn read_test_http_request(stream: &mut TcpStream) -> Vec<u8> {
     let mut request = Vec::new();
     let mut buffer = [0u8; 4096];
     let header_end = loop {
@@ -573,7 +578,7 @@ async fn read_test_http_request(stream: &mut TcpStream) -> Vec<u8> {
     request[header_end..header_end + content_length].to_vec()
 }
 
-async fn write_test_sse(stream: &mut TcpStream, body: &str) {
+pub(crate) async fn write_test_sse(stream: &mut TcpStream, body: &str) {
     let response = format!(
             "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
             body.len(),
@@ -725,7 +730,7 @@ async fn compaction_resets_the_byte_prefix_at_most_once_each() {
     );
 }
 
-fn queue_test_config(base_url: String) -> AppConfig {
+pub(crate) fn queue_test_config(base_url: String) -> AppConfig {
     let mut config = AppConfig {
         active_provider: "queue-test".to_string(),
         active_provider_models: None,
@@ -777,7 +782,7 @@ fn binary_image_cache_is_isolated_by_platform() {
     assert_ne!(platform_path, clipboard_path);
 }
 
-fn test_paths(root: &std::path::Path) -> GQYPaths {
+pub(crate) fn test_paths(root: &std::path::Path) -> GQYPaths {
     GQYPaths {
         root_dir: root.to_path_buf(),
         config_dir: root.join("config"),
