@@ -744,10 +744,10 @@ pub(crate) async fn run_models_for_session(
                 );
                 return Ok(());
             }
+#[allow(clippy::unnecessary_lazy_evaluations)]
             let models = choices
                 .iter()
                 .zip(active)
-#[allow(clippy::unnecessary_lazy_evaluations)]
                 .filter_map(|(choice, active)| {
                     active.then(|| ActiveProviderModelConfig {
                         provider_id: choice.provider_id.clone(),
