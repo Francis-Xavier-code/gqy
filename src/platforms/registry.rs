@@ -1402,4 +1402,3 @@ pub(crate) fn register_platform_tools(
     context.plugins.register_tools(registry, context.clone());
 }
 
-/// Per-conversation fixed-window rate limiter shared by all platforms.
