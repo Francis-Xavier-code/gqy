@@ -13,7 +13,6 @@ use std::process::Stdio;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tokio::process::Command;
 
-
 mod store;
 use store::*;
 mod kb_tools;
@@ -603,4 +602,3 @@ struct Chunk {
     end: usize,
     text: String,
 }
-

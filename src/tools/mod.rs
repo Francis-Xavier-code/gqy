@@ -1,7 +1,7 @@
 mod alarm;
 mod api_quota;
-mod apply_patch;
 mod applegamingwiki_query;
+mod apply_patch;
 mod artifact;
 mod ask_question;
 mod brew;
@@ -36,8 +36,8 @@ mod skills;
 mod subagent_runner;
 mod task;
 mod todowrite;
-pub(crate) mod usage_query;
 pub mod tool_descriptions;
+pub(crate) mod usage_query;
 pub mod vision;
 mod weather;
 mod web;
@@ -180,7 +180,7 @@ fn builtin_readable_tool_name(name: &str) -> Option<&'static str> {
         "read_clipboard" => t("Read clipboard", "读取剪贴板"),
         "web_search" => t("Web search", "网络搜索"),
         "web_fetch" => t("Fetch webpage", "读取网页"),
-                "search_web_images" => t("Search images", "搜索图片"),
+        "search_web_images" => t("Search images", "搜索图片"),
         "analyze_image" | "vision_analyze" => t("Analyze image", "分析图片"),
         "print_image" => t("Display image", "显示图片"),
         "generate_image" => t("Generate image", "生成图片"),
@@ -213,7 +213,7 @@ fn builtin_readable_tool_name(name: &str) -> Option<&'static str> {
         "brew_check_status" => t("Check Homebrew status", "查询 Homebrew 状态"),
         "query_deepseek_status" => t("Check DeepSeek status", "查询 DeepSeek 状态"),
         "query_api_quota" => t("Query API quota", "查询大模型 API 额度"),
-                "online_man_search" | "man_search" => t("Search online manuals", "搜索在线手册"),
+        "online_man_search" | "man_search" => t("Search online manuals", "搜索在线手册"),
         "online_man_get_page" | "man_read" => t("Read online manual", "读取在线手册"),
         "moegirl_query" | "query_moegirl" => t("Query Moegirlpedia", "查询萌娘百科"),
         "calculate" | "calculator" | "scientific_calculator" => {
@@ -291,7 +291,10 @@ pub fn clear_brew_review_state(paths: &GQYPaths) -> anyhow::Result<()> {
 pub(crate) fn brew_review_install_guard() -> ToolGuard {
     std::sync::Arc::new(|tool, _args, ctx| {
         (tool.name == "install_brew_package"
-            && ctx.used_tools.iter().any(|name| name == "review_brew_package"))
+            && ctx
+                .used_tools
+                .iter()
+                .any(|name| name == "review_brew_package"))
         .then(|| {
             "install_brew_package cannot run in the same turn as review_brew_package; \
              ask the user to confirm installation first"
@@ -332,7 +335,11 @@ pub fn builtin_registry(config: &AppConfig, paths: &GQYPaths) -> ToolRegistry {
     install_builtin_guards(&mut registry, config);
     default_tools::register(&mut registry, config.skills.allow_command_execution);
     jobs::register_management(&mut registry);
-    usage_query::register(&mut registry, paths.state_dir.join("usage-history.jsonl"), config.clone());
+    usage_query::register(
+        &mut registry,
+        paths.state_dir.join("usage-history.jsonl"),
+        config.clone(),
+    );
     // 编辑器只留 apply_patch(聚合增/改/删,diff 渲染载体);write_file/
     // edit_file/edit_string 与 dev 同步退场(验收四轮:normal 也去冗余)。
     apply_patch::register(&mut registry);

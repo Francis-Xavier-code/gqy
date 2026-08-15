@@ -715,7 +715,8 @@ pub(crate) async fn execute_builtin_command(
             } else {
                 // context.config 已按平台人格覆盖作用域化:清的就是这个
                 // 会话所属人格的记忆命名空间;会话历史与技能不动。
-                match crate::memory::MemoryStore::new(&context.config, &state.paths).reset_all(false)
+                match crate::memory::MemoryStore::new(&context.config, &state.paths)
+                    .reset_all(false)
                 {
                     Ok(()) => t("Long-term memory erased.", "长期记忆已清空。").to_string(),
                     Err(error) => {
@@ -778,4 +779,3 @@ pub(crate) async fn execute_builtin_command(
     };
     Some(OutboundMessage::text(OutboundOrigin::Command, response))
 }
-

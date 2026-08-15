@@ -857,7 +857,7 @@ mod tests {
             api_key: None,
             models: vec!["m".to_string()],
             model_context_window: HashMap::new(),
-model_temperature: HashMap::new(),
+            model_temperature: HashMap::new(),
             model_modalities: HashMap::new(),
             model_costs: HashMap::from([(
                 "m".to_string(),
@@ -914,12 +914,19 @@ model_temperature: HashMap::new(),
             "https://opencode.ai/zen/go/v1"
         );
         assert!(parsed.data["opencode-go"]["no-cost"].cost.is_none());
-        let cost = parsed.data["opencode-go"]["deepseek-v4-flash"].cost.unwrap();
+        let cost = parsed.data["opencode-go"]["deepseek-v4-flash"]
+            .cost
+            .unwrap();
         // 200 万 prompt(其中 100 万命中)+ 100 万输出
         let est = cost.estimate(2_000_000, 1_000_000, 1_000_000, 0);
         assert!((est - (0.07 + 0.0014 + 0.14)).abs() < 1e-9, "{est}");
         // 无缓存价时命中按输入价计
-        let flat = ApiCost { input: 1.0, output: 2.0, cache_read: None, cache_write: None };
+        let flat = ApiCost {
+            input: 1.0,
+            output: 2.0,
+            cache_read: None,
+            cache_write: None,
+        };
         assert!((flat.estimate(1_000_000, 0, 400_000, 0) - 1.0).abs() < 1e-9);
     }
 

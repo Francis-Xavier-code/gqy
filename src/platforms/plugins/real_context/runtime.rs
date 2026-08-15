@@ -77,7 +77,12 @@ impl SessionRuntime {
         self.heat_updated = now;
     }
 
-    pub(crate) fn continuation_match(&mut self, sender_id: &str, now: Instant, enabled: bool) -> bool {
+    pub(crate) fn continuation_match(
+        &mut self,
+        sender_id: &str,
+        now: Instant,
+        enabled: bool,
+    ) -> bool {
         if !enabled {
             self.continuation = None;
             return false;
@@ -169,4 +174,3 @@ pub(crate) struct DynamicGate {
     active: AtomicUsize,
     notify: Notify,
 }
-

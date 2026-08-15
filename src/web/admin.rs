@@ -133,7 +133,9 @@ pub(crate) async fn reset_platform_persona_state(
 
 /// Light admin reservation (session/model updates): serializes against other
 /// admin operations but is allowed while turns are running.
-pub(crate) fn reserve_admin_light(manager: &Arc<Mutex<ManagerState>>) -> std::result::Result<(), ApiError> {
+pub(crate) fn reserve_admin_light(
+    manager: &Arc<Mutex<ManagerState>>,
+) -> std::result::Result<(), ApiError> {
     let mut manager = manager.lock().unwrap();
     if manager.admin_busy {
         return Err(ApiError::new(StatusCode::CONFLICT, ipc::ADMIN_BUSY_MESSAGE));
@@ -142,7 +144,9 @@ pub(crate) fn reserve_admin_light(manager: &Arc<Mutex<ManagerState>>) -> std::re
     Ok(())
 }
 
-pub(crate) fn require_no_running_turn(state_store: &StateStore) -> std::result::Result<(), ApiError> {
+pub(crate) fn require_no_running_turn(
+    state_store: &StateStore,
+) -> std::result::Result<(), ApiError> {
     if state_store
         .has_any_running_turns()
         .map_err(ApiError::internal)?
@@ -401,7 +405,11 @@ pub(crate) fn validate_managed_persona_asset_file(paths: &GQYPaths, path: &FileP
     Ok(())
 }
 
-pub(crate) fn redact_secret_list(states: &mut HashMap<String, bool>, key: &str, values: &mut Vec<String>) {
+pub(crate) fn redact_secret_list(
+    states: &mut HashMap<String, bool>,
+    key: &str,
+    values: &mut Vec<String>,
+) {
     states.insert(
         key.to_string(),
         values.iter().any(|value| !value.trim().is_empty()),
@@ -629,7 +637,10 @@ pub(crate) fn normalize_single_secret(
     Ok(Some(value.trim().to_string()).filter(|value| !value.is_empty()))
 }
 
-pub(crate) fn parse_secret_list(value: &str, field: &str) -> std::result::Result<Vec<String>, ApiError> {
+pub(crate) fn parse_secret_list(
+    value: &str,
+    field: &str,
+) -> std::result::Result<Vec<String>, ApiError> {
     validate_secret_text(value, field)?;
     Ok(value
         .split(|character| matches!(character, ',' | '\n' | '\r'))
@@ -863,7 +874,10 @@ pub(crate) fn validate_prompt_document_list(
     Ok(())
 }
 
-pub(crate) fn validate_prompt_document_name(name: &str, kind: &str) -> std::result::Result<(), ApiError> {
+pub(crate) fn validate_prompt_document_name(
+    name: &str,
+    kind: &str,
+) -> std::result::Result<(), ApiError> {
     let valid = name == name.trim()
         && name.ends_with(".md")
         && name.len() <= 240
@@ -884,7 +898,10 @@ pub(crate) fn validate_prompt_document_name(name: &str, kind: &str) -> std::resu
     Ok(())
 }
 
-pub(crate) fn read_prompt_documents(config: &AppConfig, paths: &GQYPaths) -> Result<PromptDocuments> {
+pub(crate) fn read_prompt_documents(
+    config: &AppConfig,
+    paths: &GQYPaths,
+) -> Result<PromptDocuments> {
     Ok(PromptDocuments {
         personas: read_prompt_document_dir(&config.prompts_dir_path(paths), true)?,
         identities: read_prompt_document_dir(&config.identities_dir_path(paths), false)?,
@@ -943,7 +960,10 @@ pub(crate) fn prompt_configuration_changed(current: &AppConfig, candidate: &AppC
         || current.system_prompt != candidate.system_prompt
 }
 
-pub(crate) fn prompt_documents_changed(current: &PromptDocuments, candidate: &PromptDocuments) -> bool {
+pub(crate) fn prompt_documents_changed(
+    current: &PromptDocuments,
+    candidate: &PromptDocuments,
+) -> bool {
     canonical_prompt_documents(&current.personas) != canonical_prompt_documents(&candidate.personas)
         || canonical_prompt_documents(&current.identities)
             != canonical_prompt_documents(&candidate.identities)
@@ -1013,7 +1033,10 @@ impl Drop for PersonaDbRenameGuard {
     }
 }
 
-pub(crate) fn migrate_persona_db_scopes(state: &StateStore, renames: &[(String, String)]) -> Result<()> {
+pub(crate) fn migrate_persona_db_scopes(
+    state: &StateStore,
+    renames: &[(String, String)],
+) -> Result<()> {
     let staged = renames
         .iter()
         .map(|(old, new)| {
@@ -1379,7 +1402,11 @@ pub(crate) fn safe_multimodal_models(config: &AppConfig) -> Vec<SafeModel> {
 }
 
 impl SafeTurn {
-    pub(crate) fn from_turn(turn: Turn, assets: Vec<ImageAsset>, artifacts: Vec<ArtifactAsset>) -> Self {
+    pub(crate) fn from_turn(
+        turn: Turn,
+        assets: Vec<ImageAsset>,
+        artifacts: Vec<ArtifactAsset>,
+    ) -> Self {
         let assets = assets
             .into_iter()
             .map(|asset| {
@@ -1422,4 +1449,3 @@ impl SafeTurn {
         }
     }
 }
-

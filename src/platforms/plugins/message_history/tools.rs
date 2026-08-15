@@ -18,7 +18,6 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
-
 #[cfg(test)]
 mod tests;
 const DELETE_CONFIRMATION_TTL: Duration = Duration::from_secs(5 * 60);
@@ -825,7 +824,10 @@ pub(super) fn register_group_members(
     );
 }
 
-pub(super) fn register_group_avatar(registry: &mut ToolRegistry, context: Arc<PlatformTurnContext>) {
+pub(super) fn register_group_avatar(
+    registry: &mut ToolRegistry,
+    context: Arc<PlatformTurnContext>,
+) {
     registry.register(
         ToolSpec::new(
             "get_group_avatar",
@@ -899,10 +901,9 @@ async fn download_avatar(
     let dir = context.paths.cache_dir.join("qq-avatars");
     let (url, alt, file_stem) = match optional_string(&arguments, "user_id")? {
         Some(user_id) => {
-            let member = context
-                .group_member(&user_id)
-                .await?
-                .with_context(|| format!("群里没有 QQ 号为 {user_id} 的成员，只能下载当前群成员的头像"))?;
+            let member = context.group_member(&user_id).await?.with_context(|| {
+                format!("群里没有 QQ 号为 {user_id} 的成员，只能下载当前群成员的头像")
+            })?;
             let url = crate::platforms::avatar::user_avatar_url(
                 &member.user_id,
                 crate::platforms::avatar::DEFAULT_AVATAR_SIZE,
@@ -918,7 +919,11 @@ async fn download_avatar(
                 crate::platforms::avatar::DEFAULT_AVATAR_SIZE,
             )
             .context("当前会话不是数字群号，无法构造群头像 URL")?;
-            (url, format!("群 {group_id} 的群头像"), format!("group-{group_id}"))
+            (
+                url,
+                format!("群 {group_id} 的群头像"),
+                format!("group-{group_id}"),
+            )
         }
     };
     let path = crate::platforms::avatar::download_avatar(&url, &dir, &file_stem).await?;
@@ -1267,4 +1272,3 @@ fn now_unix() -> i64 {
         .unwrap_or_default()
         .as_secs() as i64
 }
-

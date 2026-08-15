@@ -1174,7 +1174,12 @@ pub(crate) async fn usage_details_web(
     crate::models_cache::ensure_active_metadata(&state.paths, &config);
     let records = state
         .state_store
-        .usage_details(limit, query.src.as_deref(), query.model.as_deref(), Some(&config))
+        .usage_details(
+            limit,
+            query.src.as_deref(),
+            query.model.as_deref(),
+            Some(&config),
+        )
         .map_err(ApiError::internal)?;
     Ok(Json(json!({ "ok": true, "records": records })).into_response())
 }
@@ -1424,4 +1429,3 @@ pub(crate) async fn set_session_models_http(
         model_override: models,
     }))
 }
-

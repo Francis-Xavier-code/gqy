@@ -45,8 +45,7 @@ pub(crate) async fn list_sessions_http(
     let current = state.state_store.session_id();
     let persona = active_persona_scope(&state);
     // 侧栏按模式分组:普通+dev 一起下发,mode 字段区分(问题七)。
-    let sessions =
-        sessions_with_dev(&state.state_store, &persona).map_err(ApiError::internal)?;
+    let sessions = sessions_with_dev(&state.state_store, &persona).map_err(ApiError::internal)?;
     let sessions = sessions
         .iter()
         .map(|overview| session_overview_json(overview, &current))
@@ -306,7 +305,10 @@ pub(crate) const TURN_TARGET_KINDS: &[&str] = &[
 
 /// Most recently updated other user session, or a fresh default session when
 /// none is left.
-pub(crate) fn fallback_session_id(state: &DaemonState, exclude: &str) -> std::result::Result<String, String> {
+pub(crate) fn fallback_session_id(
+    state: &DaemonState,
+    exclude: &str,
+) -> std::result::Result<String, String> {
     let persona = active_persona_scope(state);
     let sessions = state
         .state_store
@@ -320,7 +322,12 @@ pub(crate) fn fallback_session_id(state: &DaemonState, exclude: &str) -> std::re
     }
     let record = state
         .state_store
-        .create_session(&persona, t("Terminal session", "终端集成会话"), "user", None)
+        .create_session(
+            &persona,
+            t("Terminal session", "终端集成会话"),
+            "user",
+            None,
+        )
         .map_err(|error| safe_error_message(&error))?;
     state.events.publish(
         "session.created",
@@ -407,7 +414,10 @@ pub(crate) fn session_record_json(record: &crate::state::SessionRecord) -> Value
     })
 }
 
-pub(crate) fn session_overview_json(overview: &crate::state::SessionOverview, current: &str) -> Value {
+pub(crate) fn session_overview_json(
+    overview: &crate::state::SessionOverview,
+    current: &str,
+) -> Value {
     let mut value = session_record_json(&overview.record);
     value["turn_count"] = json!(overview.turn_count);
     value["last_user_content"] = json!(overview.last_user_content);
@@ -512,7 +522,7 @@ pub(crate) async fn handle_ipc_turn(
                     operation: RunOperation::Create,
                     job_wake: false,
                     turn_origin: crate::tools::workspace::TurnOrigin::Human,
-                job_wake_label: None,
+                    job_wake_label: None,
                 },
             );
             false
@@ -616,7 +626,6 @@ pub(crate) async fn handle_ipc_turn(
     Ok(())
 }
 
-
 /// Attach a client to an already-running turn (background-command wake):
 /// forwards its event frames until terminal, without owning the run.
 pub(crate) async fn follow_run(
@@ -673,7 +682,13 @@ pub(crate) async fn follow_run(
         if data.get("run_id").and_then(Value::as_str) != Some(run_id.as_str()) {
             // The run may have finished before we saw a frame; stop when it
             // is no longer active and nothing more will arrive for it.
-            if !state.manager.lock().unwrap().active_runs.contains_key(&run_id) {
+            if !state
+                .manager
+                .lock()
+                .unwrap()
+                .active_runs
+                .contains_key(&run_id)
+            {
                 break;
             }
             continue;
@@ -798,10 +813,11 @@ pub(crate) fn router(state: DaemonState) -> Router {
 /// changes on any frontend edit (build.rs rerun triggers), so a 304 can
 /// never pin a stale file.
 pub(crate) fn build_etag() -> &'static HeaderValue {
-    pub(crate) static ETAG_VALUE: std::sync::LazyLock<HeaderValue> = std::sync::LazyLock::new(|| {
-        HeaderValue::from_str(concat!("\"", env!("GQY_BUILD_ID"), "\""))
-            .expect("build id forms a valid header value")
-    });
+    pub(crate) static ETAG_VALUE: std::sync::LazyLock<HeaderValue> =
+        std::sync::LazyLock::new(|| {
+            HeaderValue::from_str(concat!("\"", env!("GQY_BUILD_ID"), "\""))
+                .expect("build id forms a valid header value")
+        });
     &ETAG_VALUE
 }
 
@@ -830,20 +846,39 @@ pub(crate) fn embedded_asset(
 pub(crate) async fn index_asset(headers: HeaderMap) -> Response {
     // Version the asset references so browsers and intermediaries can never
     // serve a stale app.js/styles.css after an upgrade.
-    pub(crate) static VERSIONED_INDEX: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| {
-        INDEX_HTML
-            .replace("href=\"/styles.css\"", concat!("href=\"/styles.css?v=", env!("GQY_BUILD_ID"), "\""))
-            .replace("src=\"/app.js\"", concat!("src=\"/app.js?v=", env!("GQY_BUILD_ID"), "\""))
-            .replace(
-                "href=\"/vendor/katex/katex.min.css\"",
-                concat!("href=\"/vendor/katex/katex.min.css?v=", env!("GQY_BUILD_ID"), "\""),
-            )
-            .replace(
-                "src=\"/vendor/katex/katex.min.js\"",
-                concat!("src=\"/vendor/katex/katex.min.js?v=", env!("GQY_BUILD_ID"), "\""),
-            )
-    });
-    embedded_asset(&headers, VERSIONED_INDEX.as_bytes(), "text/html; charset=utf-8")
+    pub(crate) static VERSIONED_INDEX: std::sync::LazyLock<String> =
+        std::sync::LazyLock::new(|| {
+            INDEX_HTML
+                .replace(
+                    "href=\"/styles.css\"",
+                    concat!("href=\"/styles.css?v=", env!("GQY_BUILD_ID"), "\""),
+                )
+                .replace(
+                    "src=\"/app.js\"",
+                    concat!("src=\"/app.js?v=", env!("GQY_BUILD_ID"), "\""),
+                )
+                .replace(
+                    "href=\"/vendor/katex/katex.min.css\"",
+                    concat!(
+                        "href=\"/vendor/katex/katex.min.css?v=",
+                        env!("GQY_BUILD_ID"),
+                        "\""
+                    ),
+                )
+                .replace(
+                    "src=\"/vendor/katex/katex.min.js\"",
+                    concat!(
+                        "src=\"/vendor/katex/katex.min.js?v=",
+                        env!("GQY_BUILD_ID"),
+                        "\""
+                    ),
+                )
+        });
+    embedded_asset(
+        &headers,
+        VERSIONED_INDEX.as_bytes(),
+        "text/html; charset=utf-8",
+    )
 }
 
 pub(crate) async fn styles_asset(headers: HeaderMap) -> Response {
@@ -862,7 +897,11 @@ pub(crate) async fn theme_css(State(state): State<DaemonState>) -> Response {
 }
 
 pub(crate) async fn app_asset(headers: HeaderMap) -> Response {
-    embedded_asset(&headers, APP_JS.as_bytes(), "application/javascript; charset=utf-8")
+    embedded_asset(
+        &headers,
+        APP_JS.as_bytes(),
+        "application/javascript; charset=utf-8",
+    )
 }
 
 pub(crate) async fn logo_asset(headers: HeaderMap) -> Response {
@@ -899,7 +938,12 @@ pub(crate) fn media_mime(path: &std::path::Path) -> Option<&'static str> {
 
 /// 解析 `Range: bytes=start-end`(单段)。返回 (start, inclusive_end)。
 pub(crate) fn parse_byte_range(value: &str, total: u64) -> Option<(u64, u64)> {
-    let spec = value.trim().strip_prefix("bytes=")?.split(',').next()?.trim();
+    let spec = value
+        .trim()
+        .strip_prefix("bytes=")?
+        .split(',')
+        .next()?
+        .trim();
     let (start, end) = spec.split_once('-')?;
     if start.is_empty() {
         // 后缀形式 bytes=-N:最后 N 字节
@@ -910,7 +954,11 @@ pub(crate) fn parse_byte_range(value: &str, total: u64) -> Option<(u64, u64)> {
         return Some((total.saturating_sub(suffix), total - 1));
     }
     let start: u64 = start.parse().ok()?;
-    let end: u64 = if end.is_empty() { total.saturating_sub(1) } else { end.parse().ok()? };
+    let end: u64 = if end.is_empty() {
+        total.saturating_sub(1)
+    } else {
+        end.parse().ok()?
+    };
     (start <= end && start < total).then(|| (start, end.min(total.saturating_sub(1))))
 }
 
@@ -986,7 +1034,11 @@ pub(crate) async fn media_stream(
 }
 
 pub(crate) async fn katex_js_asset(headers: HeaderMap) -> Response {
-    embedded_asset(&headers, KATEX_JS.as_bytes(), "text/javascript; charset=utf-8")
+    embedded_asset(
+        &headers,
+        KATEX_JS.as_bytes(),
+        "text/javascript; charset=utf-8",
+    )
 }
 
 pub(crate) async fn katex_css_asset(headers: HeaderMap) -> Response {
@@ -1224,7 +1276,10 @@ pub(crate) fn asset_response(content: &'static [u8], content_type: &'static str)
     finish_asset_response(content.into_response(), content_type)
 }
 
-pub(crate) fn finish_asset_response(mut response: Response, content_type: &'static str) -> Response {
+pub(crate) fn finish_asset_response(
+    mut response: Response,
+    content_type: &'static str,
+) -> Response {
     response
         .headers_mut()
         .insert(CONTENT_TYPE, HeaderValue::from_static(content_type));
@@ -1480,4 +1535,3 @@ pub(crate) async fn bootstrap(
         .insert(CACHE_CONTROL, HeaderValue::from_static("no-store"));
     Ok(response)
 }
-

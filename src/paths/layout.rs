@@ -576,7 +576,10 @@ pub(crate) fn migrate_resource_layout(layout: &Layout) -> Result<()> {
     Ok(())
 }
 
-pub(crate) fn try_migrate_resource_layout(layout: &Layout, current_process_is_daemon: bool) -> Result<bool> {
+pub(crate) fn try_migrate_resource_layout(
+    layout: &Layout,
+    current_process_is_daemon: bool,
+) -> Result<bool> {
     if resource_layout_marker_exists(layout)? {
         remove_resource_journal_if_present(layout)?;
         return Ok(true);
@@ -694,7 +697,10 @@ pub(crate) fn try_acquire_runtime_lock(path: &Path) -> Result<Option<File>> {
     }
 }
 
-pub(crate) fn preflight_resource_entries(layout: &Layout, entries: &[ResourceMigrationEntry]) -> Result<()> {
+pub(crate) fn preflight_resource_entries(
+    layout: &Layout,
+    entries: &[ResourceMigrationEntry],
+) -> Result<()> {
     let projections = entries
         .iter()
         .map(|entry| (entry.source.clone(), entry.destination.clone()))
@@ -828,7 +834,10 @@ pub(crate) fn atomic_resource_move(source: &Path, destination: &Path) -> Result<
     Ok(())
 }
 
-pub(crate) fn write_resource_journal(layout: &Layout, journal: &ResourceMigrationJournal) -> Result<()> {
+pub(crate) fn write_resource_journal(
+    layout: &Layout,
+    journal: &ResourceMigrationJournal,
+) -> Result<()> {
     let path = layout.resource_journal();
     let temporary = path.with_extension(format!(
         "tmp-{}-{}",
@@ -965,7 +974,10 @@ pub(crate) fn legacy_daemon_is_running(legacy: &LegacyLayout) -> bool {
     )
 }
 
-pub(crate) fn legacy_daemon_is_running_at(legacy: &LegacyLayout, xdg_runtime_dir: Option<&Path>) -> bool {
+pub(crate) fn legacy_daemon_is_running_at(
+    legacy: &LegacyLayout,
+    xdg_runtime_dir: Option<&Path>,
+) -> bool {
     let mut runtime_dirs = vec![legacy.state_dir.clone()];
     if let Some(runtime_dir) = xdg_runtime_dir {
         runtime_dirs.push(runtime_dir.to_path_buf());
@@ -1057,7 +1069,10 @@ pub(crate) fn migrate_legacy_layout(legacy: &LegacyLayout, next: &Layout) -> Res
     Ok(())
 }
 
-pub(crate) fn legacy_migration_mappings(legacy: &LegacyLayout, next: &Layout) -> Vec<MigrationMapping> {
+pub(crate) fn legacy_migration_mappings(
+    legacy: &LegacyLayout,
+    next: &Layout,
+) -> Vec<MigrationMapping> {
     let mut mappings = vec![
         MigrationMapping::new(&legacy.config_dir, &next.config_dir),
         MigrationMapping::new(&legacy.data_dir, &next.data_dir),
@@ -1335,7 +1350,10 @@ pub(crate) fn ensure_absolute_symlink_targets_stable(
     Ok(())
 }
 
-pub(crate) fn ensure_mapping_pair_compatible(left: &MigrationMapping, right: &MigrationMapping) -> Result<()> {
+pub(crate) fn ensure_mapping_pair_compatible(
+    left: &MigrationMapping,
+    right: &MigrationMapping,
+) -> Result<()> {
     if left.destination == right.destination {
         return ensure_projected_entries_compatible(&left.source, &right.source, &left.destination);
     }
@@ -1363,7 +1381,10 @@ pub(crate) fn ensure_nested_mapping_compatible(
 /// Locates the source entry which an outer mapping would project onto a nested
 /// destination. A non-directory ancestor is already a conflict because the
 /// inner mapping needs that destination path to remain traversable.
-pub(crate) fn projected_source_entry(source_root: &Path, relative: &Path) -> Result<Option<PathBuf>> {
+pub(crate) fn projected_source_entry(
+    source_root: &Path,
+    relative: &Path,
+) -> Result<Option<PathBuf>> {
     let mut current = source_root.to_path_buf();
     for component in relative.components() {
         let metadata = fs::symlink_metadata(&current)?;
@@ -1416,4 +1437,3 @@ pub(crate) fn ensure_projected_entries_compatible(
         projected_destination.display()
     )
 }
-

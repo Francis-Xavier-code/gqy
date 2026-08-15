@@ -147,7 +147,10 @@ mod tests {
         assert!(chain.observe("grep", r#"{"a":1,"b":2}"#).is_none());
         // 仅属性顺序不同 → 视为相同,计数 2。
         assert!(chain.observe("grep", r#"{"b":2,"a":1}"#).is_none());
-        assert!(chain.observe("grep", r#"{"a":1,"b":2}"#).is_some(), "第 3 次触发");
+        assert!(
+            chain.observe("grep", r#"{"a":1,"b":2}"#).is_some(),
+            "第 3 次触发"
+        );
         // 换参数 → 链重开。
         assert!(chain.observe("grep", r#"{"a":9}"#).is_none());
         assert!(chain.observe("grep", r#"{"a":9}"#).is_none());

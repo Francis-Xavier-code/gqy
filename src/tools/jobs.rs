@@ -236,9 +236,7 @@ pub fn overview() -> Vec<JobOverview> {
 /// 文件留在磁盘,唤醒消息里带着 log_path,要翻旧账用 read_file。
 pub fn acknowledge(job_id: &str) {
     let mut jobs = jobs().lock().unwrap();
-    let terminal = jobs
-        .get(job_id)
-        .is_some_and(|job| job.state.is_terminal());
+    let terminal = jobs.get(job_id).is_some_and(|job| job.state.is_terminal());
     if terminal {
         jobs.remove(job_id);
     }
@@ -480,7 +478,9 @@ pub async fn spawn_background(
         .stdout(std::process::Stdio::from(log.try_clone()?))
         .stderr(std::process::Stdio::from(log));
     process.process_group(0);
-    let mut child = process.spawn().context("failed to spawn the background job")?;
+    let mut child = process
+        .spawn()
+        .context("failed to spawn the background job")?;
     let pid = child.id().context("background job has no pid")?;
     let entry = JobEntry {
         job_id: job_id.clone(),
@@ -708,10 +708,7 @@ fn read_log_tail(path: &PathBuf, lines: usize) -> (String, u64) {
     }
     for line in &all[start..] {
         if line.chars().count() > MAX_TAIL_LINE_CHARS {
-            let clipped = line
-                .chars()
-                .take(MAX_TAIL_LINE_CHARS)
-                .collect::<String>();
+            let clipped = line.chars().take(MAX_TAIL_LINE_CHARS).collect::<String>();
             out.push_str(&clipped);
             out.push('…');
         } else {
@@ -728,7 +725,11 @@ fn read_log_tail(path: &PathBuf, lines: usize) -> (String, u64) {
 /// 这次任务的交付物,**不截断**——截了模型还得回头读日志,等于没给);后台命令
 /// 没有结论,日志尾部就是结果,失败时给得比成功时多,因为报错的根因常常要往上
 /// 翻十几行。
-pub fn completion_result(log_path: &PathBuf, is_subagent: bool, ok: bool) -> Option<(String, String)> {
+pub fn completion_result(
+    log_path: &PathBuf,
+    is_subagent: bool,
+    ok: bool,
+) -> Option<(String, String)> {
     if is_subagent {
         let text = std::fs::read_to_string(log_path).ok()?;
         for marker in [SUBAGENT_RESULT_MARKER, SUBAGENT_ERROR_MARKER] {
@@ -911,9 +912,8 @@ async fn job_status(args: Value) -> Result<String> {
     };
 
     ensure_jobs_visible(&ids, current.as_deref(), all, "查看")?;
-    let job = job_snapshot(job_id).with_context(|| {
-        format!("后台命令 {job_id} 不存在；后台命令随宿主进程重启而清空")
-    })?;
+    let job = job_snapshot(job_id)
+        .with_context(|| format!("后台命令 {job_id} 不存在；后台命令随宿主进程重启而清空"))?;
 
     // Single id keeps the flat shape it always had.
     let mut detail = job_detail_json(&job, offset, MAX_STATUS_OUTPUT_CHARS);
@@ -974,8 +974,7 @@ async fn job_stop(args: Value) -> Result<String> {
         }))?);
     }
     let job_id = &ids[0];
-    let job = job_snapshot(job_id)
-        .with_context(|| format!("后台任务 {job_id} 不存在"))?;
+    let job = job_snapshot(job_id).with_context(|| format!("后台任务 {job_id} 不存在"))?;
     if job.state.is_terminal() {
         return Ok(serde_json::to_string_pretty(&json!({
             "ok": true,
@@ -994,8 +993,7 @@ async fn job_stop(args: Value) -> Result<String> {
 
 /// Stop a single job; returns its resulting status label.
 async fn stop_one(job_id: &str) -> Result<String> {
-    let job = job_snapshot(job_id)
-        .with_context(|| format!("后台任务 {job_id} 不存在"))?;
+    let job = job_snapshot(job_id).with_context(|| format!("后台任务 {job_id} 不存在"))?;
     if job.state.is_terminal() {
         return Ok(job.state.label());
     }
@@ -1144,16 +1142,18 @@ mod tests {
     #[tokio::test]
     async fn background_job_lifecycle() {
         shared_init();
-        let spawned: Value =
-            serde_json::from_str(&spawn_background("echo hello; exit 3", Some("退出码测试"), &test_progress()).await.unwrap()).unwrap();
+        let spawned: Value = serde_json::from_str(
+            &spawn_background("echo hello; exit 3", Some("退出码测试"), &test_progress())
+                .await
+                .unwrap(),
+        )
+        .unwrap();
         let job_id = spawned["job_id"].as_str().unwrap().to_string();
         assert!(spawned["ok"].as_bool().unwrap());
 
         await_terminal(&job_id).await;
-        let status: Value = serde_json::from_str(
-            &job_status(json!({"job_id": job_id})).await.unwrap(),
-        )
-        .unwrap();
+        let status: Value =
+            serde_json::from_str(&job_status(json!({"job_id": job_id})).await.unwrap()).unwrap();
         assert_eq!(status["status"], "exited(3)");
         assert!(status["output"]["content"]
             .as_str()
@@ -1232,7 +1232,10 @@ mod tests {
         assert!(!tail.starts_with('…'));
 
         // 超出时只留最后几行,并标出前面还有。
-        let many = (1..=20).map(|n| format!("line{n}")).collect::<Vec<_>>().join("\n");
+        let many = (1..=20)
+            .map(|n| format!("line{n}"))
+            .collect::<Vec<_>>()
+            .join("\n");
         std::fs::write(&path, &many).unwrap();
         let (tail, _) = read_log_tail(&path, 3);
         assert!(tail.starts_with("…\n"), "{tail:?}");
@@ -1242,7 +1245,11 @@ mod tests {
         // 单行超长要截断,不能把额度吃光。
         std::fs::write(&path, "x".repeat(MAX_TAIL_LINE_CHARS * 3)).unwrap();
         let (tail, _) = read_log_tail(&path, 10);
-        assert!(tail.chars().count() <= MAX_TAIL_LINE_CHARS + 2, "{}", tail.chars().count());
+        assert!(
+            tail.chars().count() <= MAX_TAIL_LINE_CHARS + 2,
+            "{}",
+            tail.chars().count()
+        );
         assert!(tail.trim_end().ends_with('…'));
 
         // 日志不存在时是空的,不是报错。
@@ -1273,7 +1280,11 @@ mod tests {
     fn completion_result_recognises_a_failed_subagent() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("k.log");
-        std::fs::write(&path, format!("…\n{SUBAGENT_ERROR_MARKER}\nmodel refused\n")).unwrap();
+        std::fs::write(
+            &path,
+            format!("…\n{SUBAGENT_ERROR_MARKER}\nmodel refused\n"),
+        )
+        .unwrap();
         let (label, body) = completion_result(&path, true, false).unwrap();
         assert_eq!(label, "子代理失败");
         assert_eq!(body, "model refused");
@@ -1284,7 +1295,10 @@ mod tests {
     fn completion_result_gives_a_command_more_lines_when_it_failed() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("c.log");
-        let body = (1..=40).map(|n| format!("line{n}")).collect::<Vec<_>>().join("\n");
+        let body = (1..=40)
+            .map(|n| format!("line{n}"))
+            .collect::<Vec<_>>()
+            .join("\n");
         std::fs::write(&path, &body).unwrap();
 
         let (label, ok_tail) = completion_result(&path, false, true).unwrap();
@@ -1331,8 +1345,7 @@ mod tests {
         let id = spawned["job_id"].as_str().unwrap().to_string();
         await_terminal(&id).await;
 
-        let status: Value =
-            serde_json::from_str(&job_status(json!({})).await.unwrap()).unwrap();
+        let status: Value = serde_json::from_str(&job_status(json!({})).await.unwrap()).unwrap();
         let row = status["jobs"]
             .as_array()
             .unwrap()
@@ -1373,12 +1386,8 @@ mod tests {
             await_terminal(id).await;
         }
 
-        let status: Value = serde_json::from_str(
-            &job_status(json!({"job_ids": ids}))
-                .await
-                .unwrap(),
-        )
-        .unwrap();
+        let status: Value =
+            serde_json::from_str(&job_status(json!({"job_ids": ids})).await.unwrap()).unwrap();
         let rows = status["jobs"].as_array().unwrap();
         assert_eq!(rows.len(), 2);
         // Rows come back in the order the ids were asked for.
@@ -1390,12 +1399,8 @@ mod tests {
         }
 
         // A single id keeps the flat shape callers already parse.
-        let single: Value = serde_json::from_str(
-            &job_status(json!({"job_id": ids[0]}))
-                .await
-                .unwrap(),
-        )
-        .unwrap();
+        let single: Value =
+            serde_json::from_str(&job_status(json!({"job_id": ids[0]})).await.unwrap()).unwrap();
         assert_eq!(single["job_id"], ids[0].as_str());
         assert!(single["jobs"].is_null());
         assert!(single["output"]["content"]
@@ -1408,12 +1413,15 @@ mod tests {
     async fn background_subagent_lifecycle() {
         shared_init();
         let spawned: Value = serde_json::from_str(
-            &spawn_background_subagent(Some("子代理测试"), "描述文本", &test_progress(), |_job_id, log_path| {
-                async move {
+            &spawn_background_subagent(
+                Some("子代理测试"),
+                "描述文本",
+                &test_progress(),
+                |_job_id, log_path| async move {
                     let _ = std::fs::write(&log_path, "工作中\n");
                     JobState::Exited { code: Some(0) }
-                }
-            })
+                },
+            )
             .await
             .unwrap(),
         )
@@ -1421,12 +1429,8 @@ mod tests {
         let job_id = spawned["job_id"].as_str().unwrap().to_string();
         assert_eq!(spawned["kind"], "background_subagent");
         await_terminal(&job_id).await;
-        let status: Value = serde_json::from_str(
-            &job_status(json!({"job_id": job_id}))
-                .await
-                .unwrap(),
-        )
-        .unwrap();
+        let status: Value =
+            serde_json::from_str(&job_status(json!({"job_id": job_id})).await.unwrap()).unwrap();
         assert_eq!(status["status"], "exited(0)");
         assert!(status["output"]["content"]
             .as_str()
@@ -1437,8 +1441,12 @@ mod tests {
     #[tokio::test]
     async fn job_stop_terminates_a_running_job() {
         shared_init();
-        let spawned: Value =
-            serde_json::from_str(&spawn_background("sleep 300", None, &test_progress()).await.unwrap()).unwrap();
+        let spawned: Value = serde_json::from_str(
+            &spawn_background("sleep 300", None, &test_progress())
+                .await
+                .unwrap(),
+        )
+        .unwrap();
         let job_id = spawned["job_id"].as_str().unwrap().to_string();
         let stopped: Value =
             serde_json::from_str(&job_stop(json!({"job_id": job_id})).await.unwrap()).unwrap();
@@ -1451,17 +1459,21 @@ mod tests {
     #[tokio::test]
     async fn incremental_output_reads_from_offset() {
         shared_init();
-        let spawned: Value =
-            serde_json::from_str(&spawn_background("printf 'AAABBB'", None, &test_progress()).await.unwrap()).unwrap();
-        let job_id = spawned["job_id"].as_str().unwrap().to_string();
-        await_terminal(&job_id).await;
-        let first: Value = serde_json::from_str(
-            &job_status(json!({"job_id": job_id})).await.unwrap(),
+        let spawned: Value = serde_json::from_str(
+            &spawn_background("printf 'AAABBB'", None, &test_progress())
+                .await
+                .unwrap(),
         )
         .unwrap();
+        let job_id = spawned["job_id"].as_str().unwrap().to_string();
+        await_terminal(&job_id).await;
+        let first: Value =
+            serde_json::from_str(&job_status(json!({"job_id": job_id})).await.unwrap()).unwrap();
         assert_eq!(first["output"]["content"], "AAABBB");
         let second: Value = serde_json::from_str(
-            &job_status(json!({"job_id": job_id, "offset": 3})).await.unwrap(),
+            &job_status(json!({"job_id": job_id, "offset": 3}))
+                .await
+                .unwrap(),
         )
         .unwrap();
         assert_eq!(second["output"]["content"], "BBB");

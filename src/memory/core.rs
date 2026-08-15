@@ -353,4 +353,3 @@ pub(crate) struct LongDiaryDraft {
     #[serde(default)]
     pub(crate) diary_ids: Vec<i64>,
 }
-

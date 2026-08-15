@@ -3,7 +3,11 @@
 use super::*;
 
 impl DynamicGate {
-    pub(crate) async fn acquire(&self, limit: usize, timeout: Duration) -> Option<DynamicGatePermit<'_>> {
+    pub(crate) async fn acquire(
+        &self,
+        limit: usize,
+        timeout: Duration,
+    ) -> Option<DynamicGatePermit<'_>> {
         let deadline = tokio::time::Instant::now() + timeout;
         loop {
             let current = self.active.load(Ordering::Acquire);
@@ -441,7 +445,11 @@ pub(crate) fn history_query_limit(configured: usize) -> usize {
     configured.saturating_add(1).min(200)
 }
 
-pub(crate) fn prepare_history(messages: &mut Vec<HistoryMessage>, message_id: &str, maximum: usize) {
+pub(crate) fn prepare_history(
+    messages: &mut Vec<HistoryMessage>,
+    message_id: &str,
+    maximum: usize,
+) {
     if !message_id.is_empty() {
         messages.retain(|message| message.message_id != message_id);
     }
@@ -511,7 +519,13 @@ pub(crate) fn format_history_for_turn(
     show_user_ids: bool,
     maximum_images: usize,
 ) -> FormattedHistory {
-    format_history_internal(messages, maximum_bytes, show_user_ids, maximum_images, false)
+    format_history_internal(
+        messages,
+        maximum_bytes,
+        show_user_ids,
+        maximum_images,
+        false,
+    )
 }
 
 /// 只收图片引用的入口:与 `format_history_for_turn(...).images` 逐项一致
@@ -755,4 +769,3 @@ pub(crate) fn now_unix() -> i64 {
         .unwrap_or_default()
         .as_secs() as i64
 }
-

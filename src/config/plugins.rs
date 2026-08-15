@@ -26,7 +26,9 @@ pub fn merge_real_context_settings(
     }
 }
 
-pub(crate) fn validate_real_context_plugin_config(instance: &PlatformPluginInstanceConfig) -> Result<()> {
+pub(crate) fn validate_real_context_plugin_config(
+    instance: &PlatformPluginInstanceConfig,
+) -> Result<()> {
     let settings = RealContextPluginSettings::from_instance(instance)?;
     settings.validate()
 }
@@ -47,7 +49,12 @@ pub(crate) fn validate_real_context_probability(name: &str, value: f64) -> Resul
     validate_real_context_range(name, value, 0.0, 1.0)
 }
 
-pub(crate) fn validate_real_context_range(name: &str, value: f64, minimum: f64, maximum: f64) -> Result<()> {
+pub(crate) fn validate_real_context_range(
+    name: &str,
+    value: f64,
+    minimum: f64,
+    maximum: f64,
+) -> Result<()> {
     if !value.is_finite() || !(minimum..=maximum).contains(&value) {
         bail!("platform plugin real_context.{name} must be between {minimum} and {maximum}");
     }
@@ -269,7 +276,9 @@ pub(crate) fn default_real_context_moderation_keywords() -> Vec<String> {
         .collect()
 }
 
-pub(crate) fn validate_reply_processor_plugin_config(instance: &PlatformPluginInstanceConfig) -> Result<()> {
+pub(crate) fn validate_reply_processor_plugin_config(
+    instance: &PlatformPluginInstanceConfig,
+) -> Result<()> {
     let settings = &instance.settings;
     for key in [
         "default_enabled",
@@ -526,7 +535,11 @@ pub(crate) fn normalize_route_pool(pool: &mut Option<Vec<ActiveProviderModelConf
     }
 }
 
-pub(crate) fn rename_provider_in_pool(pool: &mut [ActiveProviderModelConfig], old_id: &str, new_id: &str) {
+pub(crate) fn rename_provider_in_pool(
+    pool: &mut [ActiveProviderModelConfig],
+    old_id: &str,
+    new_id: &str,
+) {
     for entry in pool {
         if entry.provider_id == old_id {
             entry.provider_id = new_id.to_string();
@@ -534,7 +547,10 @@ pub(crate) fn rename_provider_in_pool(pool: &mut [ActiveProviderModelConfig], ol
     }
 }
 
-pub(crate) fn retain_provider_pool(pool: &mut Option<Vec<ActiveProviderModelConfig>>, provider_id: &str) {
+pub(crate) fn retain_provider_pool(
+    pool: &mut Option<Vec<ActiveProviderModelConfig>>,
+    provider_id: &str,
+) {
     if let Some(entries) = pool {
         entries.retain(|entry| entry.provider_id != provider_id);
     }
@@ -664,7 +680,10 @@ impl Default for PlatformRateLimit {
     }
 }
 
-pub(crate) fn validate_platform_session_limits(field: &str, limits: PlatformSessionLimits) -> Result<()> {
+pub(crate) fn validate_platform_session_limits(
+    field: &str,
+    limits: PlatformSessionLimits,
+) -> Result<()> {
     if limits.running == 0 || limits.running > MAX_PLATFORM_SESSION_RUNNING {
         bail!("platforms.qq.{field}.running must be between 1 and {MAX_PLATFORM_SESSION_RUNNING}");
     }
@@ -1410,4 +1429,3 @@ pub struct WebPluginConfig {
     #[serde(default)]
     pub searxng_base_url: String,
 }
-

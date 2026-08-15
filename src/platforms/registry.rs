@@ -75,9 +75,7 @@ pub(crate) fn record_recent_conversation_images(scope_key: &str, digests: &[blak
         // Bound the ledger even when every conversation stays inside the TTL.
         let oldest = ledger
             .iter()
-            .filter_map(|(key, entries)| {
-                entries.last().map(|(_, at)| (*at, key.clone()))
-            })
+            .filter_map(|(key, entries)| entries.last().map(|(_, at)| (*at, key.clone())))
             .min()
             .map(|(_, key)| key);
         if let Some(key) = oldest {
@@ -1392,4 +1390,3 @@ pub(crate) fn register_platform_tools(
     tool::register(registry, context.clone());
     context.plugins.register_tools(registry, context.clone());
 }
-

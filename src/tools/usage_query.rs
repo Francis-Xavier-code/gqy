@@ -9,7 +9,11 @@ use anyhow::{Context, Result};
 use serde_json::{json, Value};
 use std::path::PathBuf;
 
-pub fn register(registry: &mut ToolRegistry, history_file: PathBuf, config: crate::config::AppConfig) {
+pub fn register(
+    registry: &mut ToolRegistry,
+    history_file: PathBuf,
+    config: crate::config::AppConfig,
+) {
     registry.register(
         ToolSpec::new(
             "query_token_usage",
@@ -38,7 +42,11 @@ pub fn register(registry: &mut ToolRegistry, history_file: PathBuf, config: crat
     );
 }
 
-async fn query(arguments: Value, history_file: PathBuf, config: crate::config::AppConfig) -> Result<String> {
+async fn query(
+    arguments: Value,
+    history_file: PathBuf,
+    config: crate::config::AppConfig,
+) -> Result<String> {
     let range_key = arguments
         .get("range")
         .and_then(Value::as_str)
@@ -89,10 +97,7 @@ pub(crate) fn format_usage_summary(stats: &crate::state::UsageStats, range_key: 
         } else {
             String::new()
         };
-        lines.push(format!(
-            "估算消费 ≈${:.4}{coverage}",
-            stats.totals.cost
-        ));
+        lines.push(format!("估算消费 ≈${:.4}{coverage}", stats.totals.cost));
     }
     for source in &stats.sources {
         let name = match source.src.as_str() {
@@ -120,7 +125,11 @@ pub(crate) fn format_usage_summary(stats: &crate::state::UsageStats, range_key: 
             } else {
                 0.0
             };
-            let display = if model.model.is_empty() { "(未标模型)" } else { model.model.as_str() };
+            let display = if model.model.is_empty() {
+                "(未标模型)"
+            } else {
+                model.model.as_str()
+            };
             parts.push(format!("{display} {share:.0}%"));
         }
         if !parts.is_empty() {
@@ -158,7 +167,11 @@ mod tests {
                 cache_read_tokens: 900,
                 ..Usage::default()
             },
-            usage::UsageMeta { source: "agent", provider: Some("prov"), model: Some("m-x") },
+            usage::UsageMeta {
+                source: "agent",
+                provider: Some("prov"),
+                model: Some("m-x"),
+            },
             false,
         )
         .unwrap();

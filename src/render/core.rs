@@ -341,7 +341,11 @@ impl CommandLiveDisplay {
         Ok(())
     }
 
-    pub(crate) fn write_static(&mut self, writer: &mut impl Write, include_output: bool) -> Result<()> {
+    pub(crate) fn write_static(
+        &mut self,
+        writer: &mut impl Write,
+        include_output: bool,
+    ) -> Result<()> {
         self.output.finalize();
         let show_output = self.show_output;
         self.show_output = include_output && show_output;
@@ -435,7 +439,10 @@ impl CommandLiveDisplay {
     }
 }
 
-pub(crate) fn write_command_block_gap(writer: &mut impl Write, line_terminated: bool) -> Result<()> {
+pub(crate) fn write_command_block_gap(
+    writer: &mut impl Write,
+    line_terminated: bool,
+) -> Result<()> {
     if !line_terminated {
         writeln!(writer)?;
     }
@@ -954,4 +961,3 @@ pub struct StreamRenderer {
     subagent_mode: Option<ChatStreamKind>,
     sent_meme_filter: SentMemeStreamFilter,
 }
-

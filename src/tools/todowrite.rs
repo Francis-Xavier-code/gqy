@@ -22,7 +22,10 @@ pub type TodoList = Arc<Mutex<Vec<Todo>>>;
 // 会话加载/回存,纯函数 todo_write/todo_update 与其测试原样保留。
 
 fn todos_path(paths: &GQYPaths, session: &str) -> PathBuf {
-    paths.state_dir.join("todos").join(format!("{session}.json"))
+    paths
+        .state_dir
+        .join("todos")
+        .join(format!("{session}.json"))
 }
 
 fn load_todos(paths: &GQYPaths, session: &str) -> Vec<Todo> {

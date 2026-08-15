@@ -7,7 +7,6 @@ use std::sync::{LazyLock, Mutex};
 use std::time::{Duration, Instant};
 use urlencoding::decode as url_decode;
 
-
 mod cooldown;
 use cooldown::*;
 mod providers;
@@ -286,7 +285,6 @@ async fn search_fallback_html(
     combined
 }
 
-
 async fn web_fetch(args: Value) -> Result<String> {
     let url = args
         .get("url")
@@ -356,4 +354,3 @@ fn clip_fetch_output(value: &str, max_chars: usize) -> String {
     let clipped = value.chars().take(max_chars).collect::<String>();
     format!("{clipped}\n\n[content truncated from {total} chars to {max_chars} chars]")
 }
-

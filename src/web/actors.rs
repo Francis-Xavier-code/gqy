@@ -1401,15 +1401,10 @@ pub(crate) fn session_for_persona(
             return Ok(session_id);
         }
     }
-    if let Some(overview) = state_store
-        .list_local_sessions(persona)?
-        .into_iter()
-        .next()
-    {
+    if let Some(overview) = state_store.list_local_sessions(persona)?.into_iter().next() {
         return Ok(overview.record.session_id);
     }
     Ok(state_store
         .create_session(persona, "", "user", None)?
         .session_id)
 }
-

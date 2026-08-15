@@ -5,7 +5,11 @@ use super::*;
 /// its per-conversation route (私聊/群聊专属配置), creating the route if needed.
 /// `/models` lists the globally configured models; `/models <index|provider/model>`
 /// switches this conversation's text model by writing a single-model pool into
-pub(crate) fn execute_models_command(state: &DaemonState, target: Target, argument: Option<&str>) -> String {
+pub(crate) fn execute_models_command(
+    state: &DaemonState,
+    target: Target,
+    argument: Option<&str>,
+) -> String {
     let kind = match target {
         Target::Private { .. } => PlatformConversationKind::Private,
         Target::Group { .. } => PlatformConversationKind::Group,
@@ -309,7 +313,10 @@ pub(crate) async fn merge_quoted_message_images(
     Ok(parsed.images.len().saturating_sub(before))
 }
 
-pub(crate) async fn resolve_current_message_images(conn: &ConnectionHandle, parsed: &mut InboundMessage) {
+pub(crate) async fn resolve_current_message_images(
+    conn: &ConnectionHandle,
+    parsed: &mut InboundMessage,
+) {
     let unresolved = std::mem::take(&mut parsed.unresolved_image_files);
     let lookups = unresolved.into_iter().map(|file| async move {
         let result = conn
@@ -1257,7 +1264,11 @@ pub(crate) fn http_image_source<'a>(file: &'a str, url: Option<&'a str>) -> Opti
     })
 }
 
-pub(crate) fn push_inbound_image_source(parsed: &mut InboundMessage, file: &str, url: Option<&str>) -> bool {
+pub(crate) fn push_inbound_image_source(
+    parsed: &mut InboundMessage,
+    file: &str,
+    url: Option<&str>,
+) -> bool {
     if let Some(encoded) = file.strip_prefix("base64://") {
         return push_inbound_base64(parsed, encoded);
     }
@@ -1294,7 +1305,11 @@ pub(crate) fn push_unresolved_image_file(
     unresolved.push(file.to_string());
 }
 
-pub(crate) fn append_cq_image_sources(parsed: &mut InboundMessage, raw: &str, unresolved: &mut Vec<String>) {
+pub(crate) fn append_cq_image_sources(
+    parsed: &mut InboundMessage,
+    raw: &str,
+    unresolved: &mut Vec<String>,
+) {
     let mut remaining = raw;
     for _ in 0..MAX_INBOUND_SEGMENTS {
         let Some(start) = remaining.find("[CQ:") else {
@@ -1373,7 +1388,10 @@ pub(crate) fn append_message_image_sources(
     unresolved
 }
 
-pub(crate) fn ordered_image_source(file: &str, url: Option<&str>) -> Option<OrderedMessageImageSource> {
+pub(crate) fn ordered_image_source(
+    file: &str,
+    url: Option<&str>,
+) -> Option<OrderedMessageImageSource> {
     if let Some(encoded) = file.strip_prefix("base64://") {
         let maximum_encoded = MAX_INBOUND_IMAGE_BYTES
             .saturating_add(2)
@@ -1461,4 +1479,3 @@ pub(crate) fn ordered_message_image_sources(
     }
     sources
 }
-

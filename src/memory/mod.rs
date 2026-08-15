@@ -10,16 +10,15 @@ use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::path::PathBuf;
 use std::sync::LazyLock;
 
-
 mod core;
 use core::*;
 mod store_impl;
 use store_impl::*;
 mod ops;
 use ops::*;
+mod organizer;
 #[cfg(test)]
 mod tests;
-mod organizer;
 
 pub(crate) use organizer::{MemoryOrganizer, MemoryOrganizerHandle};
 
@@ -40,6 +39,4 @@ struct CompactJieba {
     max_word_chars: usize,
 }
 
-impl MemoryStore {
-}
-
+impl MemoryStore {}

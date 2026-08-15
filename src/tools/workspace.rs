@@ -108,7 +108,10 @@ where
 }
 
 pub fn current_platform_sender() -> Option<String> {
-    PLATFORM_SENDER.try_with(|sender| sender.clone()).ok().flatten()
+    PLATFORM_SENDER
+        .try_with(|sender| sender.clone())
+        .ok()
+        .flatten()
 }
 
 /// 本回合的发起来源(dsh goal 权限模型的 GQY 化:不扫会话事件,发起方

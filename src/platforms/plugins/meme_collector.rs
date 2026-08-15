@@ -335,7 +335,9 @@ async fn save_current_message_meme(
                 .map(|m| m.sender_display_name.clone())
                 .unwrap_or_default(),
             message_id: message_id.clone(),
-            sent_at: replied.map(|m| platform_sent_at(m.timestamp)).unwrap_or_default(),
+            sent_at: replied
+                .map(|m| platform_sent_at(m.timestamp))
+                .unwrap_or_default(),
             collected_at: String::new(),
         }
     };

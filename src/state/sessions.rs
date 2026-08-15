@@ -147,4 +147,3 @@ pub struct StoredConversationEntry {
     #[serde(default)]
     pub reasoning: Option<String>,
 }
-

@@ -203,14 +203,9 @@ mod tests {
         // Minting it must not move the terminal lane, and it must not surface
         // in the session list.
         assert_eq!(&*state.state_store.session_id(), terminal.as_str());
-        let listed = handle_session_command(
-            &state,
-            IpcCommand::ListSessions {
-                mode: None,
-            },
-        )
-        .await
-        .unwrap();
+        let listed = handle_session_command(&state, IpcCommand::ListSessions { mode: None })
+            .await
+            .unwrap();
         assert!(listed["sessions"]
             .as_array()
             .unwrap()
@@ -347,14 +342,9 @@ mod tests {
             )
             .unwrap();
 
-        let data = handle_session_command(
-            &state,
-            IpcCommand::ListSessions {
-                mode: None,
-            },
-        )
-        .await
-        .unwrap();
+        let data = handle_session_command(&state, IpcCommand::ListSessions { mode: None })
+            .await
+            .unwrap();
         let ids = data["sessions"]
             .as_array()
             .unwrap()
@@ -665,14 +655,9 @@ mod tests {
             .map(|session| session["session_id"].as_str().unwrap())
             .collect();
         assert_eq!(ids, vec![dev.session_id.as_str()]);
-        let normal = handle_session_command(
-            &state,
-            IpcCommand::ListSessions {
-                mode: None,
-            },
-        )
-        .await
-        .unwrap();
+        let normal = handle_session_command(&state, IpcCommand::ListSessions { mode: None })
+            .await
+            .unwrap();
         assert!(normal["sessions"]
             .as_array()
             .unwrap()
@@ -1087,6 +1072,4 @@ mod tests {
         ));
         assert!(!state.manager.lock().unwrap().admin_busy);
     }
-
 }
-

@@ -334,9 +334,7 @@ impl ToolRegistry {
     }
 
     fn guard_denial(&self, tool: &ToolSpec, args: &Value, ctx: &GuardCtx) -> Option<String> {
-        self.guards
-            .iter()
-            .find_map(|guard| guard(tool, args, ctx))
+        self.guards.iter().find_map(|guard| guard(tool, args, ctx))
     }
 
     fn effective_timeout(&self, tool: &ToolSpec) -> Option<std::time::Duration> {
@@ -925,7 +923,10 @@ mod tests {
         registry.add_guard(crate::tools::brew_review_install_guard());
 
         let (sender, _receiver) = mpsc::unbounded_channel();
-        let used = vec!["review_brew_package".to_string(), "install_brew_package".to_string()];
+        let used = vec![
+            "review_brew_package".to_string(),
+            "install_brew_package".to_string(),
+        ];
         let denied = registry
             .call_with_progress_future(
                 "install_brew_package",
@@ -964,7 +965,7 @@ mod tests {
             |_| async { Ok("ran".to_string()) },
         ));
         registry.add_guard(crate::tools::command_deny_guard(vec![
-            "rm -rf /".to_string(),
+            "rm -rf /".to_string()
         ]));
 
         let denied = registry

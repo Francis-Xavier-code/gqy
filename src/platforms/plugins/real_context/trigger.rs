@@ -421,4 +421,3 @@ pub(crate) struct RuntimeState {
     sessions: HashMap<String, SessionRuntime>,
     next_generation: u64,
 }
-

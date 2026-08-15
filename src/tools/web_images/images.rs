@@ -506,7 +506,9 @@ pub(crate) fn provider_ready(provider: &ImageSearchProvider) -> bool {
     }
 }
 
-pub(crate) fn provider_probe_candidate(providers: &[ImageSearchProvider]) -> Option<ImageSearchProvider> {
+pub(crate) fn provider_probe_candidate(
+    providers: &[ImageSearchProvider],
+) -> Option<ImageSearchProvider> {
     let cooldowns = PROVIDER_COOLDOWNS.lock().ok()?;
     providers.iter().copied().min_by_key(|provider| {
         cooldowns
@@ -1403,4 +1405,3 @@ pub(crate) fn remove_invalid_cache_entry(path: &Path) -> Result<()> {
         }
     }
 }
-

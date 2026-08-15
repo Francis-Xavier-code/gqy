@@ -14,7 +14,6 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-
 #[cfg(test)]
 mod tests;
 pub(crate) const GROUP_MANAGEMENT_PLUGIN_ID: &str = "qq_group_management";
@@ -639,7 +638,6 @@ impl GroupManagementPlugin {
         )
         .to_string())
     }
-
 }
 
 impl PlatformPlugin for Arc<GroupManagementPlugin> {
@@ -1460,4 +1458,3 @@ fn aggregate_target_results(results: Vec<Value>) -> Value {
 fn json_result(success: bool, message: &str, data: Value) -> Result<String> {
     Ok(json!({ "success": success, "message": message, "data": data }).to_string())
 }
-

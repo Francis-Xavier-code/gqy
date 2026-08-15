@@ -23,7 +23,6 @@ fn auto_detect_script(path: &Path) -> Option<ScriptEntry> {
     })
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -608,4 +607,3 @@ mod tests {
         assert_ne!(perms.mode() & 0o111, 0);
     }
 }
-

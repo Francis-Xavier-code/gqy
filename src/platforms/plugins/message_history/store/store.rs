@@ -1487,4 +1487,3 @@ pub(crate) fn query_search(conn: &Connection, query: SearchQuery) -> Result<Hist
         next_cursor,
     })
 }
-

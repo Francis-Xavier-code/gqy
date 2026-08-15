@@ -333,7 +333,10 @@ pub(crate) fn parse_message_info(data: &Value, self_id: i64) -> Option<PlatformM
     })
 }
 
-pub(crate) fn parse_group_member(data: &Value, fallback_group_id: i64) -> Option<PlatformGroupMember> {
+pub(crate) fn parse_group_member(
+    data: &Value,
+    fallback_group_id: i64,
+) -> Option<PlatformGroupMember> {
     Some(PlatformGroupMember {
         group_id: data
             .get("group_id")
@@ -411,7 +414,10 @@ pub(crate) fn prepend_response_target(segments: &mut Vec<Value>, target: &Respon
 }
 
 impl PlatformAdapter for OneBotAdapter {
-    pub(crate) fn send<'a>(&'a self, message: OutboundMessage) -> BoxFuture<'a, Result<SendReceipt>> {
+    pub(crate) fn send<'a>(
+        &'a self,
+        message: OutboundMessage,
+    ) -> BoxFuture<'a, Result<SendReceipt>> {
         Box::pin(async move { self.send_message(message).await })
     }
 
@@ -516,7 +522,9 @@ impl PlatformAdapter for OneBotAdapter {
         })
     }
 
-    pub(crate) fn bot_send_availability<'a>(&'a self) -> BoxFuture<'a, Result<BotSendAvailability>> {
+    pub(crate) fn bot_send_availability<'a>(
+        &'a self,
+    ) -> BoxFuture<'a, Result<BotSendAvailability>> {
         Box::pin(async move {
             let Target::Group { group_id } = self.target else {
                 return Ok(BotSendAvailability::Available);
@@ -827,7 +835,10 @@ impl OneBotAdapter {
         }
     }
 
-    pub(crate) async fn send_response_marker(&self, target: &ResponseTarget) -> Result<Option<String>> {
+    pub(crate) async fn send_response_marker(
+        &self,
+        target: &ResponseTarget,
+    ) -> Result<Option<String>> {
         if !matches!(self.target, Target::Group { .. }) || !target.is_effective() {
             return Ok(None);
         }
@@ -1083,7 +1094,11 @@ impl OneBotAdapter {
             .await
     }
 
-    pub(crate) async fn upload_file_source(&self, source: &str, name: &str) -> Result<Option<String>> {
+    pub(crate) async fn upload_file_source(
+        &self,
+        source: &str,
+        name: &str,
+    ) -> Result<Option<String>> {
         let (action, params) = match self.target {
             Target::Private { user_id } => (
                 "upload_private_file",
@@ -1341,4 +1356,3 @@ pub(crate) fn final_reply_text(outcome: &super::TurnOutcome) -> String {
 pub(crate) fn text_segment(text: &str) -> Value {
     json!({ "type": "text", "data": { "text": text } })
 }
-

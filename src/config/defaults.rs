@@ -863,7 +863,10 @@ impl ProviderConfig {
     }
 }
 
-pub(crate) fn append_resolved_api_keys(out: &mut Vec<ResolvedProviderKey>, raw: &str) -> Result<()> {
+pub(crate) fn append_resolved_api_keys(
+    out: &mut Vec<ResolvedProviderKey>,
+    raw: &str,
+) -> Result<()> {
     for item in split_api_keys(raw) {
         let value = if let Some(env_name) = item.strip_prefix("$env:") {
             std::env::var(env_name)
@@ -890,7 +893,10 @@ pub(crate) fn split_api_keys(raw: &str) -> Vec<&str> {
         .collect()
 }
 
-pub(crate) fn active_model_exists(providers: &[ProviderConfig], active: &ActiveProviderModelConfig) -> bool {
+pub(crate) fn active_model_exists(
+    providers: &[ProviderConfig],
+    active: &ActiveProviderModelConfig,
+) -> bool {
     providers
         .iter()
         .find(|provider| provider.id == active.provider_id.trim())
@@ -950,4 +956,3 @@ pub(crate) fn is_positive_decimal_id(value: &str) -> bool {
         && value.bytes().all(|byte| byte.is_ascii_digit())
         && value.parse::<u64>().is_ok_and(|id| id > 0)
 }
-

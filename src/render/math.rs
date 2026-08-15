@@ -52,12 +52,24 @@ fn ratex_png(tex: &str, mode: MathMode) -> Option<Vec<u8>> {
         MathMode::Block => (MathStyle::Display, 28.0, 4.0),
         MathMode::Cell => (MathStyle::Text, 24.0, 1.0),
     };
-    let color = Color { r: MATH_COLOR.0, g: MATH_COLOR.1, b: MATH_COLOR.2, a: 1.0 };
-    let layout_opts = LayoutOptions::default().with_style(math_style).with_color(color);
+    let color = Color {
+        r: MATH_COLOR.0,
+        g: MATH_COLOR.1,
+        b: MATH_COLOR.2,
+        a: 1.0,
+    };
+    let layout_opts = LayoutOptions::default()
+        .with_style(math_style)
+        .with_color(color);
     let render_opts = RenderOptions {
         font_size,
         padding,
-        background_color: Color { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
+        background_color: Color {
+            r: 0.0,
+            g: 0.0,
+            b: 0.0,
+            a: 0.0,
+        },
         font_dir: String::new(),
         device_pixel_ratio: 2.0,
     };
@@ -110,11 +122,21 @@ fn decode_and_trim(png: &[u8]) -> Option<Raster> {
             trimmed.push(pixels[y * width + x]);
         }
     }
-    Some(Raster { pixels: trimmed, width: trimmed_width, height: trimmed_height })
+    Some(Raster {
+        pixels: trimmed,
+        width: trimmed_width,
+        height: trimmed_height,
+    })
 }
 
 /// 区域平均采样(缩小时抗锯齿;放大时最近邻)。
-fn sample(raster: &Raster, x: usize, y: usize, target_width: usize, target_height: usize) -> [u8; 4] {
+fn sample(
+    raster: &Raster,
+    x: usize,
+    y: usize,
+    target_width: usize,
+    target_height: usize,
+) -> [u8; 4] {
     if target_width >= raster.width && target_height >= raster.height {
         let source_x = (x * raster.width / target_width).min(raster.width - 1);
         let source_y = (y * raster.height / target_height).min(raster.height - 1);
@@ -123,7 +145,8 @@ fn sample(raster: &Raster, x: usize, y: usize, target_width: usize, target_heigh
     let start_x = (x * raster.width / target_width).min(raster.width - 1);
     let end_x = (((x + 1) * raster.width).div_ceil(target_width)).clamp(start_x + 1, raster.width);
     let start_y = (y * raster.height / target_height).min(raster.height - 1);
-    let end_y = (((y + 1) * raster.height).div_ceil(target_height)).clamp(start_y + 1, raster.height);
+    let end_y =
+        (((y + 1) * raster.height).div_ceil(target_height)).clamp(start_y + 1, raster.height);
     let (mut r, mut g, mut b, mut a, mut count) = (0u32, 0u32, 0u32, 0u32, 0u32);
     for sy in start_y..end_y {
         for sx in start_x..end_x {
@@ -135,7 +158,12 @@ fn sample(raster: &Raster, x: usize, y: usize, target_width: usize, target_heigh
             count += 1;
         }
     }
-    [(r / count) as u8, (g / count) as u8, (b / count) as u8, (a / count) as u8]
+    [
+        (r / count) as u8,
+        (g / count) as u8,
+        (b / count) as u8,
+        (a / count) as u8,
+    ]
 }
 
 /// 半块化:目标高 `target_rows` 字符行(=2×像素行),宽等比、封顶 `max_cols`。
@@ -162,7 +190,10 @@ fn halfblock_art(png: &[u8], target_rows: usize, max_cols: usize) -> Option<Math
         line.push_str("\x1b[0m");
         lines.push(line);
     }
-    Some(MathArt { lines, cols: width_px })
+    Some(MathArt {
+        lines,
+        cols: width_px,
+    })
 }
 
 fn halfblock_cell(top: [u8; 4], bottom: [u8; 4]) -> String {
@@ -174,7 +205,10 @@ fn halfblock_cell(top: [u8; 4], bottom: [u8; 4]) -> String {
             top[0], top[1], top[2], bottom[0], bottom[1], bottom[2]
         ),
         (true, false) => format!("\x1b[49m\x1b[38;2;{};{};{}m▀", top[0], top[1], top[2]),
-        (false, true) => format!("\x1b[49m\x1b[38;2;{};{};{}m▄", bottom[0], bottom[1], bottom[2]),
+        (false, true) => format!(
+            "\x1b[49m\x1b[38;2;{};{};{}m▄",
+            bottom[0], bottom[1], bottom[2]
+        ),
         (false, false) => "\x1b[49m ".to_string(),
     }
 }
@@ -195,7 +229,10 @@ mod tests {
         assert!(!art.lines.is_empty());
         assert!(art.cols > 10 && art.cols <= 100);
         assert!(art.lines[0].contains("\u{1b}[")); // 真彩 ANSI
-        assert!(art.lines.iter().any(|line| line.contains('▀') || line.contains('▄')));
+        assert!(art
+            .lines
+            .iter()
+            .any(|line| line.contains('▀') || line.contains('▄')));
     }
 
     #[test]
@@ -209,11 +246,36 @@ mod tests {
     #[ignore]
     fn dump_preview_artifacts() {
         let cases = [
-            ("attention", r"\operatorname{Attention}(Q,K,V)=\operatorname{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)V", MathMode::Block, 9),
-            ("newton", r"x_{n+1}=x_n-\frac{f(x_n)}{f'(x_n)}", MathMode::Cell, 2),
-            ("newton3", r"x_{n+1}=x_n-\frac{f(x_n)}{f'(x_n)}", MathMode::Cell, 3),
-            ("golden", r"q=\frac{1+\sqrt5}{2}\approx 1.618", MathMode::Cell, 3),
-            ("gauss", r"\int_{-\infty}^{\infty} e^{-x^2}\,dx=\sqrt{\pi}", MathMode::Block, 8),
+            (
+                "attention",
+                r"\operatorname{Attention}(Q,K,V)=\operatorname{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)V",
+                MathMode::Block,
+                9,
+            ),
+            (
+                "newton",
+                r"x_{n+1}=x_n-\frac{f(x_n)}{f'(x_n)}",
+                MathMode::Cell,
+                2,
+            ),
+            (
+                "newton3",
+                r"x_{n+1}=x_n-\frac{f(x_n)}{f'(x_n)}",
+                MathMode::Cell,
+                3,
+            ),
+            (
+                "golden",
+                r"q=\frac{1+\sqrt5}{2}\approx 1.618",
+                MathMode::Cell,
+                3,
+            ),
+            (
+                "gauss",
+                r"\int_{-\infty}^{\infty} e^{-x^2}\,dx=\sqrt{\pi}",
+                MathMode::Block,
+                8,
+            ),
         ];
         for (name, tex, mode, rows) in cases {
             let png = ratex_png(tex, mode).expect(name);
@@ -317,7 +379,10 @@ fn convert_command(chars: &[char], cursor: &mut usize) -> String {
         }
     }
     let start = *cursor;
-    while chars.get(*cursor).is_some_and(|ch| ch.is_ascii_alphabetic()) {
+    while chars
+        .get(*cursor)
+        .is_some_and(|ch| ch.is_ascii_alphabetic())
+    {
         *cursor += 1;
     }
     let name: String = chars[start..*cursor].iter().collect();
@@ -329,7 +394,11 @@ fn convert_command(chars: &[char], cursor: &mut usize) -> String {
         "frac" | "dfrac" | "tfrac" => {
             let numerator = read_group(chars, cursor);
             let denominator = read_group(chars, cursor);
-            format!("{}/{}", parenthesize(&numerator), parenthesize(&denominator))
+            format!(
+                "{}/{}",
+                parenthesize(&numerator),
+                parenthesize(&denominator)
+            )
         }
         "sqrt" => {
             let radicand = read_group(chars, cursor);
@@ -360,7 +429,9 @@ fn convert_command(chars: &[char], cursor: &mut usize) -> String {
         "left" | "right" | "big" | "Big" | "bigg" | "Bigg" | "displaystyle" | "textstyle"
         | "limits" | "nolimits" => String::new(),
         "quad" | "qquad" => " ".to_string(),
-        other => symbol_for(other).map(str::to_string).unwrap_or_else(|| format!("\\{other}")),
+        other => symbol_for(other)
+            .map(str::to_string)
+            .unwrap_or_else(|| format!("\\{other}")),
     }
 }
 
@@ -368,25 +439,90 @@ fn convert_command(chars: &[char], cursor: &mut usize) -> String {
 fn parenthesize(text: &str) -> String {
     let trimmed = text.trim();
     let simple = trimmed.chars().count() <= 1
-        || trimmed.chars().all(|ch| ch.is_alphanumeric() || ch == '.' || ch == '′')
+        || trimmed
+            .chars()
+            .all(|ch| ch.is_alphanumeric() || ch == '.' || ch == '′')
         || (trimmed.starts_with('(') && trimmed.ends_with(')'));
-    if simple { trimmed.to_string() } else { format!("({trimmed})") }
+    if simple {
+        trimmed.to_string()
+    } else {
+        format!("({trimmed})")
+    }
 }
 
 const SUPERSCRIPTS: &[(char, char)] = &[
-    ('0', '⁰'), ('1', '¹'), ('2', '²'), ('3', '³'), ('4', '⁴'), ('5', '⁵'), ('6', '⁶'),
-    ('7', '⁷'), ('8', '⁸'), ('9', '⁹'), ('+', '⁺'), ('-', '⁻'), ('−', '⁻'), ('=', '⁼'),
-    ('(', '⁽'), (')', '⁾'), ('n', 'ⁿ'), ('i', 'ⁱ'), ('T', 'ᵀ'), ('t', 'ᵗ'), ('k', 'ᵏ'),
-    ('m', 'ᵐ'), ('a', 'ᵃ'), ('b', 'ᵇ'), ('c', 'ᶜ'), ('d', 'ᵈ'), ('e', 'ᵉ'), ('x', 'ˣ'),
-    ('y', 'ʸ'), ('p', 'ᵖ'), ('r', 'ʳ'), ('s', 'ˢ'), ('u', 'ᵘ'), ('v', 'ᵛ'), ('*', '*'),
-    ('′', '′'), ('⊤', 'ᵀ'),
+    ('0', '⁰'),
+    ('1', '¹'),
+    ('2', '²'),
+    ('3', '³'),
+    ('4', '⁴'),
+    ('5', '⁵'),
+    ('6', '⁶'),
+    ('7', '⁷'),
+    ('8', '⁸'),
+    ('9', '⁹'),
+    ('+', '⁺'),
+    ('-', '⁻'),
+    ('−', '⁻'),
+    ('=', '⁼'),
+    ('(', '⁽'),
+    (')', '⁾'),
+    ('n', 'ⁿ'),
+    ('i', 'ⁱ'),
+    ('T', 'ᵀ'),
+    ('t', 'ᵗ'),
+    ('k', 'ᵏ'),
+    ('m', 'ᵐ'),
+    ('a', 'ᵃ'),
+    ('b', 'ᵇ'),
+    ('c', 'ᶜ'),
+    ('d', 'ᵈ'),
+    ('e', 'ᵉ'),
+    ('x', 'ˣ'),
+    ('y', 'ʸ'),
+    ('p', 'ᵖ'),
+    ('r', 'ʳ'),
+    ('s', 'ˢ'),
+    ('u', 'ᵘ'),
+    ('v', 'ᵛ'),
+    ('*', '*'),
+    ('′', '′'),
+    ('⊤', 'ᵀ'),
 ];
 const SUBSCRIPTS: &[(char, char)] = &[
-    ('0', '₀'), ('1', '₁'), ('2', '₂'), ('3', '₃'), ('4', '₄'), ('5', '₅'), ('6', '₆'),
-    ('7', '₇'), ('8', '₈'), ('9', '₉'), ('+', '₊'), ('-', '₋'), ('−', '₋'), ('=', '₌'),
-    ('(', '₍'), (')', '₎'), ('a', 'ₐ'), ('e', 'ₑ'), ('h', 'ₕ'), ('i', 'ᵢ'), ('j', 'ⱼ'),
-    ('k', 'ₖ'), ('l', 'ₗ'), ('m', 'ₘ'), ('n', 'ₙ'), ('o', 'ₒ'), ('p', 'ₚ'), ('r', 'ᵣ'),
-    ('s', 'ₛ'), ('t', 'ₜ'), ('u', 'ᵤ'), ('v', 'ᵥ'), ('x', 'ₓ'),
+    ('0', '₀'),
+    ('1', '₁'),
+    ('2', '₂'),
+    ('3', '₃'),
+    ('4', '₄'),
+    ('5', '₅'),
+    ('6', '₆'),
+    ('7', '₇'),
+    ('8', '₈'),
+    ('9', '₉'),
+    ('+', '₊'),
+    ('-', '₋'),
+    ('−', '₋'),
+    ('=', '₌'),
+    ('(', '₍'),
+    (')', '₎'),
+    ('a', 'ₐ'),
+    ('e', 'ₑ'),
+    ('h', 'ₕ'),
+    ('i', 'ᵢ'),
+    ('j', 'ⱼ'),
+    ('k', 'ₖ'),
+    ('l', 'ₗ'),
+    ('m', 'ₘ'),
+    ('n', 'ₙ'),
+    ('o', 'ₒ'),
+    ('p', 'ₚ'),
+    ('r', 'ᵣ'),
+    ('s', 'ₛ'),
+    ('t', 'ₜ'),
+    ('u', 'ᵤ'),
+    ('v', 'ᵥ'),
+    ('x', 'ₓ'),
 ];
 
 /// 上/下标转换:内容全部有对应字符才转,否则退化为 ^(x)/_(x)。
@@ -407,43 +543,164 @@ fn to_script(content: &str, table: &[(char, char)], marker: char) -> String {
 
 fn symbol_for(name: &str) -> Option<&'static str> {
     Some(match name {
-        "alpha" => "α", "beta" => "β", "gamma" => "γ", "delta" => "δ", "epsilon" => "ε",
-        "varepsilon" => "ε", "zeta" => "ζ", "eta" => "η", "theta" => "θ", "vartheta" => "ϑ",
-        "iota" => "ι", "kappa" => "κ", "lambda" => "λ", "mu" => "μ", "nu" => "ν", "xi" => "ξ",
-        "pi" => "π", "rho" => "ρ", "sigma" => "σ", "tau" => "τ", "upsilon" => "υ", "phi" => "φ",
-        "varphi" => "φ", "chi" => "χ", "psi" => "ψ", "omega" => "ω",
-        "Gamma" => "Γ", "Delta" => "Δ", "Theta" => "Θ", "Lambda" => "Λ", "Xi" => "Ξ",
-        "Pi" => "Π", "Sigma" => "Σ", "Upsilon" => "Υ", "Phi" => "Φ", "Psi" => "Ψ",
+        "alpha" => "α",
+        "beta" => "β",
+        "gamma" => "γ",
+        "delta" => "δ",
+        "epsilon" => "ε",
+        "varepsilon" => "ε",
+        "zeta" => "ζ",
+        "eta" => "η",
+        "theta" => "θ",
+        "vartheta" => "ϑ",
+        "iota" => "ι",
+        "kappa" => "κ",
+        "lambda" => "λ",
+        "mu" => "μ",
+        "nu" => "ν",
+        "xi" => "ξ",
+        "pi" => "π",
+        "rho" => "ρ",
+        "sigma" => "σ",
+        "tau" => "τ",
+        "upsilon" => "υ",
+        "phi" => "φ",
+        "varphi" => "φ",
+        "chi" => "χ",
+        "psi" => "ψ",
+        "omega" => "ω",
+        "Gamma" => "Γ",
+        "Delta" => "Δ",
+        "Theta" => "Θ",
+        "Lambda" => "Λ",
+        "Xi" => "Ξ",
+        "Pi" => "Π",
+        "Sigma" => "Σ",
+        "Upsilon" => "Υ",
+        "Phi" => "Φ",
+        "Psi" => "Ψ",
         "Omega" => "Ω",
-        "infty" => "∞", "partial" => "∂", "nabla" => "∇", "pm" => "±", "mp" => "∓",
-        "times" => "×", "div" => "÷", "cdot" => "·", "bullet" => "•", "circ" => "∘",
-        "approx" => "≈", "neq" => "≠", "ne" => "≠", "leq" => "≤", "le" => "≤",
-        "geq" => "≥", "ge" => "≥", "ll" => "≪", "gg" => "≫", "sim" => "∼", "simeq" => "≃",
-        "equiv" => "≡", "propto" => "∝", "to" => "→", "gets" => "←", "mapsto" => "↦",
-        "Rightarrow" => "⇒", "Leftarrow" => "⇐", "Leftrightarrow" => "⇔",
-        "rightarrow" => "→", "leftarrow" => "←", "leftrightarrow" => "↔",
-        "uparrow" => "↑", "downarrow" => "↓",
-        "in" => "∈", "notin" => "∉", "ni" => "∋", "subset" => "⊂", "supset" => "⊃",
-        "subseteq" => "⊆", "supseteq" => "⊇", "cup" => "∪", "cap" => "∩",
-        "emptyset" => "∅", "varnothing" => "∅", "setminus" => "∖",
-        "forall" => "∀", "exists" => "∃", "nexists" => "∄", "neg" => "¬", "lnot" => "¬",
-        "land" => "∧", "wedge" => "∧", "lor" => "∨", "vee" => "∨",
-        "sum" => "Σ", "prod" => "Π", "int" => "∫", "iint" => "∬", "iiint" => "∭",
-        "oint" => "∮", "bigcup" => "⋃", "bigcap" => "⋂",
+        "infty" => "∞",
+        "partial" => "∂",
+        "nabla" => "∇",
+        "pm" => "±",
+        "mp" => "∓",
+        "times" => "×",
+        "div" => "÷",
+        "cdot" => "·",
+        "bullet" => "•",
+        "circ" => "∘",
+        "approx" => "≈",
+        "neq" => "≠",
+        "ne" => "≠",
+        "leq" => "≤",
+        "le" => "≤",
+        "geq" => "≥",
+        "ge" => "≥",
+        "ll" => "≪",
+        "gg" => "≫",
+        "sim" => "∼",
+        "simeq" => "≃",
+        "equiv" => "≡",
+        "propto" => "∝",
+        "to" => "→",
+        "gets" => "←",
+        "mapsto" => "↦",
+        "Rightarrow" => "⇒",
+        "Leftarrow" => "⇐",
+        "Leftrightarrow" => "⇔",
+        "rightarrow" => "→",
+        "leftarrow" => "←",
+        "leftrightarrow" => "↔",
+        "uparrow" => "↑",
+        "downarrow" => "↓",
+        "in" => "∈",
+        "notin" => "∉",
+        "ni" => "∋",
+        "subset" => "⊂",
+        "supset" => "⊃",
+        "subseteq" => "⊆",
+        "supseteq" => "⊇",
+        "cup" => "∪",
+        "cap" => "∩",
+        "emptyset" => "∅",
+        "varnothing" => "∅",
+        "setminus" => "∖",
+        "forall" => "∀",
+        "exists" => "∃",
+        "nexists" => "∄",
+        "neg" => "¬",
+        "lnot" => "¬",
+        "land" => "∧",
+        "wedge" => "∧",
+        "lor" => "∨",
+        "vee" => "∨",
+        "sum" => "Σ",
+        "prod" => "Π",
+        "int" => "∫",
+        "iint" => "∬",
+        "iiint" => "∭",
+        "oint" => "∮",
+        "bigcup" => "⋃",
+        "bigcap" => "⋂",
         // 文字函数:两侧留空隙,对应 TeX 的算子间距。
-        "sin" => " sin ", "cos" => " cos ", "tan" => " tan ", "log" => " log ", "ln" => " ln ",
-        "exp" => " exp ", "lim" => " lim ", "max" => " max ", "min" => " min ", "sup" => " sup ",
-        "inf" => " inf ", "arg" => " arg ", "det" => " det ", "gcd" => " gcd ", "mod" => " mod ",
-        "bmod" => " mod ", "pmod" => " mod ",
-        "ldots" => "…", "cdots" => "⋯", "dots" => "…", "vdots" => "⋮", "ddots" => "⋱",
-        "prime" => "′", "dagger" => "†", "ddagger" => "‡", "star" => "⋆", "ast" => "*",
-        "oplus" => "⊕", "otimes" => "⊗", "ominus" => "⊖", "odot" => "⊙",
-        "perp" => "⊥", "parallel" => "∥", "angle" => "∠", "triangle" => "△",
-        "top" => "⊤", "bot" => "⊥", "vdash" => "⊢", "dashv" => "⊣", "models" => "⊨",
-        "hbar" => "ℏ", "ell" => "ℓ", "Re" => "ℜ", "Im" => "ℑ", "aleph" => "ℵ",
-        "wp" => "℘", "degree" => "°", "prec" => "≺", "succ" => "≻",
-        "langle" => "⟨", "rangle" => "⟩", "lceil" => "⌈", "rceil" => "⌉",
-        "lfloor" => "⌊", "rfloor" => "⌋", "|" => "‖", "colon" => ":",
+        "sin" => " sin ",
+        "cos" => " cos ",
+        "tan" => " tan ",
+        "log" => " log ",
+        "ln" => " ln ",
+        "exp" => " exp ",
+        "lim" => " lim ",
+        "max" => " max ",
+        "min" => " min ",
+        "sup" => " sup ",
+        "inf" => " inf ",
+        "arg" => " arg ",
+        "det" => " det ",
+        "gcd" => " gcd ",
+        "mod" => " mod ",
+        "bmod" => " mod ",
+        "pmod" => " mod ",
+        "ldots" => "…",
+        "cdots" => "⋯",
+        "dots" => "…",
+        "vdots" => "⋮",
+        "ddots" => "⋱",
+        "prime" => "′",
+        "dagger" => "†",
+        "ddagger" => "‡",
+        "star" => "⋆",
+        "ast" => "*",
+        "oplus" => "⊕",
+        "otimes" => "⊗",
+        "ominus" => "⊖",
+        "odot" => "⊙",
+        "perp" => "⊥",
+        "parallel" => "∥",
+        "angle" => "∠",
+        "triangle" => "△",
+        "top" => "⊤",
+        "bot" => "⊥",
+        "vdash" => "⊢",
+        "dashv" => "⊣",
+        "models" => "⊨",
+        "hbar" => "ℏ",
+        "ell" => "ℓ",
+        "Re" => "ℜ",
+        "Im" => "ℑ",
+        "aleph" => "ℵ",
+        "wp" => "℘",
+        "degree" => "°",
+        "prec" => "≺",
+        "succ" => "≻",
+        "langle" => "⟨",
+        "rangle" => "⟩",
+        "lceil" => "⌈",
+        "rceil" => "⌉",
+        "lfloor" => "⌊",
+        "rfloor" => "⌋",
+        "|" => "‖",
+        "colon" => ":",
         _ => return None,
     })
 }
@@ -455,8 +712,14 @@ mod unicode_tests {
     #[test]
     fn converts_common_inline_formulas() {
         assert_eq!(unicode_math(r"E=mc^2"), "E=mc²");
-        assert_eq!(unicode_math(r"x_{n+1}=x_n-\frac{f(x_n)}{f'(x_n)}"), "xₙ₊₁=xₙ-(f(xₙ))/(f′(xₙ))");
-        assert_eq!(unicode_math(r"q=\frac{1+\sqrt5}{2}\approx 1.618"), "q=(1+√5)/2≈1.618");
+        assert_eq!(
+            unicode_math(r"x_{n+1}=x_n-\frac{f(x_n)}{f'(x_n)}"),
+            "xₙ₊₁=xₙ-(f(xₙ))/(f′(xₙ))"
+        );
+        assert_eq!(
+            unicode_math(r"q=\frac{1+\sqrt5}{2}\approx 1.618"),
+            "q=(1+√5)/2≈1.618"
+        );
         assert_eq!(unicode_math(r"\alpha\in(0,1)"), "α∈(0,1)");
         assert_eq!(unicode_math(r"\sqrt{d_k}"), "√dₖ");
         assert_eq!(unicode_math(r"O(n\log n)"), "O(n log n)");
@@ -564,7 +827,9 @@ pub(crate) struct KittyMath {
 /// kitty 家族终端(原生 kitty / ghostty)才用图形协议;其余走半块。
 pub(crate) fn kitty_graphics_supported() -> bool {
     crate::tools::kitty_image::is_native_kitty_terminal()
-        || std::env::var("TERM").map(|term| term.contains("ghostty")).unwrap_or(false)
+        || std::env::var("TERM")
+            .map(|term| term.contains("ghostty"))
+            .unwrap_or(false)
         || std::env::var_os("GHOSTTY_RESOURCES_DIR").is_some()
 }
 
@@ -603,7 +868,11 @@ pub(crate) fn render_math_kitty(tex: &str, max_cols: usize) -> Option<KittyMath>
     for y in 0..draw_h {
         for x in 0..draw_w {
             let pixel = sample(&raster, x, y, draw_w, draw_h);
-            padded.put_pixel((offset_x + x) as u32, (offset_y + y) as u32, image::Rgba(pixel));
+            padded.put_pixel(
+                (offset_x + x) as u32,
+                (offset_y + y) as u32,
+                image::Rgba(pixel),
+            );
         }
     }
     let sequence = crate::tools::kitty_image::kitty_sequence_with_grid(
@@ -630,17 +899,33 @@ struct MathTextBox {
 impl MathTextBox {
     fn text(content: &str) -> Self {
         let width = text_display_width(content);
-        Self { lines: vec![content.to_string()], baseline: 0, width }
+        Self {
+            lines: vec![content.to_string()],
+            baseline: 0,
+            width,
+        }
     }
 
     fn empty() -> Self {
-        Self { lines: vec![String::new()], baseline: 0, width: 0 }
+        Self {
+            lines: vec![String::new()],
+            baseline: 0,
+            width: 0,
+        }
     }
 }
 
 fn text_display_width(text: &str) -> usize {
     text.chars()
-        .map(|ch| if ch.is_ascii() { 1 } else if (ch as u32) >= 0x2e80 { 2 } else { 1 })
+        .map(|ch| {
+            if ch.is_ascii() {
+                1
+            } else if (ch as u32) >= 0x2e80 {
+                2
+            } else {
+                1
+            }
+        })
         .sum()
 }
 
@@ -664,13 +949,24 @@ fn hcat(left: MathTextBox, right: MathTextBox) -> MathTextBox {
     let below = (left.lines.len() - left.baseline).max(right.lines.len() - right.baseline);
     let mut lines = Vec::with_capacity(above + below);
     for row in 0..(above + below) {
-        let left_row = (row + left.baseline).checked_sub(above).and_then(|i| left.lines.get(i));
-        let right_row = (row + right.baseline).checked_sub(above).and_then(|i| right.lines.get(i));
+        let left_row = (row + left.baseline)
+            .checked_sub(above)
+            .and_then(|i| left.lines.get(i));
+        let right_row = (row + right.baseline)
+            .checked_sub(above)
+            .and_then(|i| right.lines.get(i));
         let mut line = pad_to_width(left_row.map(String::as_str).unwrap_or(""), left.width);
-        line.push_str(&pad_to_width(right_row.map(String::as_str).unwrap_or(""), right.width));
+        line.push_str(&pad_to_width(
+            right_row.map(String::as_str).unwrap_or(""),
+            right.width,
+        ));
         lines.push(line);
     }
-    MathTextBox { lines, baseline: above, width: left.width + right.width }
+    MathTextBox {
+        lines,
+        baseline: above,
+        width: left.width + right.width,
+    }
 }
 
 fn frac_box(numerator: MathTextBox, denominator: MathTextBox) -> MathTextBox {
@@ -684,7 +980,11 @@ fn frac_box(numerator: MathTextBox, denominator: MathTextBox) -> MathTextBox {
     for line in &denominator.lines {
         lines.push(center_to_width(line, width));
     }
-    MathTextBox { lines, baseline, width }
+    MathTextBox {
+        lines,
+        baseline,
+        width,
+    }
 }
 
 /// 多行转写入口:含 `\frac` 的公式排成上下结构,单行公式与
@@ -782,7 +1082,10 @@ fn sequence_box(chars: &[char], cursor: &mut usize, stop: Option<char>) -> MathT
 /// 只窥探命令名(字母串+吃尾空格),游标停在参数处。
 fn peek_command_name(chars: &[char], cursor: &mut usize) -> Option<String> {
     let start = *cursor;
-    while chars.get(*cursor).is_some_and(|ch| ch.is_ascii_alphabetic()) {
+    while chars
+        .get(*cursor)
+        .is_some_and(|ch| ch.is_ascii_alphabetic())
+    {
         *cursor += 1;
     }
     if *cursor == start {
@@ -824,7 +1127,10 @@ mod box_tests {
         assert_eq!(lines.len(), 3, "{lines:?}");
         assert!(lines[0].contains("∂f"));
         assert!(lines[1].starts_with('─'));
-        assert!(lines[1].contains("─── ="), "baseline row carries the rest: {lines:?}");
+        assert!(
+            lines[1].contains("─── ="),
+            "baseline row carries the rest: {lines:?}"
+        );
         assert!(lines[2].contains("∂x"));
     }
 

@@ -155,7 +155,10 @@ pub(crate) fn resolve_pasted_image_paths(
         .collect()
 }
 
-pub(crate) fn rewrite_image_placeholders_with_paths(input: &str, paths: &[Option<String>]) -> String {
+pub(crate) fn rewrite_image_placeholders_with_paths(
+    input: &str,
+    paths: &[Option<String>],
+) -> String {
     let mut output = String::new();
     let mut rest = input;
     while let Some(start) = rest.find("[Image ") {
@@ -353,7 +356,11 @@ impl ReasoningTitleFilter {
         self.release_without_title()
     }
 
-    pub(crate) fn finish_decision(&mut self, title: String, rest: String) -> (Option<String>, Option<String>) {
+    pub(crate) fn finish_decision(
+        &mut self,
+        title: String,
+        rest: String,
+    ) -> (Option<String>, Option<String>) {
         self.pending.clear();
         self.decided = true;
         self.trim_body_prefix = rest.is_empty();
@@ -650,4 +657,3 @@ pub(crate) fn strip_tagged_sections(mut text: String, tag: &str) -> String {
     }
     text
 }
-

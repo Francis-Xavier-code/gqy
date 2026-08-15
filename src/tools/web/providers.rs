@@ -430,7 +430,10 @@ pub(crate) async fn search_exa_public(
     }
     let body = parse_mcp_body(response).await?;
     if let Some(error) = body.get("error") {
-        bail!("Exa free quota RPC error: {}", clip(&error.to_string(), 240));
+        bail!(
+            "Exa free quota RPC error: {}",
+            clip(&error.to_string(), 240)
+        );
     }
     let result = body.get("result").cloned().unwrap_or(Value::Null);
     if result
@@ -741,7 +744,11 @@ pub(crate) fn extract_snippet_after(text: &str, marker: &str) -> Option<String> 
     Some(clean_html_text(&rest[open_end + 1..open_end + 1 + close]))
 }
 
-pub(crate) fn format_crawler_results(query: &str, provider: &str, results: Vec<CrawlerResult>) -> String {
+pub(crate) fn format_crawler_results(
+    query: &str,
+    provider: &str,
+    results: Vec<CrawlerResult>,
+) -> String {
     let mut lines = vec![
         format!("## Search results for: {query}"),
         format!("**Provider**: {provider}\n"),
@@ -759,4 +766,3 @@ pub(crate) fn format_crawler_results(query: &str, provider: &str, results: Vec<C
 }
 
 // ── DuckDuckGo HTML search ─────────────────────────────────────
-

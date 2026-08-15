@@ -14,7 +14,6 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock, RwLock};
 use std::time::SystemTime;
 
-
 mod score;
 use score::*;
 mod validate;
@@ -861,7 +860,6 @@ fn prepare_image(source: &Path, max_bytes: u64) -> Result<PreparedImage> {
     })
 }
 
-
 fn meme_print_size(args: &Value, config: &MemesPluginConfig) -> Option<String> {
     let width = args
         .get("width")
@@ -1222,7 +1220,10 @@ mod tests {
         assert_eq!(origin.sender_name, "测试群友");
         assert_eq!(origin.sent_at, "2026-08-10T12:00:00+00:00");
         assert!(!origin.collected_at.is_empty(), "collected_at stamped");
-        println!("E2E origin: {}", serde_json::to_string_pretty(origin).unwrap());
+        println!(
+            "E2E origin: {}",
+            serde_json::to_string_pretty(origin).unwrap()
+        );
     }
 
     #[test]

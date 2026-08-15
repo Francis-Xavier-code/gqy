@@ -1,7 +1,7 @@
 mod cache_log;
 mod openai_compatible;
-pub mod request_log;
 pub(crate) mod provider_capabilities;
+pub mod request_log;
 
 pub(crate) use openai_compatible::{
     thinking_variant_options_for_model, ThinkingVariantPreferences,
@@ -379,24 +379,24 @@ pub fn is_context_overflow_message(message: &str) -> bool {
         return false;
     }
     const PATTERNS: &[&str] = &[
-        "prompt is too long",                     // Anthropic
-        "request_too_large",                      // Anthropic HTTP 413
+        "prompt is too long", // Anthropic
+        "request_too_large",  // Anthropic HTTP 413
         "request entity too large",
-        "input is too long for requested model",  // Bedrock
-        "exceeds the context window",             // OpenAI
-        "maximum context length",                 // OpenAI-compatible / gateways
-        "reduce the length of the messages",      // Groq
-        "context window exceeds limit",           // MiniMax
-        "exceeded model token limit",             // Kimi
-        "but the configured context size",        // DeepSeek
-        "model_context_window_exceeded",          // z.ai
-        "context_length_exceeded",                // OpenAI error code
+        "input is too long for requested model", // Bedrock
+        "exceeds the context window",            // OpenAI
+        "maximum context length",                // OpenAI-compatible / gateways
+        "reduce the length of the messages",     // Groq
+        "context window exceeds limit",          // MiniMax
+        "exceeded model token limit",            // Kimi
+        "but the configured context size",       // DeepSeek
+        "model_context_window_exceeded",         // z.ai
+        "context_length_exceeded",               // OpenAI error code
         "context length exceeded",
-        "prompt too long",                        // Ollama
-        "greater than the context length",        // LM Studio
-        "exceeds the available context size",     // llama.cpp
-        "too many tokens",                        // generic fallback
-        "token limit exceeded",                   // generic fallback
+        "prompt too long",                    // Ollama
+        "greater than the context length",    // LM Studio
+        "exceeds the available context size", // llama.cpp
+        "too many tokens",                    // generic fallback
+        "token limit exceeded",               // generic fallback
     ];
     PATTERNS.iter().any(|pattern| lower.contains(pattern))
 }
