@@ -3,7 +3,7 @@
 use super::*;
 
 impl RealContextPlugin {
-    pub(super) fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             settings_cache: Mutex::new(None),
             runtime: Mutex::new(RuntimeState::default()),

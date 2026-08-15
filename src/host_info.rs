@@ -77,7 +77,7 @@ fn detect_os_name() -> String {
 /// dependency and `uname(2)` is the same call on macOS and other unices, so
 /// this stays portable without forking.
 #[cfg(unix)]
-fn detect_kernel_release() -> Option<String> {
+pub(crate) fn detect_kernel_release() -> Option<String> {
     // SAFETY: `utsname` is a plain byte-array struct with no invalid bit
     // patterns, `uname` only writes into the buffer we own, and on success it
     // NUL-terminates every field.
@@ -95,7 +95,7 @@ fn detect_kernel_release() -> Option<String> {
 }
 
 #[cfg(not(unix))]
-fn detect_kernel_release() -> Option<String> {
+pub(crate) fn detect_kernel_release() -> Option<String> {
     None
 }
 

@@ -4,7 +4,7 @@
 use super::tests::*;
 use super::tests3::*;
 use super::*;
-use crate::web::TurnOutcome;
+use crate::platforms::TurnOutcome;
 
 fn group_trigger_matrix() {
     let at_only = OneBotConfig::default();

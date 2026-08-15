@@ -847,7 +847,7 @@ fn image_only_turns_receive_nonempty_model_instructions() {
 
 #[test]
 fn confirmed_direct_send_only_suppresses_later_assistant_text() {
-    let outcome = crate::web::TurnOutcome {
+    let outcome = crate::platforms::TurnOutcome {
         run_id: "run-test".to_string(),
         text: "首条消息的回答\n工具发送后的重复确认".to_string(),
         provider_id: None,
@@ -861,7 +861,7 @@ fn confirmed_direct_send_only_suppresses_later_assistant_text() {
     };
     assert_eq!(final_reply_text(&outcome), "首条消息的回答");
 
-    let unsuppressed = crate::web::TurnOutcome {
+    let unsuppressed = crate::platforms::TurnOutcome {
         suppressed_reply_ranges: Vec::new(),
         final_reply_already_sent: false,
         ..outcome
@@ -878,7 +878,7 @@ fn direct_send_suppression_preserves_text_outside_the_suppressed_range() {
     let duplicate = "工具确认";
     let later = "后续回答";
     let text = format!("{prefix}{duplicate}{later}");
-    let outcome = crate::web::TurnOutcome {
+    let outcome = crate::platforms::TurnOutcome {
         run_id: "run-test".to_string(),
         text,
         provider_id: None,
