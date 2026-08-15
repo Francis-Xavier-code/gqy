@@ -1,10 +1,10 @@
 # Renderer fonts
 
-These fonts are loaded only by Miyu's long-image renderer worker. The worker
+These fonts are loaded only by GQY's long-image renderer worker. The worker
 starts with the CJK font and adds the Emoji font only for content that needs it.
-They are installed under `/usr/share/miyu/fonts` so rendering is deterministic
+They are installed under `/usr/share/gqy/fonts` so rendering is deterministic
 and never needs to scan host fonts. Development builds read this directory in
-the source tree. `MIYU_RENDERER_FONTS_DIR` can override the location for
+the source tree. `GQY_RENDERER_FONTS_DIR` can override the location for
 portable builds.
 
 - `NotoSansCJK-Regular.ttc`: unmodified Noto Sans CJK release `Sans2.004`

@@ -10,13 +10,11 @@
 ## Feats
 
 - 权限管理
-- MacOS适配
 - 文转音频
 - 语音输入
 - Live2D
 - 支持QQ官方机器人
 - 支持telegram
 - 安全性、权限
-- artifact增强
 - 自带skill扩充
 - 通讯平台命令

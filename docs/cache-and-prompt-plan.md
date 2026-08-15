@@ -1,10 +1,10 @@
-# Miyu 改进方案 v7（定稿）：高缓存命中率 + 精简提示词
+# GQY 改进方案 v7（定稿）：高缓存命中率 + 精简提示词
 
-> 五轮流程的最终定稿：四轮 Claude 研究（广度 → Miyu 对抗验证 → pi/Reasonix 实现深潜+供应商核查 → v3 落地性核查）+ 第五轮对两份外部 review 的裁定合并：
+> 五轮流程的最终定稿：四轮 Claude 研究（广度 → GQY 对抗验证 → pi/Reasonix 实现深潜+供应商核查 → v3 落地性核查）+ 第五轮对两份外部 review 的裁定合并：
 > - `cache-and-prompt-plan-deepseekreviewed.md`（v5，DeepSeek）
 > - `cache-and-prompt-plan-gpt-reviewed.md`（v6，GPT）
 > 本文取代 v4 成为唯一施工依据；v5/v6 文件保留作为审计记录。file:line 以 main (f851722) 为准。
-> 大前提：**不影响 Miyu 现有功能和语义**。
+> 大前提：**不影响 GQY 现有功能和语义**。
 
 ## 〇、对两份外部 review 的裁定
 
@@ -19,8 +19,8 @@
 | "task tier amend 位置误标" | **部分成立**：v4 A4 引用列表漏 `task.rs:182`，补上 |
 | "v4 缺 compactStuck 锁"（R9） | **不成立**（v4 4.1 已有）。R9 的阈值数字（0.5/0.6/0.8/0.9）采纳 |
 | R5 "MCP 全部走稳定代理" | **部分采纳**。GPT 纠正：Reasonix 实为 pinned lazy registry + use_capability **双路径**（`plugin/lazy.go:168-196` 与 `usecapability.go:529-555`）。v7：MCP 走探针快照 pinned 语义 + **执行时实时鉴权**；代理化为数据触发项 |
-| R7 tokPerChar 自校准 | **不采纳为默认**：Miyu 已内嵌精确 o200k BPE（token_counter.rs）。留作注记 |
-| R1（字节稳定性基建前置）/R3（TRANSIENT 正则自动生成+幂等测试）/R4（探针快照瞬态合并）/R6（压缩逐字保留地板）/R12（辅助请求独立 scheduler 状态+重试复用自身前缀）/P1（工具三件套与静态化同批）/P2（miyu.md 审查表交付物）/P4（辅助隔离测试断言）/P7（append-only 工程规约）/P8（deferred tools 并列 experiments）/§〇遗漏 2（cooldown 纳入亲和判定）/遗漏 6（responses continuation.endpoint_id 锚点复用） | **全部采纳**（归属见正文） |
+| R7 tokPerChar 自校准 | **不采纳为默认**：GQY 已内嵌精确 o200k BPE（token_counter.rs）。留作注记 |
+| R1（字节稳定性基建前置）/R3（TRANSIENT 正则自动生成+幂等测试）/R4（探针快照瞬态合并）/R6（压缩逐字保留地板）/R12（辅助请求独立 scheduler 状态+重试复用自身前缀）/P1（工具三件套与静态化同批）/P2（gqy.md 审查表交付物）/P4（辅助隔离测试断言）/P7（append-only 工程规约）/P8（deferred tools 并列 experiments）/§〇遗漏 2（cooldown 纳入亲和判定）/遗漏 6（responses continuation.endpoint_id 锚点复用） | **全部采纳**（归属见正文） |
 
 ### GPT v6
 
@@ -41,7 +41,7 @@
 | OpenAI prompt_cache_key / explicit mode / cache_write_tokens 已官方化 | **采纳**（capability 表按文档配置；实现时留一行核验） |
 | usage 归一化互斥桶 + `read+write<=total` 守恒校验（不满足标 malformed，不做饱和减法掩盖） | **采纳** |
 | Anthropic 首版仅 1 个 system 断点（+可选 automatic），不预建四槽滚动 | **采纳**（>20 block miss 由数据触发扩展） |
-| persona/identity 变更"下会话生效"→"当前 turn 冻结、下一 turn 原子切换 generation" | **采纳**（Miyu 会话长驻） |
+| persona/identity 变更"下会话生效"→"当前 turn 冻结、下一 turn 原子切换 generation" | **采纳**（GQY 会话长驻） |
 | coding 工具包（schema validation 前置、mutation queue、只读并行、bash 落盘、overflow 单次重试） | **采纳**（→ Release 4 附带） |
 
 ## 一、核心不变量（全工程约束）
@@ -126,7 +126,7 @@ runtime tail                             [E] <runtime now/cwd>（分钟级，决
 ### Release 3：Prompt 精简（先离线，后生产）
 
 1. 先建 persona/safety/tool-routing eval；离线 replay + 新会话分桶，不直接动生产。
-2. **miyu.md 去留表**（GPT v6 §5.2 为基准草案，实施时逐条确认）：人格/关系/语气核心保留压实；对话示例缩到高区分度少量；"逻辑自检/固定 80-90% 置信/每问必双搜"删除或改触发式；todo/loader 教程、AUR 流程、游戏数据源顺序、计算器强制 → 下沉到工具 snippet/guideline 或状态机；易过期 Linux 事实 → KB 加时间戳；外貌/喜好 → 按需 appendix；**Emoji 全禁 vs AUR/游戏要求彩色 Emoji 的冲突 → 实施时请用户定夺统一规则**。
+2. **gqy.md 去留表**（GPT v6 §5.2 为基准草案，实施时逐条确认）：人格/关系/语气核心保留压实；对话示例缩到高区分度少量；"逻辑自检/固定 80-90% 置信/每问必双搜"删除或改触发式；todo/loader 教程、AUR 流程、游戏数据源顺序、计算器强制 → 下沉到工具 snippet/guideline 或状态机；易过期 Linux 事实 → KB 加时间戳；外貌/喜好 → 按需 appendix；**Emoji 全禁 vs AUR/游戏要求彩色 Emoji 的冲突 → 实施时请用户定夺统一规则**。
 3. **指纹拆分**（C1 修复，生产 rollout 硬前置）：persona_compatibility_id（兼容集合，回滚不删数据）+ wire_prompt_hash（变化只记 cold start）；`reset_history` 不再被 prompt 文案变化触发；A/B 分配按 session keyed 稳定跨重启。
 4. ToolDescription 三件套（description/snippet/guideline）——与 2c 同一数据结构改造（P1）；工具清单 opt-in 进 system。
 5. always_loaded 瘦身以 per-tool token 成本表定名单（83 工具合计 27.8k 字符基线；成本表由测试/诊断现算，不写死）。
@@ -204,7 +204,7 @@ runtime tail                             [E] <runtime now/cwd>（分钟级，决
 | C1 修复 | 指纹变更**不再删除**历史与 artifacts（改为记日志 + 更新指纹 = 计划内冷启动）；测试更新 | state/mod.rs |
 | A14 | journal 附加改 BTreeMap 确定性分块 | conversation_db.rs |
 | B8 | 累积器 name 兼容"整名重发"网关（重复忽略/前缀延伸替换/片段追加） | openai_compatible.rs |
-| 存量修复 | token 向量测试的两个过期值（上游改 miyu.md/README 未更新） | token_estimate.rs |
+| 存量修复 | token 向量测试的两个过期值（上游改 gqy.md/README 未更新） | token_estimate.rs |
 | 缓存显示 | REPL footer 与逐轮回执显示 `turn(Ccached)` 绝对值；WebUI 轮次 meta 行显示 `· 缓存 X`；usage 快照接口（/api）携带累计 cache_read/write/reasoning；usage.json 同步累计 | render/mod.rs, cli.rs, web.rs, web/app.js, state/usage.rs |
 | **stub 模式（§八点七 方案①，已实现并设为默认）** | `tools.loading_mode = "stub"`（新默认；hybrid/full 保留可选）：懒工具以真名+首行摘要+宽松参数壳常驻，**tools 数组会话内字节恒定**（有确定性单测锁定）；`load_tools` 语义变为契约获取——结果新增 `contracts` 字段（完整 description + JSON Schema，走 tool result 不碰前缀），对 already-available 名字也返回契约；参数直接按契约填在顶层（无嵌套解包）；权限/审批天然按真名判定；hybrid 的懒加载门在 stub 下自动旁路；token 会计同步走 stub 定义 | registry.rs `stub_definitions`/`tool_contracts`, load_tools.rs, config.rs, agent/mod.rs, config_tui.rs |
 
@@ -212,17 +212,17 @@ runtime tail                             [E] <runtime now/cwd>（分钟级，决
 
 未实施（按 v7 门控，非遗漏）：
 - **数据门控**（需先观测账单）：Anthropic cache_control 断点（决策 7 排期降级）、2.2 历史块前移、`context_start_seq` 指针、MCP 代理化、设计 a/P8、保留真实序列。
-- **eval 门控**：miyu.md 瘦身（Release 3a 要求离线 eval 先行）、工具三件套 snippet/guideline 全量填充。
+- **eval 门控**：gqy.md 瘦身（Release 3a 要求离线 eval 先行）、工具三件套 snippet/guideline 全量填充。
 - **规模门控（后续批次）**：`llm_requests` 表/WirePrefixShape/mock e2e 门禁、model_context sidecar 迁移、render_turn 四合一、snip/prune 水位线、`last_request_at`+冷恢复剪枝、compact 迭代式摘要、cache_sticky 开关与亲和头透传、per-endpoint compat 开关、golden 基线测试、群聊 B2 会计。这些是下一批的第一优先级。
 
 ## 八点七、外部佐证与新增方案（2026-08-06，来源：linux.do《关于渐进式披露工具上下文的几种方向讨论》by 时歌）
 
 该文独立推导出与本方案第三/四轮研究一致的**三角约束**：严格原生调用、稳定 Prompt Cache、真正按需加载——缺 Provider 配合时三选二（"保留独立原生调用→真实工具或 Stub 必须常驻；动态修改 tools→破坏早期缓存；缓存稳定+O(1) 初始→只能统一外壳、校验下放客户端"）。与 v4→v7 的裁定（tools 渲染在最前、追加也保不住历史、代理工具丢内层校验）互为印证。
 
-**新增方案 ①（采纳，列为 Release 2c 的推荐演进 "1.3-c stub 模式"）**：全部懒工具以 **stub 常驻**——保留真名 + 一句话描述 + 宽松参数壳 `{arguments: object}`，常驻一个 `load_tool_schemas` 工具按需以 tool result 返回完整 schema（追加在对话尾部、不碰前缀）。文中估算 200 工具 80k→15k（-80%）。对 Miyu 的适配性极佳：
+**新增方案 ①（采纳，列为 Release 2c 的推荐演进 "1.3-c stub 模式"）**：全部懒工具以 **stub 常驻**——保留真名 + 一句话描述 + 宽松参数壳 `{arguments: object}`，常驻一个 `load_tool_schemas` 工具按需以 tool result 返回完整 schema（追加在对话尾部、不碰前缀）。文中估算 200 工具 80k→15k（-80%）。对 GQY 的适配性极佳：
 - 60 个懒工具 stub ≈ 60×70tok ≈ 4-5k，**tools 数组从此恒定**（C9 三条"减"路径整体无关化，A4 集合增长消失）；
 - **权限按真名判定天然成立**（stub 名=真名，无需设计 a 的 unwrap 分发与提权防护）；call_id 配对与 finish_reason 原生保留；
-- Miyu 执行层本就不做 schema 校验（tools 核查 §3 已确认 handler 自行取参），"内层校验下放客户端"对 Miyu 是零损失；
+- GQY 执行层本就不做 schema 校验（tools 核查 §3 已确认 handler 自行取参），"内层校验下放客户端"对 GQY 是零损失；
 - 改造点：懒工具注册时生成 stub 定义；执行分发时解开 `arguments` 外壳（单点）；`load_tools` 语义改为返回完整 schema 文本；
 - 代价：模型按 tool_result 中的 schema 填参；enum/pattern 从语法层降为文本层——与设计 a 相同类型的损失但范围小得多，可对高约束工具（task/qq_mention_users 等）保留完整 schema 常驻豁免。
 
