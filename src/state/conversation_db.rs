@@ -11,9 +11,9 @@ use std::path::Path;
 use std::sync::Mutex;
 
 mod store;
-pub use store::*;
+
 mod search;
-pub use search::*;
+
 const PENDING_PLACEHOLDER: &str = "<system-reminder>上一轮prompt正在由另一轮回复处理中，你只需要回应用户当前的prompt，不要处理上一轮的prompt</system-reminder>";
 const INTERRUPTED_TEXT: &str =
     "<system-reminder>上一轮prompt已被中断，除非用户重新要求否则不要处理上一轮的prompt</system-reminder>";

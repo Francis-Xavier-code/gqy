@@ -6,9 +6,6 @@ use super::*;
 mod repl_input_tests2 {
     use super::*;
     use crate::llm::ChatStreamKind;
-    use std::os::unix::fs::PermissionsExt;
-    use std::sync::atomic::{AtomicUsize, Ordering};
-    use std::sync::Arc;
 
     fn sample_pop_turn(status: TurnStatus) -> Turn {
         Turn {

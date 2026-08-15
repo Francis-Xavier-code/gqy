@@ -3,8 +3,6 @@
 
 use super::*;
 
-use super::*;
-
 #[test]
 fn clips_fetch_output_with_notice() {
     let output = clip_fetch_output("abcdef", 3);

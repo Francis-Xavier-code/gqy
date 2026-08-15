@@ -3,40 +3,22 @@
 use super::*;
 
 use crate::config::{
-    merge_real_context_settings, ActiveProviderModelConfig, ApiQuotaAccountConfig,
-    ApiQuotaProviderConfig, AppConfig, PlatformCommandPermission, PlatformConversationConfig,
-    PlatformConversationKind, PlatformModelPoolInheritance, PlatformModelRoute,
-    PlatformPersonaOverride, PlatformRateLimit, PlatformSessionLimits, ProviderConfig,
-    ProviderModelChoice, QqMemeCollectorPluginSettings, QqMessageHistoryPluginSettings,
-    RealContextIdentityMapping, RealContextPluginSettings, MAX_COMMAND_OUTPUT_LINES,
-    MAX_PLATFORM_COMMAND_PREFIX_CHARS, MAX_PLATFORM_SESSION_QUEUED, MAX_PLATFORM_SESSION_RUNNING,
-    MAX_REPL_REPLAY_TURNS, QQ_MEME_COLLECTOR_PLUGIN_ID, QQ_MESSAGE_HISTORY_PLUGIN_ID,
-    REAL_CONTEXT_PLUGIN_ID,
+    ApiQuotaAccountConfig, ApiQuotaProviderConfig, AppConfig, PlatformPersonaOverride,
 };
-use crate::default_models::{OPENCODE_DEFAULT_VISION_MODEL, OPENCODE_PROVIDER_ID};
+
 use crate::i18n::{is_zh, text as t};
-use crate::llm::{
-    thinking_variant_options_for_model, ThinkingVariantOptions, ThinkingVariantPreferences,
-};
+use crate::llm::ThinkingVariantPreferences;
+
 use crate::paths::GQYPaths;
-use crate::platforms::commands::{self, PlatformCommandDescriptor};
-use crate::platforms::plugins::{
-    active_judgement_skip_ids, apply_active_judgement_skip_editor_changes,
-};
-use crate::state::StateStore;
-use anyhow::{bail, Result};
+
+use anyhow::Result;
 use crossterm::cursor::{Hide, MoveTo, Show};
-use crossterm::event::{self, Event, KeyCode, KeyEvent};
+use crossterm::event::KeyCode;
 use crossterm::style::{Attribute, Print, SetAttribute};
 use crossterm::terminal::{self, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen};
 use crossterm::{execute, queue};
-use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+
 use std::io::{self, Write};
-use std::path::PathBuf;
-use std::process::Command;
-use std::sync::mpsc::{self, Receiver};
-use std::time::Duration;
 
 pub fn run(paths: &GQYPaths) -> Result<bool> {
     AppConfig::init_files(paths)?;

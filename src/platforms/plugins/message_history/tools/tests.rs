@@ -3,7 +3,6 @@
 
 use super::*;
 
-use super::*;
 use crate::config::AppConfig;
 use crate::paths::GQYPaths;
 use crate::platforms::plugins::PlatformPluginRegistry;

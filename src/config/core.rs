@@ -2,16 +2,9 @@
 
 use super::*;
 
-use crate::default_models::{
-    OPENCODE_DEFAULT_CHAT_MODEL, OPENCODE_DEFAULT_VISION_MODEL, OPENCODE_PROVIDER_ID,
-    OPENCODE_ZEN_BASE_URL,
-};
-use crate::paths::GQYPaths;
-use crate::prompts::default_system_prompt;
 use anyhow::{bail, Context, Result};
-use serde::{Deserialize, Deserializer, Serialize};
-use std::collections::{BTreeMap, HashMap, HashSet};
-use std::path::{Path, PathBuf};
+use serde::{Deserialize, Serialize};
+use std::collections::{BTreeMap, HashSet};
 
 pub const MAX_COMMAND_OUTPUT_LINES: usize = 1_000;
 

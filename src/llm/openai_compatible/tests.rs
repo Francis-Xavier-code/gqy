@@ -6,9 +6,6 @@ use super::*;
 
 #[cfg(test)]
 use crate::llm::{ChatContent, ChatContentPart, ImageUrlContent};
-use std::sync::atomic::AtomicUsize;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpListener;
 
 #[derive(Debug)]
 struct ResponsesTestOutput {

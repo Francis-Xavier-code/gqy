@@ -3,8 +3,6 @@
 
 use super::*;
 
-use super::*;
-
 #[test]
 fn target_parser_accepts_only_qq_sized_numeric_ids() {
     assert_eq!(

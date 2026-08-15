@@ -114,8 +114,6 @@ pub(crate) fn select_active_provider(
     }
 }
 
-use crate::config::EMBEDDING_MODALITY;
-
 pub(crate) fn model_is_embedding(provider: &ProviderConfig, model: &str) -> bool {
     AppConfig::model_is_embedding(provider, model)
 }

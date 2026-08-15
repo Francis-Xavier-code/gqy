@@ -5,7 +5,7 @@ use super::*;
 use crate::platforms::{ConversationKind, PlatformMention};
 use anyhow::{anyhow, bail, Context, Result};
 use rusqlite::types::Value as SqlValue;
-use rusqlite::{params, Connection, OptionalExtension, Transaction, TransactionBehavior};
+use rusqlite::{params, Connection, OptionalExtension, TransactionBehavior};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};

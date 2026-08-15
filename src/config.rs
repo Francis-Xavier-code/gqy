@@ -16,9 +16,9 @@ pub use plugins::*;
 mod defaults;
 pub use defaults::*;
 mod app_impl;
-pub use app_impl::*;
+
 mod app_impl2;
-pub use app_impl2::*;
+
 mod schema;
 pub use schema::*;
 #[cfg(test)]

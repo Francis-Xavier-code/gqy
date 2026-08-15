@@ -2,8 +2,6 @@
 
 use super::*;
 
-use keyboard_enhancement::KeyboardEnhancementState;
-
 pub(crate) fn run_history(paths: &GQYPaths, args: HistoryArgs) -> Result<()> {
     let state = StateStore::new(paths)?;
     run_history_with_state(&state, args)

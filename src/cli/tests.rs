@@ -5,7 +5,7 @@ use super::*;
 
 mod repl_input_tests {
     use super::*;
-    use crate::llm::ChatStreamKind;
+
     use std::os::unix::fs::PermissionsExt;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;

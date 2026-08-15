@@ -19,23 +19,18 @@ pub(crate) use types::{
     ResponseTarget, SendReceipt, TriggerDecision,
 };
 
-use crate::agent::{AgentMode, QueueIngressBarrier, QueueIngressReservation};
-use crate::config::{
-    ActiveProviderModelConfig, AppConfig, PlatformRateLimit, PlatformSessionLimits, PromptAudience,
-};
-use crate::i18n::{text_for, Locale};
-use crate::ipc::ImageAttachment;
+use crate::agent::{QueueIngressBarrier, QueueIngressReservation};
+use crate::config::{ActiveProviderModelConfig, AppConfig, PlatformSessionLimits};
+
 use crate::paths::GQYPaths;
-use crate::state::{PlatformSessionBindingKey, StateStore};
-use crate::web::{random_id, validate_content, ActorCommand, DaemonState, IpcRunGuard, RunInfo};
-use anyhow::{anyhow, bail, Context, Result};
-use futures_util::StreamExt;
+use crate::state::StateStore;
+use anyhow::{anyhow, Result};
+
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, OnceLock, Weak};
 use std::time::{Duration, Instant};
-use tokio::sync::broadcast;
 
 /// How long a delivered image stays deduplicated for its conversation.
 /// Auto-attached reply images (generate_image / search_web_images) must not
