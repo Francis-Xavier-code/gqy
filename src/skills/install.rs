@@ -18,7 +18,7 @@ impl StagedDirectory {
 }
 
 impl Drop for StagedDirectory {
-    pub(crate) fn drop(&mut self) {
+    fn drop(&mut self) {
         if self.armed {
             let _ = fs::remove_dir_all(&self.path);
         }

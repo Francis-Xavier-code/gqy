@@ -958,7 +958,7 @@ impl MigrationMapping {
 pub(crate) struct MigrationLease(File);
 
 impl Drop for MigrationLease {
-    pub(crate) fn drop(&mut self) {
+    fn drop(&mut self) {
         unsafe {
             libc::flock(self.0.as_raw_fd(), libc::LOCK_UN);
         }

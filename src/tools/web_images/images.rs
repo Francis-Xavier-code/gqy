@@ -107,7 +107,7 @@ impl CallTempDir {
 }
 
 impl Drop for CallTempDir {
-    pub(crate) fn drop(&mut self) {
+    fn drop(&mut self) {
         if let Some(dir) = self.inner.take() {
             let path = dir.path().to_path_buf();
             if let Err(error) = dir.close() {

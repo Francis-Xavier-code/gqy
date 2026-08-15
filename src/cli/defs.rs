@@ -1148,7 +1148,7 @@ pub struct DaemonLogsArgs {
 }
 
 impl std::fmt::Debug for WebArgs {
-    pub(crate) fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter
             .debug_struct("WebArgs")
             .field("port", &self.port)

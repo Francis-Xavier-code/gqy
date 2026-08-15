@@ -72,7 +72,7 @@ pub(crate) struct RenderConfig {
 }
 
 impl Default for RenderConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             theme: "paper".to_string(),
             max_height: 2600,
@@ -243,7 +243,7 @@ impl WorkerSlot {
 }
 
 impl Drop for WorkerSlot {
-    pub(crate) fn drop(&mut self) {
+    fn drop(&mut self) {
         self.cancel_idle_timer();
     }
 }

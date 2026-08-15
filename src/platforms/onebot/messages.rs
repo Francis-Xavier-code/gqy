@@ -414,14 +414,11 @@ pub(crate) fn prepend_response_target(segments: &mut Vec<Value>, target: &Respon
 }
 
 impl PlatformAdapter for OneBotAdapter {
-    pub(crate) fn send<'a>(
-        &'a self,
-        message: OutboundMessage,
-    ) -> BoxFuture<'a, Result<SendReceipt>> {
+    fn send<'a>(&'a self, message: OutboundMessage) -> BoxFuture<'a, Result<SendReceipt>> {
         Box::pin(async move { self.send_message(message).await })
     }
 
-    pub(crate) fn bot_display_name<'a>(&'a self) -> BoxFuture<'a, Result<String>> {
+    fn bot_display_name<'a>(&'a self) -> BoxFuture<'a, Result<String>> {
         Box::pin(async move {
             let conn = self.connection();
             if let Some(name) = conn.bot_name.lock().unwrap().clone() {
@@ -440,7 +437,7 @@ impl PlatformAdapter for OneBotAdapter {
         })
     }
 
-    pub(crate) fn message_images<'a>(
+    fn message_images<'a>(
         &'a self,
         message_id: &'a str,
     ) -> BoxFuture<'a, Result<Vec<PlatformImageData>>> {
@@ -522,9 +519,7 @@ impl PlatformAdapter for OneBotAdapter {
         })
     }
 
-    pub(crate) fn bot_send_availability<'a>(
-        &'a self,
-    ) -> BoxFuture<'a, Result<BotSendAvailability>> {
+    fn bot_send_availability<'a>(&'a self) -> BoxFuture<'a, Result<BotSendAvailability>> {
         Box::pin(async move {
             let Target::Group { group_id } = self.target else {
                 return Ok(BotSendAvailability::Available);
@@ -578,7 +573,7 @@ impl PlatformAdapter for OneBotAdapter {
         })
     }
 
-    pub(crate) fn set_message_reaction<'a>(
+    fn set_message_reaction<'a>(
         &'a self,
         message_id: &'a str,
         reaction_id: &'a str,
@@ -603,7 +598,7 @@ impl PlatformAdapter for OneBotAdapter {
         })
     }
 
-    pub(crate) fn message_info<'a>(
+    fn message_info<'a>(
         &'a self,
         message_id: &'a str,
     ) -> BoxFuture<'a, Result<Option<PlatformMessageInfo>>> {
@@ -616,7 +611,7 @@ impl PlatformAdapter for OneBotAdapter {
         })
     }
 
-    pub(crate) fn group_members<'a>(&'a self) -> BoxFuture<'a, Result<Vec<PlatformGroupMember>>> {
+    fn group_members<'a>(&'a self) -> BoxFuture<'a, Result<Vec<PlatformGroupMember>>> {
         Box::pin(async move {
             let Target::Group { group_id } = self.target else {
                 bail!("group member lookup requires a group conversation");
@@ -638,21 +633,21 @@ impl PlatformAdapter for OneBotAdapter {
         })
     }
 
-    pub(crate) fn group_member<'a>(
+    fn group_member<'a>(
         &'a self,
         user_id: &'a str,
     ) -> BoxFuture<'a, Result<Option<PlatformGroupMember>>> {
         self.group_member_lookup(user_id, false)
     }
 
-    pub(crate) fn group_member_fresh<'a>(
+    fn group_member_fresh<'a>(
         &'a self,
         user_id: &'a str,
     ) -> BoxFuture<'a, Result<Option<PlatformGroupMember>>> {
         self.group_member_lookup(user_id, true)
     }
 
-    pub(crate) fn bot_group_role<'a>(&'a self) -> BoxFuture<'a, Result<BotGroupRole>> {
+    fn bot_group_role<'a>(&'a self) -> BoxFuture<'a, Result<BotGroupRole>> {
         Box::pin(async move {
             let Target::Group { group_id } = self.target else {
                 return Ok(BotGroupRole::Unknown);
@@ -684,7 +679,7 @@ impl PlatformAdapter for OneBotAdapter {
         })
     }
 
-    pub(crate) fn delete_message<'a>(&'a self, message_id: &'a str) -> BoxFuture<'a, Result<()>> {
+    fn delete_message<'a>(&'a self, message_id: &'a str) -> BoxFuture<'a, Result<()>> {
         Box::pin(async move {
             let message_id = message_id.trim();
             if message_id.is_empty() || message_id.len() > MAX_ONEBOT_ID_BYTES {
@@ -700,7 +695,7 @@ impl PlatformAdapter for OneBotAdapter {
         })
     }
 
-    pub(crate) fn set_group_ban<'a>(
+    fn set_group_ban<'a>(
         &'a self,
         user_id: &'a str,
         duration_seconds: u64,
@@ -723,7 +718,7 @@ impl PlatformAdapter for OneBotAdapter {
         })
     }
 
-    pub(crate) fn set_group_kick<'a>(
+    fn set_group_kick<'a>(
         &'a self,
         user_id: &'a str,
         reject_add_request: bool,
@@ -746,7 +741,7 @@ impl PlatformAdapter for OneBotAdapter {
         })
     }
 
-    pub(crate) fn set_group_special_title<'a>(
+    fn set_group_special_title<'a>(
         &'a self,
         user_id: &'a str,
         special_title: &'a str,

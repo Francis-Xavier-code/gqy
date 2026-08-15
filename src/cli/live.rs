@@ -171,11 +171,11 @@ impl TerminalFrameTracker {
 }
 
 impl VtePerform for TerminalFrameTracker {
-    pub(crate) fn print(&mut self, character: char) {
+    fn print(&mut self, character: char) {
         self.pending_text.push(character);
     }
 
-    pub(crate) fn execute(&mut self, byte: u8) {
+    fn execute(&mut self, byte: u8) {
         self.flush_text();
         match byte {
             b'\n' => {
@@ -197,7 +197,7 @@ impl VtePerform for TerminalFrameTracker {
         }
     }
 
-    pub(crate) fn csi_dispatch(
+    fn csi_dispatch(
         &mut self,
         params: &VteParams,
         _intermediates: &[u8],
@@ -238,7 +238,7 @@ impl VtePerform for TerminalFrameTracker {
         }
     }
 
-    pub(crate) fn esc_dispatch(&mut self, _intermediates: &[u8], ignore: bool, byte: u8) {
+    fn esc_dispatch(&mut self, _intermediates: &[u8], ignore: bool, byte: u8) {
         self.flush_text();
         if ignore {
             return;

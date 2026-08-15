@@ -73,7 +73,7 @@ impl TerminalSession {
 }
 
 impl Drop for TerminalSession {
-    pub(crate) fn drop(&mut self) {
+    fn drop(&mut self) {
         let _ = execute!(self.stdout, Show, LeaveAlternateScreen);
         let _ = terminal::disable_raw_mode();
     }

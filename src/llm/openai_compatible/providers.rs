@@ -541,11 +541,11 @@ pub(crate) fn wrap_system_update(text: String) -> String {
 }
 
 pub(crate) trait IntoNonEmpty {
-    pub(crate) fn into_non_empty(self) -> Option<String>;
+    fn into_non_empty(self) -> Option<String>;
 }
 
 impl IntoNonEmpty for String {
-    pub(crate) fn into_non_empty(self) -> Option<String> {
+    fn into_non_empty(self) -> Option<String> {
         (!self.trim().is_empty()).then_some(self)
     }
 }

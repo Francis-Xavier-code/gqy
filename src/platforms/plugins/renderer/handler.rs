@@ -929,7 +929,7 @@ impl CappedVecWriter {
 }
 
 impl Write for CappedVecWriter {
-    pub(crate) fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
+    fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
         let Some(next_len) = self.bytes.len().checked_add(buffer.len()) else {
             self.exceeded = true;
             return Err(io::Error::other("rendered PNG byte budget exceeded"));
@@ -942,7 +942,7 @@ impl Write for CappedVecWriter {
         Ok(buffer.len())
     }
 
-    pub(crate) fn flush(&mut self) -> io::Result<()> {
+    fn flush(&mut self) -> io::Result<()> {
         Ok(())
     }
 }

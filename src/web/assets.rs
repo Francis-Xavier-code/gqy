@@ -3,7 +3,7 @@
 use super::*;
 
 impl From<ArtifactAsset> for SafeArtifactAsset {
-    pub(crate) fn from(asset: ArtifactAsset) -> Self {
+    fn from(asset: ArtifactAsset) -> Self {
         Self {
             url: format!("/api/artifacts/{}", asset.asset_id),
             id: asset.asset_id,
@@ -49,7 +49,7 @@ impl SafeImageAsset {
 }
 
 impl From<ImageAsset> for SafeImageAsset {
-    pub(crate) fn from(asset: ImageAsset) -> Self {
+    fn from(asset: ImageAsset) -> Self {
         Self::from_asset(asset, false)
     }
 }
@@ -80,7 +80,7 @@ pub(crate) fn meme_asset_caption_hidden(asset: &ImageAsset, reports: &[String]) 
 }
 
 impl From<TurnFollowup> for SafeFollowup {
-    pub(crate) fn from(followup: TurnFollowup) -> Self {
+    fn from(followup: TurnFollowup) -> Self {
         Self {
             id: followup.prompt_id,
             content: followup.display_content,
@@ -103,7 +103,7 @@ impl From<TurnFollowup> for SafeFollowup {
 }
 
 impl From<QueuedPrompt> for SafeQueuedPrompt {
-    pub(crate) fn from(prompt: QueuedPrompt) -> Self {
+    fn from(prompt: QueuedPrompt) -> Self {
         Self {
             id: prompt.prompt_id,
             content: prompt.display_content,
@@ -118,7 +118,7 @@ impl From<QueuedPrompt> for SafeQueuedPrompt {
 }
 
 impl From<UserAttachment> for SafeUserAttachment {
-    pub(crate) fn from(attachment: UserAttachment) -> Self {
+    fn from(attachment: UserAttachment) -> Self {
         Self {
             url: format!("/api/attachments/{}", attachment.attachment_id),
             id: attachment.attachment_id,
@@ -133,7 +133,7 @@ impl From<UserAttachment> for SafeUserAttachment {
 }
 
 impl From<UsageSnapshot> for SafeUsageSnapshot {
-    pub(crate) fn from(usage: UsageSnapshot) -> Self {
+    fn from(usage: UsageSnapshot) -> Self {
         Self {
             requests: usage.requests,
             prompt_tokens: usage.prompt_tokens,

@@ -567,7 +567,7 @@ impl InlineRawMode {
 }
 
 impl Drop for InlineRawMode {
-    pub(crate) fn drop(&mut self) {
+    fn drop(&mut self) {
         let _ = execute!(self.stdout, Show);
         let _ = terminal::disable_raw_mode();
     }

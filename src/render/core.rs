@@ -911,14 +911,14 @@ pub(crate) enum RenderOutput {
 }
 
 impl Write for RenderOutput {
-    pub(crate) fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+    fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
         match self {
             Self::Terminal => io::stdout().write(bytes),
             Self::Buffered(buffer) => buffer.write(bytes),
         }
     }
 
-    pub(crate) fn flush(&mut self) -> io::Result<()> {
+    fn flush(&mut self) -> io::Result<()> {
         match self {
             Self::Terminal => io::stdout().flush(),
             Self::Buffered(_) => Ok(()),

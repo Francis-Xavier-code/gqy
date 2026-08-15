@@ -503,7 +503,7 @@ impl SessionTurnLease {
 }
 
 impl Drop for SessionTurnLease {
-    pub(crate) fn drop(&mut self) {
+    fn drop(&mut self) {
         // Release the session before removing its registry entry. Otherwise a
         // new arrival could create a second lock during this guard's drop.
         self.guard.take();
@@ -553,7 +553,7 @@ pub(crate) struct TurnProfile {
 }
 
 impl Default for TurnProfile {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             active_persona: None,
             text_models: None,

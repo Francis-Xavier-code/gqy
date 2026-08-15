@@ -313,7 +313,7 @@ pub(crate) struct SafeRedoCandidate {
 }
 
 impl From<crate::state::RedoCandidate> for SafeRedoCandidate {
-    pub(crate) fn from(candidate: crate::state::RedoCandidate) -> Self {
+    fn from(candidate: crate::state::RedoCandidate) -> Self {
         Self {
             turn_id: candidate.turn_id,
             revision: candidate.revision,
@@ -592,7 +592,7 @@ impl IpcRunGuard {
 }
 
 impl Drop for IpcRunGuard {
-    pub(crate) fn drop(&mut self) {
+    fn drop(&mut self) {
         // dsh 语义(验收):回合归 daemon 所有,前端断线只是观众离席——
         // 不取消。曾经这里在客户端断开时砍掉 run,REPL 一关回合就死;
         // 现在 run 由 actor 跑到终态,finish_run 在完成路径里自行清理,
