@@ -133,15 +133,15 @@ pub(crate) struct ChatRequest {
     model: String,
     messages: Vec<ChatMessage>,
     temperature: f32,
-    stream: bool,
+    pub(crate) stream: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
-    stream_options: Option<ChatStreamOptions>,
+    pub(crate) stream_options: Option<ChatStreamOptions>,
     /// Only set by cache-keepalive pings; normal chat leaves the provider
     /// default in place.
     #[serde(skip_serializing_if = "Option::is_none")]
     max_tokens: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    tools: Option<Vec<ToolDefinition>>,
+    pub(crate) tools: Option<Vec<ToolDefinition>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     chat_template_kwargs: Option<ChatTemplateKwargs>,
     #[serde(flatten)]
@@ -166,7 +166,7 @@ pub(crate) struct ResponsesRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     tools: Option<Vec<Value>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    reasoning: Option<ResponsesReasoning>,
+    pub(crate) reasoning: Option<ResponsesReasoning>,
     #[serde(skip_serializing_if = "Option::is_none")]
     temperature: Option<f32>,
     #[serde(flatten)]
@@ -179,7 +179,7 @@ pub(crate) struct ResponsesReasoning {
     #[serde(skip_serializing_if = "Option::is_none")]
     effort: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    summary: Option<String>,
+    pub(crate) summary: Option<String>,
 }
 
 pub(crate) fn default_responses_reasoning(summary: &str) -> ResponsesReasoning {
@@ -256,7 +256,7 @@ pub(crate) struct AnthropicTool {
 
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct ChatTemplateKwargs {
-    enable_thinking: bool,
+    pub(crate) enable_thinking: bool,
 }
 
 /// DeepSeek thinking mode 400s an assistant tool_calls turn whose
@@ -638,21 +638,21 @@ pub(crate) fn remove_null_any_of(value: Value) -> Value {
 #[derive(Debug, Deserialize)]
 pub(crate) struct ChatStreamResponse {
     #[serde(default, deserialize_with = "null_as_default")]
-    choices: Vec<ChatStreamChoice>,
+    pub(crate) choices: Vec<ChatStreamChoice>,
     #[serde(default, deserialize_with = "null_as_default")]
-    usage: Option<Usage>,
+    pub(crate) usage: Option<Usage>,
     #[serde(default, deserialize_with = "null_as_default")]
-    error: Option<Value>,
+    pub(crate) error: Option<Value>,
 }
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct ChatCompletionResponse {
     #[serde(default, deserialize_with = "null_as_default")]
-    choices: Vec<ChatCompletionChoice>,
+    pub(crate) choices: Vec<ChatCompletionChoice>,
     #[serde(default, deserialize_with = "null_as_default")]
-    usage: Option<Usage>,
+    pub(crate) usage: Option<Usage>,
     #[serde(default, deserialize_with = "null_as_default")]
-    error: Option<Value>,
+    pub(crate) error: Option<Value>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -676,17 +676,17 @@ pub(crate) struct ChatChoiceMessage {
     #[serde(default, deserialize_with = "null_as_default")]
     content: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    reasoning_content: Option<String>,
+    pub(crate) reasoning_content: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    reasoning: Option<String>,
+    pub(crate) reasoning: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    thinking: Option<String>,
+    pub(crate) thinking: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    thinking_content: Option<String>,
+    pub(crate) thinking_content: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    reasoning_text: Option<String>,
+    pub(crate) reasoning_text: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    reasoning_details: Option<serde_json::Value>,
+    pub(crate) reasoning_details: Option<serde_json::Value>,
     #[serde(default, deserialize_with = "null_as_default")]
     tool_calls: Vec<ToolCallDelta>,
 }
@@ -702,13 +702,13 @@ where
 #[derive(Debug, Default, Deserialize)]
 pub(crate) struct ToolCallDelta {
     #[serde(default)]
-    index: usize,
+    pub(crate) index: usize,
     #[serde(default, deserialize_with = "null_as_default")]
-    id: Option<String>,
+    pub(crate) id: Option<String>,
     #[serde(rename = "type", default, deserialize_with = "null_as_default")]
-    kind: Option<String>,
+    pub(crate) kind: Option<String>,
     #[serde(default)]
-    function: ToolCallFunctionDelta,
+    pub(crate) function: ToolCallFunctionDelta,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -722,39 +722,39 @@ pub(crate) struct ToolCallFunctionDelta {
 #[derive(Debug, Deserialize)]
 pub(crate) struct ResponsesStreamEvent {
     #[serde(rename = "type")]
-    kind: String,
+    pub(crate) kind: String,
     #[serde(default, deserialize_with = "null_as_default")]
-    delta: Option<String>,
+    pub(crate) delta: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    arguments: Option<String>,
+    pub(crate) arguments: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    name: Option<String>,
+    pub(crate) name: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    refusal: Option<String>,
+    pub(crate) refusal: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    text: Option<String>,
+    pub(crate) text: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    content_index: Option<usize>,
+    pub(crate) content_index: Option<usize>,
     #[serde(default, deserialize_with = "null_as_default")]
-    item_id: Option<String>,
+    pub(crate) item_id: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    item: Option<ResponsesStreamItem>,
+    pub(crate) item: Option<ResponsesStreamItem>,
     #[serde(default, deserialize_with = "null_as_default")]
-    response: Option<ResponsesStreamResponse>,
+    pub(crate) response: Option<ResponsesStreamResponse>,
 }
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct ResponsesStreamItem {
     #[serde(rename = "type")]
-    kind: String,
+    pub(crate) kind: String,
     #[serde(default, deserialize_with = "null_as_default")]
-    id: Option<String>,
+    pub(crate) id: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    call_id: Option<String>,
+    pub(crate) call_id: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    name: Option<String>,
+    pub(crate) name: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    arguments: Option<String>,
+    pub(crate) arguments: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -804,19 +804,19 @@ pub(crate) struct ResponsesOutputTokenDetails {
 #[derive(Debug, Deserialize)]
 pub(crate) struct AnthropicStreamEvent {
     #[serde(rename = "type")]
-    kind: String,
+    pub(crate) kind: String,
     #[serde(default, deserialize_with = "null_as_default")]
-    index: Option<usize>,
+    pub(crate) index: Option<usize>,
     #[serde(default, deserialize_with = "null_as_default")]
-    message: Option<AnthropicStreamMessage>,
+    pub(crate) message: Option<AnthropicStreamMessage>,
     #[serde(default, deserialize_with = "null_as_default")]
-    content_block: Option<AnthropicStreamBlock>,
+    pub(crate) content_block: Option<AnthropicStreamBlock>,
     #[serde(default, deserialize_with = "null_as_default")]
-    delta: Option<AnthropicStreamDelta>,
+    pub(crate) delta: Option<AnthropicStreamDelta>,
     #[serde(default, deserialize_with = "null_as_default")]
-    usage: Option<AnthropicUsage>,
+    pub(crate) usage: Option<AnthropicUsage>,
     #[serde(default, deserialize_with = "null_as_default")]
-    error: Option<AnthropicStreamError>,
+    pub(crate) error: Option<AnthropicStreamError>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -830,9 +830,9 @@ pub(crate) struct AnthropicStreamBlock {
     #[serde(rename = "type")]
     kind: String,
     #[serde(default, deserialize_with = "null_as_default")]
-    id: Option<String>,
+    pub(crate) id: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    name: Option<String>,
+    pub(crate) name: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
     text: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
@@ -856,13 +856,13 @@ pub(crate) struct AnthropicStreamDelta {
 #[derive(Debug, Deserialize)]
 pub(crate) struct AnthropicUsage {
     #[serde(default)]
-    input_tokens: u64,
+    pub(crate) input_tokens: u64,
     #[serde(default)]
-    output_tokens: u64,
+    pub(crate) output_tokens: u64,
     #[serde(default)]
-    cache_read_input_tokens: Option<u64>,
+    pub(crate) cache_read_input_tokens: Option<u64>,
     #[serde(default)]
-    cache_creation_input_tokens: Option<u64>,
+    pub(crate) cache_creation_input_tokens: Option<u64>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -875,14 +875,14 @@ pub(crate) struct AnthropicStreamError {
 
 #[derive(Default)]
 pub(crate) struct AnthropicStreamState {
-    content: String,
-    content_emitted: usize,
-    reasoning: String,
-    reasoning_emitted: usize,
-    reasoning_part_active: bool,
-    thinking_signature: Option<String>,
-    usage: Option<Usage>,
-    tool_calls: AnthropicToolAccumulator,
+    pub(crate) content: String,
+    pub(crate) content_emitted: usize,
+    pub(crate) reasoning: String,
+    pub(crate) reasoning_emitted: usize,
+    pub(crate) reasoning_part_active: bool,
+    pub(crate) thinking_signature: Option<String>,
+    pub(crate) usage: Option<Usage>,
+    pub(crate) tool_calls: AnthropicToolAccumulator,
 }
 
 /// Upper bound on streamed tool calls per response. Indices come from the
@@ -920,5 +920,5 @@ pub(crate) fn bounded_stream_string(mut value: String, limit: usize) -> String {
 
 #[derive(Debug, Default)]
 pub(crate) struct AnthropicToolAccumulator {
-    calls: Vec<PartialToolCall>,
+    pub(crate) calls: Vec<PartialToolCall>,
 }

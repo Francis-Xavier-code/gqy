@@ -431,10 +431,10 @@ pub(crate) fn write_fenced_block(stdout: &mut impl Write, label: &str, text: &st
 }
 
 pub(crate) struct CommandResult {
-    success: bool,
-    exit_code: Option<i64>,
-    stdout: String,
-    stderr: String,
+    pub(crate) success: bool,
+    pub(crate) exit_code: Option<i64>,
+    pub(crate) stdout: String,
+    pub(crate) stderr: String,
 }
 
 pub(crate) fn parse_command_result(output: &str) -> Option<CommandResult> {

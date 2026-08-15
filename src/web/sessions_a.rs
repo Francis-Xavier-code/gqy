@@ -5,7 +5,7 @@ use super::*;
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct LoginRequest {
-    password: String,
+    pub(crate) password: String,
 }
 
 pub(crate) const QQ_GROUP_MANAGEMENT_PLUGIN_ID: &str = "qq_group_management";
@@ -142,10 +142,10 @@ pub(crate) async fn qq_group_offender_delete_http(
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct UpdateConfigRequest {
-    config: Value,
+    pub(crate) config: Value,
     #[serde(default)]
-    secrets: HashMap<String, SecretMutation>,
-    prompts: PromptDocuments,
+    pub(crate) secrets: HashMap<String, SecretMutation>,
+    pub(crate) prompts: PromptDocuments,
     #[serde(default)]
     reset_conversation: bool,
 }
@@ -161,48 +161,48 @@ pub(crate) enum SecretMutation {
 #[serde(deny_unknown_fields)]
 pub(crate) struct PromptDocuments {
     #[serde(default)]
-    personas: Vec<PromptDocument>,
+    pub(crate) personas: Vec<PromptDocument>,
     #[serde(default)]
-    identities: Vec<PromptDocument>,
+    pub(crate) identities: Vec<PromptDocument>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct PromptDocument {
-    name: String,
-    content: String,
+    pub(crate) name: String,
+    pub(crate) content: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    avatar_path: Option<String>,
+    pub(crate) avatar_path: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    board_image_path: Option<String>,
+    pub(crate) board_image_path: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    board_title: Option<String>,
+    pub(crate) board_title: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    board_subtitle: Option<String>,
+    pub(crate) board_subtitle: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    starter_prompts: Option<Vec<String>>,
+    pub(crate) starter_prompts: Option<Vec<String>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    original_name: Option<String>,
+    pub(crate) original_name: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub(crate) struct PersonaMetadata {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    avatar_path: Option<String>,
+    pub(crate) avatar_path: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    board_image_path: Option<String>,
+    pub(crate) board_image_path: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    board_title: Option<String>,
+    pub(crate) board_title: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    board_subtitle: Option<String>,
+    pub(crate) board_subtitle: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    starter_prompts: Option<Vec<String>>,
+    pub(crate) starter_prompts: Option<Vec<String>>,
 }
 
 #[derive(Serialize)]
 pub(crate) struct ConfigResponse {
-    config: Value,
-    secret_states: HashMap<String, bool>,
+    pub(crate) config: Value,
+    pub(crate) secret_states: HashMap<String, bool>,
     prompts: PromptDocuments,
     models: Vec<SafeModel>,
     multimodal_models: Vec<SafeModel>,
@@ -213,8 +213,8 @@ pub(crate) struct ConfigResponse {
 
 #[derive(Clone, Debug, Serialize)]
 pub(crate) struct PersonaIdentity {
-    name: String,
-    avatar_url: Option<String>,
+    pub(crate) name: String,
+    pub(crate) avatar_url: Option<String>,
     board_image_url: Option<String>,
     board_title: String,
     board_subtitle: String,

@@ -191,7 +191,7 @@ impl ResponsesToolAccumulator {
 
 #[derive(Debug, Default)]
 pub(crate) struct ToolCallAccumulator {
-    calls: Vec<PartialToolCall>,
+    pub(crate) calls: Vec<PartialToolCall>,
 }
 
 #[derive(Debug, Default)]

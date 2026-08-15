@@ -67,7 +67,7 @@ pub(crate) struct CreateSessionRequest {
 
 #[derive(Deserialize)]
 pub(crate) struct ResetConversationRequest {
-    session_id: Option<String>,
+    pub(crate) session_id: Option<String>,
 }
 
 pub(crate) async fn create_session_http(

@@ -36,15 +36,15 @@ pub(crate) static CACHE_PUBLISH_LOCK: AsyncMutex<()> = AsyncMutex::const_new(())
 
 #[derive(Debug, Clone)]
 pub(crate) struct ImageCandidate {
-    title: String,
-    page_url: String,
-    image_url: String,
-    thumbnail_url: String,
-    source: String,
-    width: u32,
-    height: u32,
-    search_description: String,
-    provider_rank: usize,
+    pub(crate) title: String,
+    pub(crate) page_url: String,
+    pub(crate) image_url: String,
+    pub(crate) thumbnail_url: String,
+    pub(crate) source: String,
+    pub(crate) width: u32,
+    pub(crate) height: u32,
+    pub(crate) search_description: String,
+    pub(crate) provider_rank: usize,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -74,13 +74,13 @@ pub(crate) struct ImageSearchResult {
 }
 
 pub(crate) struct StoredImage {
-    candidate: ImageCandidate,
-    local_path: PathBuf,
-    mime_type: String,
-    size_bytes: usize,
-    sha256: String,
-    used_thumbnail: bool,
-    vision: VisionScreening,
+    pub(crate) candidate: ImageCandidate,
+    pub(crate) local_path: PathBuf,
+    pub(crate) mime_type: String,
+    pub(crate) size_bytes: usize,
+    pub(crate) sha256: String,
+    pub(crate) used_thumbnail: bool,
+    pub(crate) vision: VisionScreening,
 }
 
 pub(crate) struct CallTempDir {
@@ -124,7 +124,7 @@ impl Drop for CallTempDir {
 #[derive(Debug, Clone)]
 pub(crate) struct VisionScreening {
     status: String,
-    accepted: bool,
+    pub(crate) accepted: bool,
     description: String,
     reason: String,
     provider_id: String,
@@ -132,7 +132,7 @@ pub(crate) struct VisionScreening {
     error: String,
     relevance: u8,
     quality: u8,
-    safe: bool,
+    pub(crate) safe: bool,
 }
 
 impl VisionScreening {

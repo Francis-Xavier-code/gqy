@@ -166,13 +166,13 @@ pub(crate) enum PlatformAccessMutationResult {
 
 #[derive(Debug, Clone)]
 pub struct StateStore {
-    state_dir: PathBuf,
-    artifacts_dir: PathBuf,
-    conv_db: Arc<ConversationDb>,
-    platform_access: Arc<SharedPlatformAccess>,
+    pub(crate) state_dir: PathBuf,
+    pub(crate) artifacts_dir: PathBuf,
+    pub(crate) conv_db: Arc<ConversationDb>,
+    pub(crate) platform_access: Arc<SharedPlatformAccess>,
     /// Active session. Shared across clones and swappable at runtime so a
     /// long-lived daemon switches every holder atomically.
-    session_id: Arc<std::sync::RwLock<Arc<str>>>,
-    queue_session_id: Arc<str>,
-    queue_owner_pid: u32,
+    pub(crate) session_id: Arc<std::sync::RwLock<Arc<str>>>,
+    pub(crate) queue_session_id: Arc<str>,
+    pub(crate) queue_owner_pid: u32,
 }

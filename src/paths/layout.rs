@@ -405,12 +405,12 @@ pub(crate) fn normalize_home(home: &Path) -> PathBuf {
 
 #[derive(Clone, Debug)]
 pub(crate) struct LegacyLayout {
-    config_dir: PathBuf,
-    data_dir: PathBuf,
-    cache_dir: PathBuf,
-    state_dir: PathBuf,
-    documents_dir: PathBuf,
-    pictures_dirs: Vec<PathBuf>,
+    pub(crate) config_dir: PathBuf,
+    pub(crate) data_dir: PathBuf,
+    pub(crate) cache_dir: PathBuf,
+    pub(crate) state_dir: PathBuf,
+    pub(crate) documents_dir: PathBuf,
+    pub(crate) pictures_dirs: Vec<PathBuf>,
 }
 
 impl LegacyLayout {
@@ -435,11 +435,11 @@ impl LegacyLayout {
 
 #[derive(Clone, Debug)]
 pub(crate) struct Layout {
-    root_dir: PathBuf,
-    config_dir: PathBuf,
-    data_dir: PathBuf,
-    cache_dir: PathBuf,
-    state_dir: PathBuf,
+    pub(crate) root_dir: PathBuf,
+    pub(crate) config_dir: PathBuf,
+    pub(crate) data_dir: PathBuf,
+    pub(crate) cache_dir: PathBuf,
+    pub(crate) state_dir: PathBuf,
 }
 
 impl Layout {
@@ -465,9 +465,9 @@ pub(crate) struct ResourceMigrationEntry {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct ResourceMigrationJournal {
     entries: Vec<ResourceMigrationEntry>,
-    moved: usize,
+    pub(crate) moved: usize,
     #[serde(default)]
-    pending: Option<usize>,
+    pub(crate) pending: Option<usize>,
 }
 
 pub(crate) fn resource_layout_entries(layout: &Layout) -> Vec<ResourceMigrationEntry> {

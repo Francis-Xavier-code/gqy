@@ -34,7 +34,7 @@ pub(crate) fn models_url(base_url: &str) -> String {
 
 #[derive(Deserialize)]
 pub(crate) struct ModelsResponse {
-    data: Vec<ModelInfo>,
+    pub(crate) data: Vec<ModelInfo>,
 }
 
 #[derive(Deserialize)]

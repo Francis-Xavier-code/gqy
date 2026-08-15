@@ -63,14 +63,14 @@ impl ToolCallDisplayMode {
 #[derive(Clone)]
 pub(crate) struct CommandLogLine {
     stream: CommandOutputStream,
-    text: String,
+    pub(crate) text: String,
     sequence: u64,
 }
 
 #[derive(Default)]
 pub(crate) struct CommandStreamState {
     utf8_pending: Vec<u8>,
-    current: String,
+    pub(crate) current: String,
     control: TerminalControlState,
     last_update: u64,
     current_sequence: Option<u64>,
@@ -85,8 +85,8 @@ pub(crate) struct CommandOutputPreviewLine {
 
 #[derive(Clone, serde::Serialize)]
 pub(crate) struct CommandOutputPreview {
-    lines: Vec<CommandOutputPreviewLine>,
-    omitted: bool,
+    pub(crate) lines: Vec<CommandOutputPreviewLine>,
+    pub(crate) omitted: bool,
 }
 
 pub(crate) struct CommandOutputTail {
@@ -260,7 +260,7 @@ pub(crate) struct CommandLiveDisplay {
     show_full_command: bool,
     output: CommandOutputTail,
     frame: usize,
-    rendered_line_widths: Vec<usize>,
+    pub(crate) rendered_line_widths: Vec<usize>,
 }
 
 impl CommandLiveDisplay {
@@ -927,37 +927,37 @@ impl Write for RenderOutput {
 }
 
 pub struct StreamRenderer {
-    reasoning_mode: ReasoningDisplayMode,
-    tool_call_mode: ToolCallDisplayMode,
-    plain: bool,
-    mode: Option<ChatStreamKind>,
-    cursor_hidden: bool,
-    external_cursor_control: bool,
-    output: RenderOutput,
-    markdown: MarkdownStreamRenderer,
-    reasoning_text: String,
-    reasoning_tokens: usize,
-    reasoning_title: Option<String>,
-    reasoning_started_at: Option<std::time::Instant>,
-    reasoning_elapsed: Option<std::time::Duration>,
-    tool_stats: BTreeMap<String, ToolStats>,
-    tool_seq: usize,
-    readable_tool_names: bool,
-    command_output_lines: usize,
-    command_display: Option<CommandLiveDisplay>,
-    summary_line_active: bool,
-    summary_lines_active: u16,
-    last_tool_summary: String,
-    live_summary: bool,
-    wait_spinner: Option<WaitSpinner>,
-    last_tick: Option<std::time::Instant>,
-    preparing_question_started_at: Option<std::time::Instant>,
+    pub(crate) reasoning_mode: ReasoningDisplayMode,
+    pub(crate) tool_call_mode: ToolCallDisplayMode,
+    pub(crate) plain: bool,
+    pub(crate) mode: Option<ChatStreamKind>,
+    pub(crate) cursor_hidden: bool,
+    pub(crate) external_cursor_control: bool,
+    pub(crate) output: RenderOutput,
+    pub(crate) markdown: MarkdownStreamRenderer,
+    pub(crate) reasoning_text: String,
+    pub(crate) reasoning_tokens: usize,
+    pub(crate) reasoning_title: Option<String>,
+    pub(crate) reasoning_started_at: Option<std::time::Instant>,
+    pub(crate) reasoning_elapsed: Option<std::time::Duration>,
+    pub(crate) tool_stats: BTreeMap<String, ToolStats>,
+    pub(crate) tool_seq: usize,
+    pub(crate) readable_tool_names: bool,
+    pub(crate) command_output_lines: usize,
+    pub(crate) command_display: Option<CommandLiveDisplay>,
+    pub(crate) summary_line_active: bool,
+    pub(crate) summary_lines_active: u16,
+    pub(crate) last_tool_summary: String,
+    pub(crate) live_summary: bool,
+    pub(crate) wait_spinner: Option<WaitSpinner>,
+    pub(crate) last_tick: Option<std::time::Instant>,
+    pub(crate) preparing_question_started_at: Option<std::time::Instant>,
     /// Phase text and start time for the "still receiving arguments" hint.
     /// Sticky like `preparing_question_started_at` and for the same reason:
     /// `tick_spinner` re-derives the phase from renderer state on every tick,
     /// so a phase merely pushed into the spinner is overwritten before it can
     /// be drawn.
-    tool_preparing: Option<(&'static str, std::time::Instant)>,
-    subagent_mode: Option<ChatStreamKind>,
-    sent_meme_filter: SentMemeStreamFilter,
+    pub(crate) tool_preparing: Option<(&'static str, std::time::Instant)>,
+    pub(crate) subagent_mode: Option<ChatStreamKind>,
+    pub(crate) sent_meme_filter: SentMemeStreamFilter,
 }

@@ -3,37 +3,37 @@
 use super::*;
 
 pub(crate) struct LiveReplTail {
-    editor: LiveReplEditor,
-    queued: Vec<QueuedPrompt>,
-    pending_chunks: Vec<ChatStreamChunk>,
-    footer: ReplFooterStatus,
+    pub(crate) editor: LiveReplEditor,
+    pub(crate) queued: Vec<QueuedPrompt>,
+    pub(crate) pending_chunks: Vec<ChatStreamChunk>,
+    pub(crate) footer: ReplFooterStatus,
     /// 回合中途逐请求刷新计量时的基线(回合开始前的 footer 快照)。
     /// 每次 RoundUsage 事件都从基线重新叠加,避免累计值重复相加;
     /// 任何权威更新(set_footer)都会清掉它。
     round_base_footer: Option<Box<ReplFooterStatus>>,
-    jobs: Vec<crate::tools::jobs::JobOverview>,
+    pub(crate) jobs: Vec<crate::tools::jobs::JobOverview>,
     job_spinner: usize,
-    output_cursor: (u16, u16),
+    pub(crate) output_cursor: (u16, u16),
     tail_start: u16,
     tail_rows: u16,
     input_cursor: (u16, u16),
-    rendered: bool,
-    external_output_active: bool,
-    raw_mode_handoff: bool,
+    pub(crate) rendered: bool,
+    pub(crate) external_output_active: bool,
+    pub(crate) raw_mode_handoff: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct LiveTailPlacement {
     output_row: u16,
-    tail_start: u16,
+    pub(crate) tail_start: u16,
     overflow: u16,
     anchored: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct TerminalFrameLayout {
-    cursor: (u16, u16),
-    occupied_bottom: Option<u16>,
+    pub(crate) cursor: (u16, u16),
+    pub(crate) occupied_bottom: Option<u16>,
 }
 
 pub(crate) struct TerminalFrameTracker {

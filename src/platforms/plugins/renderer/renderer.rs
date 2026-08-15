@@ -97,15 +97,15 @@ pub(crate) struct RenderedImage {
 
 #[derive(Clone)]
 pub(crate) struct MarkdownImageRenderer {
-    worker: Arc<Mutex<WorkerSlot>>,
+    pub(crate) worker: Arc<Mutex<WorkerSlot>>,
 }
 
 pub(crate) struct RendererState {
-    font_system: FontSystem,
+    pub(crate) font_system: FontSystem,
     swash_cache: SwashCache,
     resolved_fonts: HashMap<String, Option<String>>,
-    emoji_font_path: PathBuf,
-    emoji_loaded: bool,
+    pub(crate) emoji_font_path: PathBuf,
+    pub(crate) emoji_loaded: bool,
 }
 
 impl MarkdownImageRenderer {
@@ -815,10 +815,10 @@ impl RendererState {
 #[derive(Clone)]
 pub(crate) struct NormalizedConfig {
     theme: String,
-    max_height: u32,
-    font_size: u32,
-    code_font_size: u32,
-    padding: u32,
+    pub(crate) max_height: u32,
+    pub(crate) font_size: u32,
+    pub(crate) code_font_size: u32,
+    pub(crate) padding: u32,
     font: String,
     title_font: String,
     code_font: String,
@@ -845,27 +845,27 @@ impl NormalizedConfig {
 
 #[derive(Clone)]
 pub(crate) struct ResolvedFonts {
-    body: Option<String>,
-    title: Option<String>,
-    code: Option<String>,
-    emoji: Option<String>,
+    pub(crate) body: Option<String>,
+    pub(crate) title: Option<String>,
+    pub(crate) code: Option<String>,
+    pub(crate) emoji: Option<String>,
 }
 
 #[derive(Clone, Copy)]
 pub(crate) struct Palette {
-    background: [u8; 4],
-    text: [u8; 4],
-    heading: [u8; 4],
-    muted: [u8; 4],
-    link: [u8; 4],
-    code_background: [u8; 4],
-    code_text: [u8; 4],
-    quote_background: [u8; 4],
-    quote_bar: [u8; 4],
-    table_header_background: [u8; 4],
-    table_background: [u8; 4],
-    border: [u8; 4],
-    rule: [u8; 4],
+    pub(crate) background: [u8; 4],
+    pub(crate) text: [u8; 4],
+    pub(crate) heading: [u8; 4],
+    pub(crate) muted: [u8; 4],
+    pub(crate) link: [u8; 4],
+    pub(crate) code_background: [u8; 4],
+    pub(crate) code_text: [u8; 4],
+    pub(crate) quote_background: [u8; 4],
+    pub(crate) quote_bar: [u8; 4],
+    pub(crate) table_header_background: [u8; 4],
+    pub(crate) table_background: [u8; 4],
+    pub(crate) border: [u8; 4],
+    pub(crate) rule: [u8; 4],
 }
 
 impl Palette {
@@ -933,25 +933,25 @@ pub(crate) enum BlockKind {
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub(crate) struct InlineStyle {
-    bold: bool,
-    italic: bool,
-    code: bool,
-    link: bool,
-    muted: bool,
+    pub(crate) bold: bool,
+    pub(crate) italic: bool,
+    pub(crate) code: bool,
+    pub(crate) link: bool,
+    pub(crate) muted: bool,
 }
 
 #[derive(Clone, Debug)]
 pub(crate) struct RichSpan {
-    text: String,
-    style: InlineStyle,
+    pub(crate) text: String,
+    pub(crate) style: InlineStyle,
 }
 
 #[derive(Clone, Debug)]
 pub(crate) struct Block {
-    kind: BlockKind,
-    spans: Vec<RichSpan>,
-    table: Option<TableBlock>,
-    task: Option<bool>,
+    pub(crate) kind: BlockKind,
+    pub(crate) spans: Vec<RichSpan>,
+    pub(crate) table: Option<TableBlock>,
+    pub(crate) task: Option<bool>,
 }
 
 impl Block {
@@ -988,9 +988,9 @@ impl Block {
 
 #[derive(Clone, Debug)]
 pub(crate) struct TableBlock {
-    alignments: Vec<Alignment>,
-    header: Vec<Vec<RichSpan>>,
-    rows: Vec<Vec<Vec<RichSpan>>>,
+    pub(crate) alignments: Vec<Alignment>,
+    pub(crate) header: Vec<Vec<RichSpan>>,
+    pub(crate) rows: Vec<Vec<Vec<RichSpan>>>,
 }
 
 impl TableBlock {
@@ -1376,18 +1376,18 @@ pub(crate) fn validate_markdown(markdown: &str) -> Result<()> {
 }
 
 pub(crate) struct LayoutBlock {
-    kind: BlockKind,
-    buffer: Option<Buffer>,
-    table: Option<LayoutTable>,
-    task: Option<TaskBox>,
-    total_height: u32,
-    vertical_padding: u32,
-    inset_left: u32,
-    boundaries: Vec<u32>,
-    margin_before: u32,
-    margin_after: u32,
-    default_color: Color,
-    inline_code_background: [u8; 4],
+    pub(crate) kind: BlockKind,
+    pub(crate) buffer: Option<Buffer>,
+    pub(crate) table: Option<LayoutTable>,
+    pub(crate) task: Option<TaskBox>,
+    pub(crate) total_height: u32,
+    pub(crate) vertical_padding: u32,
+    pub(crate) inset_left: u32,
+    pub(crate) boundaries: Vec<u32>,
+    pub(crate) margin_before: u32,
+    pub(crate) margin_after: u32,
+    pub(crate) default_color: Color,
+    pub(crate) inline_code_background: [u8; 4],
 }
 
 pub(crate) struct LayoutTable {
@@ -1398,15 +1398,15 @@ pub(crate) struct LayoutTable {
 pub(crate) struct LayoutTableRow {
     cells: Vec<LayoutTableCell>,
     source_start: u32,
-    source_end: u32,
+    pub(crate) source_end: u32,
     header: bool,
     stripe: bool,
 }
 
 pub(crate) struct LayoutTableCell {
-    buffer: Buffer,
+    pub(crate) buffer: Buffer,
     x: u32,
     width: u32,
-    default_color: Color,
-    inline_code_background: [u8; 4],
+    pub(crate) default_color: Color,
+    pub(crate) inline_code_background: [u8; 4],
 }

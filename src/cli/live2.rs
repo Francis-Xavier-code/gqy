@@ -453,8 +453,8 @@ impl Drop for LiveRawMode {
 pub(crate) struct SharedJobsFeed {
     /// The owning REPL's current session — strip snapshots are filtered to
     /// it (daemon "current session" can drift from the REPL's after /new).
-    repl_session: std::sync::Mutex<Option<String>>,
-    jobs: std::sync::Mutex<Vec<crate::tools::jobs::JobOverview>>,
+    pub(crate) repl_session: std::sync::Mutex<Option<String>>,
+    pub(crate) jobs: std::sync::Mutex<Vec<crate::tools::jobs::JobOverview>>,
     /// Rendered wake-turn reports waiting to be printed into the scrollback.
     reports: std::sync::Mutex<Vec<BackgroundReport>>,
     /// Latest session Σ read straight from the store. Background subagents
@@ -463,18 +463,18 @@ pub(crate) struct SharedJobsFeed {
     /// sat on a stale Σ until the user happened to send another prompt.
     cumulative: std::sync::Mutex<Option<TurnTokens>>,
     /// Active daemon-initiated wake runs: (run_id, session_id, label).
-    wake_runs: std::sync::Mutex<Vec<(String, String, String)>>,
+    pub(crate) wake_runs: std::sync::Mutex<Vec<(String, String, String)>>,
     /// Wake runs already attached to (never re-follow), and turn ids that
     /// were rendered live (their DB report must not print again).
     followed_runs: std::sync::Mutex<std::collections::HashSet<String>>,
-    rendered_turns: std::sync::Mutex<std::collections::HashSet<String>>,
+    pub(crate) rendered_turns: std::sync::Mutex<std::collections::HashSet<String>>,
 }
 
 #[derive(Clone)]
 pub(crate) struct BackgroundReport {
     turn_id: String,
-    headline: String,
-    reply: String,
+    pub(crate) headline: String,
+    pub(crate) reply: String,
 }
 
 /// Session isolation for the strip: keep only `session`'s jobs (sessionless

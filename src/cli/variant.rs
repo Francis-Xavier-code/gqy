@@ -410,13 +410,13 @@ pub(crate) fn print_repl_help() {
 }
 
 pub(crate) struct LiveReplEditor {
-    mode: AgentMode,
-    input: String,
-    cursor: usize,
-    history: Vec<String>,
+    pub(crate) mode: AgentMode,
+    pub(crate) input: String,
+    pub(crate) cursor: usize,
+    pub(crate) history: Vec<String>,
     history_index: usize,
     history_clean_index: Option<usize>,
-    is_pasted: bool,
+    pub(crate) is_pasted: bool,
     pasted_images: Vec<Option<crate::clipboard::PastedImage>>,
     pasted_texts: Vec<Option<PastedText>>,
     escape_armed_until: Option<Instant>,
@@ -428,14 +428,14 @@ pub(crate) struct LiveReplEditor {
 }
 
 pub(crate) struct LiveSubmission {
-    content: String,
-    display_content: String,
-    images: Vec<Option<crate::clipboard::PastedImage>>,
+    pub(crate) content: String,
+    pub(crate) display_content: String,
+    pub(crate) images: Vec<Option<crate::clipboard::PastedImage>>,
 }
 
 pub(crate) struct LiveAgentInput<'a> {
-    content: &'a str,
-    images: &'a [Option<crate::clipboard::PastedImage>],
+    pub(crate) content: &'a str,
+    pub(crate) images: &'a [Option<crate::clipboard::PastedImage>],
 }
 
 pub(crate) enum LiveEditorAction {

@@ -70,18 +70,18 @@ pub(crate) fn longest_sent_meme_prefix_suffix(text: &str) -> usize {
 
 #[derive(Default)]
 pub(crate) struct ToolStats {
-    calls: usize,
-    ok: usize,
-    error: usize,
-    subject: Option<String>,
-    progress: Option<String>,
-    final_progress: Option<String>,
-    started_at: Option<std::time::Instant>,
-    elapsed: Option<std::time::Duration>,
+    pub(crate) calls: usize,
+    pub(crate) ok: usize,
+    pub(crate) error: usize,
+    pub(crate) subject: Option<String>,
+    pub(crate) progress: Option<String>,
+    pub(crate) final_progress: Option<String>,
+    pub(crate) started_at: Option<std::time::Instant>,
+    pub(crate) elapsed: Option<std::time::Duration>,
     /// The subagent handed itself off to the background. Its call returned at
     /// once, so the elapsed timer would only ever read `0s` — and worse, imply
     /// the work finished instantly. The job strip tracks it from here on.
-    detached: bool,
+    pub(crate) detached: bool,
     seq: usize,
 }
 

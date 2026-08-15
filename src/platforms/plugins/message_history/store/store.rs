@@ -33,10 +33,10 @@ pub(crate) const SECONDS_PER_DAY: i64 = 86_400;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub(crate) struct ConversationKey {
-    platform: String,
-    account_id: String,
-    conversation_kind: String,
-    conversation_id: String,
+    pub(crate) platform: String,
+    pub(crate) account_id: String,
+    pub(crate) conversation_kind: String,
+    pub(crate) conversation_id: String,
 }
 
 /// Compatibility name for real-context code that only reads group history.
@@ -102,8 +102,8 @@ impl ConversationKey {
 /// never crosses the platform or bot-account boundary.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub(crate) struct AccountKey {
-    platform: String,
-    account_id: String,
+    pub(crate) platform: String,
+    pub(crate) account_id: String,
 }
 
 impl AccountKey {

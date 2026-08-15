@@ -656,10 +656,10 @@ pub(crate) struct PreparedWebAttachments {
 }
 
 pub(crate) struct RedoWebPrompt {
-    prompt_id: String,
-    content: String,
-    display_content: String,
-    images: Vec<Option<ImageAttachment>>,
+    pub(crate) prompt_id: String,
+    pub(crate) content: String,
+    pub(crate) display_content: String,
+    pub(crate) images: Vec<Option<ImageAttachment>>,
 }
 
 pub(crate) fn prepare_web_attachments(

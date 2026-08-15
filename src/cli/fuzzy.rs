@@ -553,7 +553,7 @@ pub(crate) fn truncate_display(value: &str, max: usize) -> String {
 }
 
 pub(crate) struct InlineRawMode {
-    stdout: io::Stdout,
+    pub(crate) stdout: io::Stdout,
 }
 
 impl InlineRawMode {
