@@ -1,6 +1,7 @@
 // core — 自 src/platforms/onebot.rs 拆分。
 
 use super::*;
+use crate::platforms::MessageActivityHandle;
 
 // OneBot v11 bridge (NapCat / QQ).
 //
@@ -13,7 +14,6 @@ use super::*;
 // use an echo-to-oneshot table. Sends are acknowledged before plugin
 // success hooks run, so transformations can safely persist delivery state.
 
-use super::access_control::{has_dynamic_access, AccessPermission};
 use super::{
     commands, download_capped, markdown_to_plain, resolve_platform_session, run_platform_turn,
     sniff_image_mime, split_reply, BotGroupRole, BotSendAvailability, ConversationKind,
@@ -30,6 +30,7 @@ use crate::config::{
 };
 use crate::i18n::text as t;
 use crate::ipc::ImageAttachment;
+use crate::platforms::access_control::{has_dynamic_access, AccessPermission};
 use crate::state::{QueuedPromptAttachment, StateStore};
 use crate::web::{
     clear_platform_session_content, enqueue_turn_update, random_id, reset_platform_persona_state,
@@ -441,7 +442,7 @@ pub(crate) struct ConnectionHandle {
     pending: Arc<Mutex<HashMap<String, oneshot::Sender<Value>>>>,
     bot_name: Arc<Mutex<Option<String>>>,
     asset_base_url: Option<String>,
-    assets: super::assets::AssetLeaseStore,
+    assets: crate::platforms::assets::AssetLeaseStore,
     shutdown: watch::Sender<bool>,
 }
 

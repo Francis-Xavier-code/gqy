@@ -18,9 +18,9 @@ use tokio::sync::broadcast;
 
 mod registry;
 pub use registry::*;
-mod access_control;
+pub(crate) mod access_control;
 mod adapters;
-mod assets;
+pub(crate) mod assets;
 pub(crate) mod avatar;
 pub(crate) mod commands;
 pub(crate) mod onebot;

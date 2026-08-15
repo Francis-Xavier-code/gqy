@@ -3,7 +3,7 @@
 use super::*;
 
 impl PlatformPlugin for RealContextPlugin {
-    pub fn descriptor(&self) -> PluginDescriptor {
+    fn descriptor(&self) -> PluginDescriptor {
         PluginDescriptor {
             id: REAL_CONTEXT_PLUGIN_ID,
             priority: 200,
@@ -11,7 +11,7 @@ impl PlatformPlugin for RealContextPlugin {
         }
     }
 
-    pub fn preempt_inbound(
+    fn preempt_inbound(
         &self,
         context: &PlatformTurnContext,
         event: &PlatformInboundEvent,
@@ -77,7 +77,7 @@ impl PlatformPlugin for RealContextPlugin {
         Ok(true)
     }
 
-    pub fn turn_is_superseded(&self, context: &PlatformTurnContext) -> bool {
+    fn turn_is_superseded(&self, context: &PlatformTurnContext) -> bool {
         self.runtime
             .lock()
             .unwrap()
@@ -87,7 +87,7 @@ impl PlatformPlugin for RealContextPlugin {
             .is_some_and(|pending| *pending.cancel.borrow())
     }
 
-    pub fn confirm_supersede<'a>(
+    fn confirm_supersede<'a>(
         &'a self,
         context: &'a PlatformTurnContext,
         event: &'a PlatformInboundEvent,
@@ -136,7 +136,7 @@ impl PlatformPlugin for RealContextPlugin {
         })
     }
 
-    pub fn after_turn_aborted<'a>(
+    fn after_turn_aborted<'a>(
         &'a self,
         context: &'a PlatformTurnContext,
     ) -> BoxFuture<'a, Result<()>> {
@@ -185,7 +185,7 @@ impl PlatformPlugin for RealContextPlugin {
         })
     }
 
-    pub fn register_tools(
+    fn register_tools(
         &self,
         registry: &mut ToolRegistry,
         context: Arc<PlatformTurnContext>,
@@ -203,7 +203,7 @@ impl PlatformPlugin for RealContextPlugin {
         Ok(())
     }
 
-    pub fn accept_followup(
+    fn accept_followup(
         &self,
         context: &PlatformTurnContext,
         event: &PlatformInboundEvent,
@@ -225,7 +225,7 @@ impl PlatformPlugin for RealContextPlugin {
         Ok(())
     }
 
-    pub fn decide_trigger<'a>(
+    fn decide_trigger<'a>(
         &'a self,
         context: &'a PlatformTurnContext,
         event: &'a PlatformInboundEvent,
@@ -243,7 +243,7 @@ impl PlatformPlugin for RealContextPlugin {
         })
     }
 
-    pub fn before_turn<'a>(
+    fn before_turn<'a>(
         &'a self,
         context: &'a PlatformTurnContext,
         input: &'a mut PlatformTurnInput,
@@ -254,7 +254,7 @@ impl PlatformPlugin for RealContextPlugin {
         })
     }
 
-    pub fn before_send<'a>(
+    fn before_send<'a>(
         &'a self,
         _context: &'a PlatformTurnContext,
         mut message: OutboundMessage,
@@ -270,7 +270,7 @@ impl PlatformPlugin for RealContextPlugin {
         })
     }
 
-    pub fn after_send<'a>(
+    fn after_send<'a>(
         &'a self,
         context: &'a PlatformTurnContext,
         message: &'a OutboundMessage,
@@ -318,7 +318,7 @@ impl PlatformPlugin for RealContextPlugin {
         })
     }
 
-    pub fn after_session_reset<'a>(
+    fn after_session_reset<'a>(
         &'a self,
         context: &'a PlatformTurnContext,
     ) -> BoxFuture<'a, Result<()>> {
@@ -342,7 +342,7 @@ impl PlatformPlugin for RealContextPlugin {
         })
     }
 
-    pub fn after_persona_reset<'a>(
+    fn after_persona_reset<'a>(
         &'a self,
         context: &'a PlatformPersonaResetContext<'a>,
     ) -> BoxFuture<'a, Result<()>> {
@@ -386,7 +386,7 @@ impl PlatformPlugin for RealContextPlugin {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-enum TriggerKind {
+pub(super) enum TriggerKind {
     Probability,
     Continuation,
     Direct,

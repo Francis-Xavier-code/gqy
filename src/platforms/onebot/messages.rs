@@ -1315,8 +1315,12 @@ pub(crate) async fn deliver_dispatch(
             if matched_delivered_image && image_count == 0 && unresolved_image_count == 0 {
                 outcome.final_reply_already_sent = true;
             }
-            let readable =
-                super::format_platform_final_reply_log(&outcome, context, &reply_text, image_count);
+            let readable = crate::platforms::adapters::format_platform_final_reply_log(
+                &outcome,
+                context,
+                &reply_text,
+                image_count,
+            );
             if !reply_text.trim().is_empty() {
                 segments.insert(0, OutboundSegment::Markdown(reply_text));
             }
@@ -1344,8 +1348,11 @@ pub(crate) async fn deliver_dispatch(
     Ok(true)
 }
 
-pub(crate) fn final_reply_text(outcome: &super::TurnOutcome) -> String {
-    super::cut_suppressed_ranges(&outcome.text, &outcome.suppressed_reply_ranges)
+pub(crate) fn final_reply_text(outcome: &crate::web::TurnOutcome) -> String {
+    crate::platforms::adapters::cut_suppressed_ranges(
+        &outcome.text,
+        &outcome.suppressed_reply_ranges,
+    )
 }
 
 pub(crate) fn text_segment(text: &str) -> Value {
