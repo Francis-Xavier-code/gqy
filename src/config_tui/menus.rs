@@ -1,6 +1,7 @@
 //! menus — 自 src/config_tui.rs 拆分。
 
 use super::*;
+use crate::config::EMBEDDING_MODALITY;
 
 pub(crate) fn edit_real_context_affection(
     stdout: &mut io::Stdout,
