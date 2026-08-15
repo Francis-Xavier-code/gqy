@@ -1,6 +1,7 @@
 //! tests2 — 自 src/config.rs 外移。
 #![cfg(test)]
 
+use super::tests::*;
 use super::*;
 
 fn qq_non_whitelist_model_pool_normalizes_for_dynamic_inheritance() {

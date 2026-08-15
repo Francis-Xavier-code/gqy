@@ -1,6 +1,7 @@
 //! tests4 — 自 src/platforms/onebot.rs 外移。
 #![cfg(test)]
 
+use super::tests3::*;
 use super::*;
 
 #[tokio::test]

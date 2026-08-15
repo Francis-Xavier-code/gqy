@@ -1,6 +1,7 @@
 //! tests3 — 自 src/platforms/onebot.rs 外移。
 #![cfg(test)]
 
+use super::tests::*;
 use super::*;
 
 #[tokio::test]
@@ -619,7 +620,7 @@ fn empty_token_only_authorizes_loopback_connections() {
     ));
 }
 
-fn test_connection(
+pub(crate) fn test_connection(
     asset_base_url: Option<String>,
 ) -> (ConnectionHandle, mpsc::UnboundedReceiver<String>) {
     let (out_tx, out_rx) = mpsc::unbounded_channel();
@@ -637,7 +638,7 @@ fn test_connection(
     )
 }
 
-fn test_adapter(handle: ConnectionHandle, target: Target) -> OneBotAdapter {
+pub(crate) fn test_adapter(handle: ConnectionHandle, target: Target) -> OneBotAdapter {
     let mut registry = ConnectionRegistry::default();
     registry.register(10000, handle.clone());
     OneBotAdapter {

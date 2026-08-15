@@ -1,7 +1,10 @@
 //! tests3 — 自 src/agent/mod.rs 外移。
 #![cfg(test)]
 
+use super::tests4::*;
 use super::*;
+use crate::tools::{empty_parameters, ToolSpec};
+use std::net::TcpListener;
 
 #[tokio::test]
 async fn parallel_task_calls_run_concurrently_and_map_outputs() {

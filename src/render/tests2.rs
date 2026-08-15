@@ -1036,6 +1036,7 @@ fn parses_command_result_json() {
 
 #[cfg(test)]
 mod math_stream_tests {
+    use super::tests::*;
     use super::*;
 
     fn render_document(document: &str) -> String {
