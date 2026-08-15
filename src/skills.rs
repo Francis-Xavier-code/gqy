@@ -1,5 +1,5 @@
 use crate::config::{persona_scope_name, AppConfig};
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
@@ -12,17 +12,7 @@ use yaml_rust2::{Yaml, YamlLoader};
 
 /// Skills compiled into the binary: (name, raw SKILL.md). A user skill of
 /// the same name in the persona/global directories overrides the built-in.
-const BUILTIN_SKILLS: &[(&str, &str)] = &[
-    ("skill-creator", include_str!("skills/skill-creator.md")),
-    (
-        "linux-input-method-diagnose",
-        include_str!("skills/linux-input-method-diagnose.md"),
-    ),
-    (
-        "linux-game-compatibility",
-        include_str!("skills/linux-game-compatibility.md"),
-    ),
-];
+const BUILTIN_SKILLS: &[(&str, &str)] = &[];
 const DRAFT_MANIFEST: &str = "draft.json";
 const DRAFT_PACKAGE_DIR: &str = "package";
 const DRAFT_VERSION: u32 = 1;
@@ -158,7 +148,7 @@ pub struct DeletedSkill {
     pub path: String,
 }
 
-pub fn discover(config: &AppConfig, paths: &MiyuPaths) -> Result<Vec<SkillEntry>> {
+pub fn discover(config: &AppConfig, paths: &GQYPaths) -> Result<Vec<SkillEntry>> {
     let mut entries = Vec::new();
     let mut seen = BTreeSet::new();
     for (root, source) in skill_roots(config, paths) {
@@ -212,7 +202,7 @@ pub fn discover(config: &AppConfig, paths: &MiyuPaths) -> Result<Vec<SkillEntry>
     Ok(entries)
 }
 
-pub fn catalog_fingerprint(config: &AppConfig, paths: &MiyuPaths) -> Result<[u8; 32]> {
+pub fn catalog_fingerprint(config: &AppConfig, paths: &GQYPaths) -> Result<[u8; 32]> {
     let mut hasher = blake3::Hasher::new();
     for (root, source) in skill_roots(config, paths) {
         hasher.update(source.as_str().as_bytes());
@@ -229,7 +219,7 @@ pub fn catalog_fingerprint(config: &AppConfig, paths: &MiyuPaths) -> Result<[u8;
     Ok(*hasher.finalize().as_bytes())
 }
 
-pub fn load(name: &str, config: &AppConfig, paths: &MiyuPaths) -> Result<LoadedSkill> {
+pub fn load(name: &str, config: &AppConfig, paths: &GQYPaths) -> Result<LoadedSkill> {
     let name = name.trim();
     if name.is_empty() {
         bail!("skill name is required");
@@ -281,7 +271,7 @@ pub fn load(name: &str, config: &AppConfig, paths: &MiyuPaths) -> Result<LoadedS
 
 pub fn create_draft(
     config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     name: &str,
     description: &str,
     scope: SkillScope,
@@ -315,7 +305,7 @@ pub fn create_draft(
 
 pub fn update_draft(
     config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     name: &str,
     scope: SkillScope,
 ) -> Result<SkillDraft> {
@@ -351,7 +341,7 @@ pub fn update_draft(
     cleanup_failed_draft(paths, &manifest, result)
 }
 
-pub fn publish_draft(paths: &MiyuPaths, draft_id: &str) -> Result<PublishedSkill> {
+pub fn publish_draft(paths: &GQYPaths, draft_id: &str) -> Result<PublishedSkill> {
     validate_draft_id(draft_id)?;
     let _lease = acquire_publish_lock(paths)?;
     prune_expired_drafts_unlocked(paths)?;
@@ -369,7 +359,7 @@ pub fn publish_draft(paths: &MiyuPaths, draft_id: &str) -> Result<PublishedSkill
     create_private_dir(&paths.skills_dir)?;
     create_private_directory_chain(&paths.skills_dir, parent)?;
     let staged = parent.join(format!(
-        ".miyu-skill-stage-{}-{:016x}",
+        ".gqy-skill-stage-{}-{:016x}",
         std::process::id(),
         rand::random::<u64>()
     ));
@@ -451,7 +441,7 @@ pub fn publish_draft(paths: &MiyuPaths, draft_id: &str) -> Result<PublishedSkill
 
 pub fn delete_skill(
     config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     name: &str,
     scope: SkillScope,
 ) -> Result<DeletedSkill> {
@@ -485,7 +475,7 @@ pub fn delete_skill(
     })
 }
 
-pub fn list_drafts(paths: &MiyuPaths) -> Result<Vec<SkillDraft>> {
+pub fn list_drafts(paths: &GQYPaths) -> Result<Vec<SkillDraft>> {
     prune_expired_drafts(paths)?;
     let root = paths.skill_drafts_dir();
     if !root.is_dir() {
@@ -516,12 +506,12 @@ pub fn list_drafts(paths: &MiyuPaths) -> Result<Vec<SkillDraft>> {
     Ok(drafts)
 }
 
-pub fn prune_expired_drafts(paths: &MiyuPaths) -> Result<usize> {
+pub fn prune_expired_drafts(paths: &GQYPaths) -> Result<usize> {
     let _lease = acquire_publish_lock(paths)?;
     prune_expired_drafts_unlocked(paths)
 }
 
-fn prune_expired_drafts_unlocked(paths: &MiyuPaths) -> Result<usize> {
+fn prune_expired_drafts_unlocked(paths: &GQYPaths) -> Result<usize> {
     let root = paths.skill_drafts_dir();
     if !root.is_dir() {
         return Ok(0);
@@ -578,11 +568,11 @@ fn prune_expired_drafts_unlocked(paths: &MiyuPaths) -> Result<usize> {
 pub fn is_generated_skill(raw: &str) -> bool {
     parse_skill_metadata(raw, None)
         .ok()
-        .and_then(|metadata| metadata.metadata.get("miyu.generated").cloned())
+        .and_then(|metadata| metadata.metadata.get("gqy.generated").cloned())
         .is_some_and(|value| value.eq_ignore_ascii_case("true"))
-        || raw.contains("generated_by: miyu")
+        || raw.contains("generated_by: gqy")
         || raw.contains("Auto-learned method from assistant conversation")
-        || raw.contains("Auto-learned method from Miyu conversation")
+        || raw.contains("Auto-learned method from GQY conversation")
 }
 
 pub fn parse_skill_metadata(raw: &str, expected_name: Option<&str>) -> Result<SkillMetadata> {
@@ -742,7 +732,7 @@ fn read_skill_file(path: &Path) -> Result<String> {
     fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))
 }
 
-fn skill_roots(config: &AppConfig, paths: &MiyuPaths) -> Vec<(PathBuf, SkillSource)> {
+fn skill_roots(config: &AppConfig, paths: &GQYPaths) -> Vec<(PathBuf, SkillSource)> {
     vec![
         (
             config.active_persona_skills_dir(paths),
@@ -811,7 +801,7 @@ fn persona_scope(config: &AppConfig, scope: SkillScope) -> Option<String> {
 }
 
 fn target_path(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     name: &str,
     scope: SkillScope,
     persona: Option<&str>,
@@ -869,7 +859,7 @@ fn new_manifest(
     }
 }
 
-fn create_empty_draft(paths: &MiyuPaths, manifest: &DraftManifest) -> Result<PathBuf> {
+fn create_empty_draft(paths: &GQYPaths, manifest: &DraftManifest) -> Result<PathBuf> {
     let root = paths.skill_drafts_dir();
     create_private_dir(&root)?;
     let draft = root.join(&manifest.id);
@@ -887,7 +877,7 @@ fn create_empty_draft(paths: &MiyuPaths, manifest: &DraftManifest) -> Result<Pat
     result
 }
 
-fn write_draft_manifest(paths: &MiyuPaths, manifest: &DraftManifest) -> Result<()> {
+fn write_draft_manifest(paths: &GQYPaths, manifest: &DraftManifest) -> Result<()> {
     let draft = paths.skill_drafts_dir().join(&manifest.id);
     write_private_file(
         &draft.join(DRAFT_MANIFEST),
@@ -896,7 +886,7 @@ fn write_draft_manifest(paths: &MiyuPaths, manifest: &DraftManifest) -> Result<(
 }
 
 fn cleanup_failed_draft<T>(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     manifest: &DraftManifest,
     result: Result<T>,
 ) -> Result<T> {
@@ -906,7 +896,7 @@ fn cleanup_failed_draft<T>(
     result
 }
 
-fn draft_public(paths: &MiyuPaths, manifest: &DraftManifest) -> Result<SkillDraft> {
+fn draft_public(paths: &GQYPaths, manifest: &DraftManifest) -> Result<SkillDraft> {
     let skill_dir = paths
         .skill_drafts_dir()
         .join(&manifest.id)
@@ -930,7 +920,7 @@ fn draft_public(paths: &MiyuPaths, manifest: &DraftManifest) -> Result<SkillDraf
     })
 }
 
-fn read_manifest(paths: &MiyuPaths, draft_id: &str) -> Result<DraftManifest> {
+fn read_manifest(paths: &GQYPaths, draft_id: &str) -> Result<DraftManifest> {
     validate_draft_id(draft_id)?;
     let draft = paths.skill_drafts_dir().join(draft_id);
     let metadata = fs::symlink_metadata(&draft)?;
@@ -1330,27 +1320,6 @@ fn install_updated_skill(
     Ok(())
 }
 
-#[cfg(target_os = "linux")]
-fn install_new_skill(staged: &Path, target: &Path) -> Result<()> {
-    use std::os::fd::AsRawFd;
-
-    let (parent, staged, target) = exchange_operands(staged, target)?;
-    let result = unsafe {
-        libc::syscall(
-            libc::SYS_renameat2,
-            parent.as_raw_fd(),
-            staged.as_ptr(),
-            parent.as_raw_fd(),
-            target.as_ptr(),
-            libc::RENAME_NOREPLACE,
-        )
-    };
-    if result != 0 {
-        return Err(std::io::Error::last_os_error().into());
-    }
-    Ok(())
-}
-
 #[cfg(target_os = "macos")]
 fn install_new_skill(staged: &Path, target: &Path) -> Result<()> {
     use std::os::fd::AsRawFd;
@@ -1371,33 +1340,12 @@ fn install_new_skill(staged: &Path, target: &Path) -> Result<()> {
     Ok(())
 }
 
-#[cfg(not(any(target_os = "linux", target_os = "macos")))]
+#[cfg(not(target_os = "macos"))]
 fn install_new_skill(staged: &Path, target: &Path) -> Result<()> {
     if target.exists() {
         bail!("skill already exists; create never overwrites");
     }
     fs::rename(staged, target)?;
-    Ok(())
-}
-
-#[cfg(target_os = "linux")]
-fn exchange_directories(left: &Path, right: &Path) -> Result<()> {
-    use std::os::fd::AsRawFd;
-
-    let (parent, left, right) = exchange_operands(left, right)?;
-    let result = unsafe {
-        libc::syscall(
-            libc::SYS_renameat2,
-            parent.as_raw_fd(),
-            left.as_ptr(),
-            parent.as_raw_fd(),
-            right.as_ptr(),
-            libc::RENAME_EXCHANGE,
-        )
-    };
-    if result != 0 {
-        return Err(std::io::Error::last_os_error().into());
-    }
     Ok(())
 }
 
@@ -1421,12 +1369,12 @@ fn exchange_directories(left: &Path, right: &Path) -> Result<()> {
     Ok(())
 }
 
-#[cfg(not(any(target_os = "linux", target_os = "macos")))]
+#[cfg(not(target_os = "macos"))]
 fn exchange_directories(_left: &Path, _right: &Path) -> Result<()> {
     bail!("atomic skill updates are unsupported on this platform")
 }
 
-#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[cfg(target_os = "macos")]
 fn exchange_operands(
     left: &Path,
     right: &Path,
@@ -1461,7 +1409,7 @@ struct PublishLease {
     _file: File,
 }
 
-fn acquire_publish_lock(paths: &MiyuPaths) -> Result<PublishLease> {
+fn acquire_publish_lock(paths: &GQYPaths) -> Result<PublishLease> {
     let root = paths.skill_drafts_dir();
     create_private_dir(&root)?;
     let lock_path = root.join(PUBLISH_LOCK_FILE);
@@ -1584,8 +1532,8 @@ fn write_private_file(path: &Path, content: &[u8]) -> Result<()> {
 mod tests {
     use super::*;
 
-    fn test_paths(root: &Path) -> MiyuPaths {
-        MiyuPaths {
+    fn test_paths(root: &Path) -> GQYPaths {
+        GQYPaths {
             root_dir: root.to_path_buf(),
             config_dir: root.join("config"),
             config_file: root.join("config/config.jsonc"),
@@ -1594,7 +1542,7 @@ mod tests {
             cache_dir: root.join("cache"),
             state_dir: root.join("state"),
             pictures_dir: root.join("data/pictures"),
-            fish_hook_file: root.join("fish/miyu.fish"),
+            fish_hook_file: root.join("fish/gqy.fish"),
             bash_hook_file: root.join("config/shell/bash-hook.sh"),
             zsh_hook_file: root.join("config/shell/zsh-hook.zsh"),
             scripts_dir: root.join("data/scripts"),
@@ -1604,10 +1552,10 @@ mod tests {
 
     #[test]
     fn parses_standard_frontmatter_fields() {
-        let raw = "---\nname: sample-skill\ndescription: Sample workflow\nlicense: MIT\ncompatibility: Miyu\nallowed-tools: read_file\nmetadata:\n  author: test\n---\n\nBody.";
+        let raw = "---\nname: sample-skill\ndescription: Sample workflow\nlicense: MIT\ncompatibility: GQY\nallowed-tools: read_file\nmetadata:\n  author: test\n---\n\nBody.";
         let metadata = parse_skill_metadata(raw, Some("sample-skill")).unwrap();
         assert_eq!(metadata.license.as_deref(), Some("MIT"));
-        assert_eq!(metadata.compatibility.as_deref(), Some("Miyu"));
+        assert_eq!(metadata.compatibility.as_deref(), Some("GQY"));
         assert_eq!(metadata.allowed_tools.as_deref(), Some("read_file"));
         assert_eq!(
             metadata.metadata.get("author").map(String::as_str),
@@ -1627,17 +1575,17 @@ mod tests {
         let temp = tempfile::tempdir().unwrap();
         let paths = test_paths(temp.path());
         let config = AppConfig::default();
-        let global = paths.skills_dir.join(BUILTIN_SKILLS[0].0);
+        let global = paths.skills_dir.join("sample-skill");
         let persona = config
             .active_persona_skills_dir(&paths)
-            .join(BUILTIN_SKILLS[0].0);
+            .join("sample-skill");
         for (directory, description) in [(&global, "global"), (&persona, "persona")] {
             fs::create_dir_all(directory).unwrap();
             fs::write(
                 directory.join("SKILL.md"),
                 format!(
                     "---\nname: {}\ndescription: {description}\n---\n",
-                    BUILTIN_SKILLS[0].0
+                    "sample-skill"
                 ),
             )
             .unwrap();
@@ -1645,7 +1593,7 @@ mod tests {
         let entries = discover(&config, &paths).unwrap();
         let creator = entries
             .iter()
-            .find(|entry| entry.metadata.name == BUILTIN_SKILLS[0].0)
+            .find(|entry| entry.metadata.name == "sample-skill")
             .unwrap();
         assert_eq!(creator.source, SkillSource::Persona);
         assert_eq!(creator.metadata.description, "persona");

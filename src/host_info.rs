@@ -1,5 +1,5 @@
 //! Host facts that never change while the process runs: which OS this is,
-//! which kernel it runs, and where Miyu keeps its own files.
+//! which kernel it runs, and where GQY keeps its own files.
 //!
 //! These ride the system prompt (the stable prefix) rather than the per-turn
 //! `<runtime …/>` tail. The tail is fossilized into `turns.context_messages`
@@ -15,10 +15,6 @@ use serde_json::{json, Value};
 use std::path::Path;
 use std::sync::OnceLock;
 
-/// os-release(5) lookup order: `/etc` overrides the vendor copy, and some
-/// image-based distros ship only the latter.
-const OS_RELEASE_PATHS: [&str; 2] = ["/etc/os-release", "/usr/lib/os-release"];
-
 const MACOS_SYSTEM_VERSION: &str = "/System/Library/CoreServices/SystemVersion.plist";
 
 /// Reads a file that is expected to be small, refusing anything that is not a
@@ -33,19 +29,6 @@ pub(crate) fn read_small_file(path: &str) -> Option<String> {
         .ok()
         .map(|value| value.trim().to_string())
         .filter(|value| !value.is_empty())
-}
-
-pub(crate) fn os_release_text() -> Option<String> {
-    OS_RELEASE_PATHS
-        .iter()
-        .find_map(|path| read_small_file(path))
-}
-
-pub(crate) fn os_release_value(text: &str, key: &str) -> Option<String> {
-    text.lines().find_map(|line| {
-        let (name, value) = line.split_once('=')?;
-        (name.trim() == key).then(|| value.trim().trim_matches('"').to_string())
-    })
 }
 
 pub(crate) fn macos_system_version_text() -> Option<String> {
@@ -75,11 +58,6 @@ pub(crate) fn plist_value(raw: &str, key: &str) -> Option<String> {
         .map(ToString::to_string)
 }
 
-fn os_release_pretty_name() -> Option<String> {
-    let text = os_release_text()?;
-    os_release_value(&text, "PRETTY_NAME").filter(|value| !value.trim().is_empty())
-}
-
 fn macos_product_name() -> Option<String> {
     let raw = macos_system_version_text()?;
     let product = plist_value(&raw, "ProductName")?;
@@ -89,23 +67,15 @@ fn macos_product_name() -> Option<String> {
     })
 }
 
-/// Human-readable OS name. macOS has no os-release and Linux has no
-/// SystemVersion.plist, so both probes run and the one matching the build
-/// target goes first; `consts::OS` is the never-empty floor.
+/// Human-readable OS name: SystemVersion.plist on macOS; `consts::OS` is the
+/// never-empty floor elsewhere.
 fn detect_os_name() -> String {
-    let mut probes: [fn() -> Option<String>; 2] = [os_release_pretty_name, macos_product_name];
-    if cfg!(target_os = "macos") {
-        probes.reverse();
-    }
-    probes
-        .iter()
-        .find_map(|probe| probe())
-        .unwrap_or_else(|| std::env::consts::OS.to_string())
+    macos_product_name().unwrap_or_else(|| std::env::consts::OS.to_string())
 }
 
 /// `uname -r` without the subprocess. `libc` is already an unconditional
-/// dependency and `uname(2)` is the same call on Linux and macOS, so this
-/// stays portable without forking or reading Linux-only `/proc` entries.
+/// dependency and `uname(2)` is the same call on macOS and other unices, so
+/// this stays portable without forking.
 #[cfg(unix)]
 fn detect_kernel_release() -> Option<String> {
     // SAFETY: `utsname` is a plain byte-array struct with no invalid bit
@@ -136,8 +106,8 @@ fn host_os_facts() -> &'static (String, Option<String>) {
 
 /// The static host block appended to the system prompt.
 ///
-/// `root_dir` is reported verbatim rather than as `~/.miyu` because
-/// `MIYU_HOME` can move it, and because a concrete path is what stops the
+/// `root_dir` is reported verbatim rather than as `~/.gqy` because
+/// `GQY_HOME` can move it, and because a concrete path is what stops the
 /// model from guessing at the layout.
 pub(crate) fn host_environment_block(root_dir: &Path) -> String {
     let (os, kernel) = host_os_facts();
@@ -148,7 +118,7 @@ pub(crate) fn host_environment_block(root_dir: &Path) -> String {
         block.push_str(&format!(" kernel=\"{}\"", xml_attr_escape(kernel)));
     }
     block.push_str(&format!(
-        " miyu_home=\"{}\"/>",
+        " gqy_home=\"{}\"/>",
         xml_attr_escape(&root_dir.display().to_string())
     ));
     block
@@ -166,22 +136,6 @@ pub(crate) fn xml_attr_escape(value: &str) -> String {
 mod tests {
     use super::*;
     use std::path::PathBuf;
-
-    #[test]
-    fn os_release_value_reads_quoted_and_bare_entries() {
-        let text = "NAME=\"Arch Linux\"\nPRETTY_NAME=\"Arch Linux\"\nID=arch\nBUILD_ID=rolling";
-        assert_eq!(
-            os_release_value(text, "PRETTY_NAME").as_deref(),
-            Some("Arch Linux")
-        );
-        assert_eq!(os_release_value(text, "ID").as_deref(), Some("arch"));
-        assert_eq!(os_release_value(text, "VERSION_ID"), None);
-        // A prefix match must not win: `ID` and `BUILD_ID` share a suffix.
-        assert_eq!(
-            os_release_value(text, "BUILD_ID").as_deref(),
-            Some("rolling")
-        );
-    }
 
     #[test]
     fn macos_plist_yields_product_name_and_version() {
@@ -203,10 +157,10 @@ mod tests {
 
     #[test]
     fn host_block_is_a_single_self_closing_tag_with_the_real_root() {
-        let block = host_environment_block(&PathBuf::from("/home/tester/.miyu"));
+        let block = host_environment_block(&PathBuf::from("/home/tester/.gqy"));
         assert!(block.starts_with("<host-environment os=\""));
         assert!(block.ends_with("/>"));
-        assert!(block.contains(" miyu_home=\"/home/tester/.miyu\""));
+        assert!(block.contains(" gqy_home=\"/home/tester/.gqy\""));
         assert!(!block.contains('\n'));
         // No placeholder values leak in when a probe comes back empty.
         assert!(!block.contains("\"\""));
@@ -216,7 +170,7 @@ mod tests {
     #[test]
     fn host_block_escapes_paths_that_would_break_the_attribute() {
         let block = host_environment_block(&PathBuf::from("/tmp/a\"b&c"));
-        assert!(block.contains(" miyu_home=\"/tmp/a&quot;b&amp;c\"/>"));
+        assert!(block.contains(" gqy_home=\"/tmp/a&quot;b&amp;c\"/>"));
     }
 
     #[cfg(unix)]

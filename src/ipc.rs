@@ -1,12 +1,8 @@
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use crate::question::QuestionAnswers;
 use anyhow::{bail, Context, Result};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value;
-#[cfg(target_os = "linux")]
-use std::ffi::OsString;
-#[cfg(target_os = "linux")]
-use std::os::unix::ffi::OsStringExt;
 use std::path::Path;
 use std::{
     fs::File, fs::OpenOptions, os::fd::AsRawFd, os::unix::fs::OpenOptionsExt,
@@ -19,16 +15,16 @@ use tokio::net::UnixStream;
 pub const PROTOCOL_VERSION: u16 = 3;
 pub const DEFAULT_WEB_PORT: u16 = 8300;
 pub const DAEMON_SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(15);
-pub const ADMIN_BUSY_MESSAGE: &str = "Miyu is busy with another operation";
+pub const ADMIN_BUSY_MESSAGE: &str = "GQY is busy with another operation";
 const MAX_FRAME_BYTES: usize = 24 * 1024 * 1024;
 
 /// Unique id of this build, stamped by build.rs. A daemon whose build id
 /// differs from the client's is restarted transparently so a rebuild never
 /// keeps serving stale code.
-pub const BUILD_ID: &str = env!("MIYU_BUILD_ID");
+pub const BUILD_ID: &str = env!("GQY_BUILD_ID");
 
 /// Access URLs for the WebUI: loopback plus every local IPv4 address.
-/// Shared between the daemon (startup banner) and the CLI (`miyu web` /
+/// Shared between the daemon (startup banner) and the CLI (`gqy web` /
 /// `--status` output).
 pub fn web_access_urls(port: u16) -> Vec<String> {
     web_access_urls_for(std::net::IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED), port)
@@ -94,8 +90,6 @@ impl Default for DaemonLaunchConfig {
 #[derive(Clone, Copy, Debug)]
 pub struct DaemonProcessIdentity {
     pid: u32,
-    #[cfg(target_os = "linux")]
-    start_time: Option<u64>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -162,12 +156,12 @@ impl Drop for StarterLease {
     }
 }
 
-pub fn acquire_direct_core(paths: &MiyuPaths) -> Result<DirectCoreLease> {
+pub fn acquire_direct_core(paths: &GQYPaths) -> Result<DirectCoreLease> {
     prepare_runtime_dir(paths)?;
     acquire_direct_core_at(paths.ipc_lock())
 }
 
-pub fn acquire_web_core(paths: &MiyuPaths) -> Result<WebCoreLease> {
+pub fn acquire_web_core(paths: &GQYPaths) -> Result<WebCoreLease> {
     prepare_runtime_dir(paths)?;
     let lock_file = acquire_lock(paths.ipc_lock())?;
     let socket_path = paths.ipc_socket();
@@ -180,7 +174,7 @@ pub fn acquire_web_core(paths: &MiyuPaths) -> Result<WebCoreLease> {
     })
 }
 
-fn prepare_runtime_dir(paths: &MiyuPaths) -> Result<()> {
+fn prepare_runtime_dir(paths: &GQYPaths) -> Result<()> {
     let runtime_dir = paths.runtime_dir();
     std::fs::create_dir_all(&runtime_dir)?;
     std::fs::set_permissions(&runtime_dir, std::fs::Permissions::from_mode(0o700))?;
@@ -205,8 +199,8 @@ fn acquire_lock(lock_path: PathBuf) -> Result<File> {
         bail!(
             "{}",
             crate::i18n::text(
-                "another Miyu core (the daemon or another direct REPL) holds this home; stop it (miyu daemon stop) or drop MIYU_DIRECT to attach to the daemon",
-                "另一个 Miyu 核心(daemon 或另一个直连 REPL)正占用本机身份;直连模式与它互斥——先 miyu daemon stop,或去掉 MIYU_DIRECT 改为连接 daemon"
+                "another GQY core (the daemon or another direct REPL) holds this home; stop it (gqy daemon stop) or drop GQY_DIRECT to attach to the daemon",
+                "另一个 GQY 核心(daemon 或另一个直连 REPL)正占用本机身份;直连模式与它互斥——先 gqy daemon stop,或去掉 GQY_DIRECT 改为连接 daemon"
             )
         );
     }
@@ -235,7 +229,7 @@ impl Request {
     }
 }
 
-/// 触发回合的终端身份:tty 设备路径 + 拉起 miyu 的 shell 进程。
+/// 触发回合的终端身份:tty 设备路径 + 拉起 gqy 的 shell 进程。
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct OriginTty {
     pub path: std::path::PathBuf,
@@ -366,7 +360,7 @@ pub enum Command {
     SetReplSession {
         target: SessionRef,
     },
-    /// 工具桥(任务#12):`miyu tool-call` 打回 daemon,以指定会话的身份与
+    /// 工具桥(任务#12):`gqy tool-call` 打回 daemon,以指定会话的身份与
     /// 回合来源执行结构化工具——内层调用照走 guard/超时管线。bash 就是
     /// 编排层:中间数据在脚本里流动,不经模型上下文往返。
     ToolCall {
@@ -375,7 +369,7 @@ pub enum Command {
         name: String,
         #[serde(default)]
         arguments: String,
-        /// 序列化的 TurnOrigin(来自 run_command 注入的 MIYU_TURN_ORIGIN)。
+        /// 序列化的 TurnOrigin(来自 run_command 注入的 GQY_TURN_ORIGIN)。
         #[serde(default)]
         origin: Option<String>,
         /// 递归深度(护栏,daemon 侧校验)。
@@ -481,10 +475,10 @@ impl Frame {
 pub async fn connect(path: &Path) -> Result<UnixStream> {
     UnixStream::connect(path)
         .await
-        .with_context(|| format!("connecting to Miyu core at {}", path.display()))
+        .with_context(|| format!("connecting to GQY core at {}", path.display()))
 }
 
-pub async fn daemon_info(paths: &MiyuPaths) -> Option<DaemonInfo> {
+pub async fn daemon_info(paths: &GQYPaths) -> Option<DaemonInfo> {
     let socket = paths.ipc_socket();
     let frame = ping_daemon(&socket, PROTOCOL_VERSION).await?;
     match frame {
@@ -556,7 +550,7 @@ fn expected_protocol_version(message: &str) -> Option<u16> {
         .ok()
 }
 
-pub fn stage_managed_web_password(paths: &MiyuPaths, password: &str) -> Result<PathBuf> {
+pub fn stage_managed_web_password(paths: &GQYPaths, password: &str) -> Result<PathBuf> {
     validate_web_password(password)?;
     let path = paths.managed_web_password_dir().join(format!(
         "password-{}-{}",
@@ -568,7 +562,7 @@ pub fn stage_managed_web_password(paths: &MiyuPaths, password: &str) -> Result<P
     Ok(path)
 }
 
-pub fn stage_web_password_file(paths: &MiyuPaths, source: &Path) -> Result<PathBuf> {
+pub fn stage_web_password_file(paths: &GQYPaths, source: &Path) -> Result<PathBuf> {
     let contents = std::fs::read_to_string(source)
         .with_context(|| format!("reading WebUI password file: {}", source.display()))?;
     stage_managed_web_password(paths, contents.trim_end_matches(['\r', '\n']))
@@ -584,7 +578,7 @@ fn validate_web_password(password: &str) -> Result<()> {
     Ok(())
 }
 
-fn try_load_daemon_launch_config(paths: &MiyuPaths) -> Result<Option<DaemonLaunchConfig>> {
+fn try_load_daemon_launch_config(paths: &GQYPaths) -> Result<Option<DaemonLaunchConfig>> {
     let path = paths.daemon_launch_state_file();
     let bytes = match std::fs::read(&path) {
         Ok(bytes) => bytes,
@@ -596,7 +590,7 @@ fn try_load_daemon_launch_config(paths: &MiyuPaths) -> Result<Option<DaemonLaunc
         .with_context(|| format!("parsing daemon launch state at {}", path.display()))
 }
 
-fn load_daemon_launch_config(paths: &MiyuPaths) -> Result<DaemonLaunchConfig> {
+fn load_daemon_launch_config(paths: &GQYPaths) -> Result<DaemonLaunchConfig> {
     let mut config = try_load_daemon_launch_config(paths)?.unwrap_or_default();
     let Some(password_file) = config.password_file.as_ref() else {
         return Ok(config);
@@ -625,7 +619,7 @@ fn load_daemon_launch_config(paths: &MiyuPaths) -> Result<DaemonLaunchConfig> {
 }
 
 pub(crate) fn daemon_launch_config_with_port(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     port: u16,
 ) -> Result<DaemonLaunchConfig> {
     let mut config = load_daemon_launch_config(paths)?;
@@ -633,7 +627,7 @@ pub(crate) fn daemon_launch_config_with_port(
     Ok(config)
 }
 
-fn save_daemon_launch_config(paths: &MiyuPaths, config: &DaemonLaunchConfig) -> Result<()> {
+fn save_daemon_launch_config(paths: &GQYPaths, config: &DaemonLaunchConfig) -> Result<()> {
     let path = paths.daemon_launch_state_file();
     let mut bytes = serde_json::to_vec(config)?;
     bytes.push(b'\n');
@@ -641,7 +635,7 @@ fn save_daemon_launch_config(paths: &MiyuPaths, config: &DaemonLaunchConfig) -> 
         .with_context(|| format!("saving daemon launch state to {}", path.display()))
 }
 
-fn commit_daemon_launch_config(paths: &MiyuPaths, config: &DaemonLaunchConfig) -> Result<()> {
+fn commit_daemon_launch_config(paths: &GQYPaths, config: &DaemonLaunchConfig) -> Result<()> {
     let previous = try_load_daemon_launch_config(paths)?;
     save_daemon_launch_config(paths, config)?;
     if let Some(old_password) = previous.and_then(|value| value.password_file) {
@@ -652,7 +646,7 @@ fn commit_daemon_launch_config(paths: &MiyuPaths, config: &DaemonLaunchConfig) -
     Ok(())
 }
 
-fn abandon_daemon_launch_candidate(paths: &MiyuPaths, config: &DaemonLaunchConfig) {
+fn abandon_daemon_launch_candidate(paths: &GQYPaths, config: &DaemonLaunchConfig) {
     let persisted_password = try_load_daemon_launch_config(paths)
         .ok()
         .flatten()
@@ -664,7 +658,7 @@ fn abandon_daemon_launch_candidate(paths: &MiyuPaths, config: &DaemonLaunchConfi
     }
 }
 
-fn remove_managed_password(paths: &MiyuPaths, path: &Path) {
+fn remove_managed_password(paths: &GQYPaths, path: &Path) {
     if path.parent() == Some(paths.managed_web_password_dir().as_path()) {
         let _ = std::fs::remove_file(path);
     }
@@ -672,8 +666,8 @@ fn remove_managed_password(paths: &MiyuPaths, path: &Path) {
 
 fn remap_managed_password(
     config: &mut DaemonLaunchConfig,
-    previous: &MiyuPaths,
-    current: &MiyuPaths,
+    previous: &GQYPaths,
+    current: &GQYPaths,
 ) {
     let Some(path) = config.password_file.as_ref() else {
         return;
@@ -686,7 +680,7 @@ fn remap_managed_password(
 }
 
 fn write_private_state(path: &Path, contents: &[u8]) -> Result<()> {
-    let parent = path.parent().context("Miyu state file has no parent")?;
+    let parent = path.parent().context("GQY state file has no parent")?;
     std::fs::create_dir_all(parent)?;
     std::fs::set_permissions(parent, std::fs::Permissions::from_mode(0o700))?;
     let temporary = parent.join(format!(
@@ -718,130 +712,20 @@ fn finish_private_state_commit(parent: &Path, directory_sync: std::io::Result<()
         tracing::warn!(
             directory = %parent.display(),
             error = %error,
-            "Miyu state file was committed, but syncing its parent directory failed"
+            "GQY state file was committed, but syncing its parent directory failed"
         );
     }
     Ok(())
 }
 
-#[cfg(target_os = "linux")]
-enum LegacyPassword {
-    File(PathBuf),
-    Inline(String),
-}
-
-#[cfg(target_os = "linux")]
-struct LegacyDaemonArgs {
-    port: u16,
-    password: Option<LegacyPassword>,
-}
-
-#[cfg(target_os = "linux")]
-fn parse_legacy_daemon_cmdline(cmdline: &[u8]) -> Result<LegacyDaemonArgs> {
-    let args = cmdline
-        .split(|byte| *byte == 0)
-        .filter(|arg| !arg.is_empty())
-        .collect::<Vec<_>>();
-    let mut parsed = LegacyDaemonArgs {
-        port: DEFAULT_WEB_PORT,
-        password: None,
-    };
-    let mut index = 0;
-    while index < args.len() {
-        let arg = args[index];
-        if arg == b"--port" {
-            index += 1;
-            let value = args
-                .get(index)
-                .context("legacy daemon --port has no value")?;
-            parsed.port = parse_legacy_port(value)?;
-        } else if let Some(value) = arg.strip_prefix(b"--port=") {
-            parsed.port = parse_legacy_port(value)?;
-        } else if arg == b"--password-file" {
-            index += 1;
-            let value = args
-                .get(index)
-                .context("legacy daemon --password-file has no value")?;
-            parsed.password = Some(LegacyPassword::File(PathBuf::from(OsString::from_vec(
-                value.to_vec(),
-            ))));
-        } else if let Some(value) = arg.strip_prefix(b"--password-file=") {
-            parsed.password = Some(LegacyPassword::File(PathBuf::from(OsString::from_vec(
-                value.to_vec(),
-            ))));
-        } else if arg == b"--password" {
-            index += 1;
-            let value = args
-                .get(index)
-                .context("legacy daemon --password has no value")?;
-            parsed.password = Some(LegacyPassword::Inline(parse_legacy_password(value)?));
-        } else if let Some(value) = arg.strip_prefix(b"--password=") {
-            parsed.password = Some(LegacyPassword::Inline(parse_legacy_password(value)?));
-        }
-        index += 1;
-    }
-    Ok(parsed)
-}
-
-#[cfg(target_os = "linux")]
-fn parse_legacy_port(value: &[u8]) -> Result<u16> {
-    std::str::from_utf8(value)
-        .context("legacy daemon port is not UTF-8")?
-        .parse()
-        .context("legacy daemon port is invalid")
-}
-
-#[cfg(target_os = "linux")]
-fn parse_legacy_password(value: &[u8]) -> Result<String> {
-    String::from_utf8(value.to_vec()).context("legacy daemon password is not UTF-8")
-}
-
-#[cfg(target_os = "linux")]
-fn recover_legacy_daemon_launch(paths: &MiyuPaths, pid: u32) -> Result<DaemonLaunchConfig> {
-    let cmdline = std::fs::read(format!("/proc/{pid}/cmdline"))
-        .context("reading legacy Miyu daemon arguments")?;
-    let cwd = std::fs::read_link(format!("/proc/{pid}/cwd"))
-        .context("reading legacy Miyu daemon working directory")?;
-    recover_legacy_daemon_launch_from_cmdline(paths, &cmdline, Some(&cwd))
-}
-
-#[cfg(target_os = "linux")]
-fn recover_legacy_daemon_launch_from_cmdline(
-    paths: &MiyuPaths,
-    cmdline: &[u8],
-    cwd: Option<&Path>,
-) -> Result<DaemonLaunchConfig> {
-    let parsed = parse_legacy_daemon_cmdline(cmdline)?;
-    let password_file = match parsed.password {
-        Some(LegacyPassword::File(path)) => {
-            let path = if path.is_relative() {
-                cwd.context("legacy daemon password file is relative but its cwd is unavailable")?
-                    .join(path)
-            } else {
-                path
-            };
-            Some(stage_web_password_file(paths, &path)?)
-        }
-        Some(LegacyPassword::Inline(password)) => {
-            Some(stage_managed_web_password(paths, &password)?)
-        }
-        None => None,
-    };
-    Ok(DaemonLaunchConfig {
-        port: parsed.port,
-        password_file,
-        // Legacy daemons predate --bind, so they were listening on 0.0.0.0.
-        bind: None,
-    })
-}
-
-#[cfg(not(target_os = "linux"))]
-fn recover_legacy_daemon_launch(_paths: &MiyuPaths, _pid: u32) -> Result<DaemonLaunchConfig> {
+/// 旧版本 daemon 没有持久化启动参数,无法可靠恢复端口与密码;
+/// 返回默认配置(旧进程会被视为过期 daemon 由调用方重启)。
+fn recover_legacy_daemon_launch(_paths: &GQYPaths, _pid: u32) -> Result<DaemonLaunchConfig> {
     Ok(DaemonLaunchConfig::default())
 }
 
 pub fn recover_daemon_launch_if_missing(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     pid: u32,
 ) -> Result<Option<DaemonLaunchConfig>> {
     if try_load_daemon_launch_config(paths)?.is_some() {
@@ -851,12 +735,12 @@ pub fn recover_daemon_launch_if_missing(
     }
 }
 
-pub fn discard_daemon_launch_candidate(paths: &MiyuPaths, config: &DaemonLaunchConfig) {
+pub fn discard_daemon_launch_candidate(paths: &GQYPaths, config: &DaemonLaunchConfig) {
     abandon_daemon_launch_candidate(paths, config);
 }
 
 pub async fn ensure_daemon(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     requested: Option<&DaemonLaunchConfig>,
 ) -> Result<DaemonInfo> {
     let mut active_paths = paths.clone();
@@ -864,7 +748,7 @@ pub async fn ensure_daemon(
     let mut current = daemon_info(&active_paths).await;
     if current.is_none() {
         let previous_paths = active_paths.clone();
-        active_paths = match MiyuPaths::new().context("refreshing Miyu paths before daemon startup")
+        active_paths = match GQYPaths::new().context("refreshing GQY paths before daemon startup")
         {
             Ok(paths) => paths,
             Err(error) => {
@@ -896,7 +780,7 @@ pub async fn ensure_daemon(
             }
             return Err(error);
         }
-        active_paths = match MiyuPaths::new().context("refreshing Miyu paths after daemon shutdown")
+        active_paths = match GQYPaths::new().context("refreshing GQY paths after daemon shutdown")
         {
             Ok(paths) => paths,
             Err(error) => {
@@ -932,7 +816,7 @@ pub async fn ensure_daemon(
             return Err(error);
         }
         drop(starter);
-        active_paths = match MiyuPaths::new().context("refreshing Miyu paths after daemon shutdown")
+        active_paths = match GQYPaths::new().context("refreshing GQY paths after daemon shutdown")
         {
             Ok(paths) => paths,
             Err(error) => {
@@ -968,10 +852,10 @@ pub async fn ensure_daemon(
             spawn_daemon_reaper(child);
             return Ok(info);
         }
-        match child.try_wait().context("checking Miyu daemon process") {
+        match child.try_wait().context("checking GQY daemon process") {
             Ok(Some(status)) => {
                 abandon_daemon_launch_candidate(&active_paths, &launch);
-                bail!("Miyu daemon exited before becoming ready ({status})");
+                bail!("GQY daemon exited before becoming ready ({status})");
             }
             Ok(None) => {}
             Err(error) => {
@@ -985,7 +869,7 @@ pub async fn ensure_daemon(
             let _ = child.kill();
             let _ = child.wait();
             abandon_daemon_launch_candidate(&active_paths, &launch);
-            bail!("Miyu daemon did not become ready within 8 seconds");
+            bail!("GQY daemon did not become ready within 8 seconds");
         }
         tokio::time::sleep(Duration::from_millis(50)).await;
     }
@@ -993,13 +877,13 @@ pub async fn ensure_daemon(
 
 /// Shuts down a daemon left over from an older build so the caller can spawn
 /// one matching the current binary.
-async fn restart_stale_daemon(paths: &MiyuPaths, info: &DaemonInfo) -> Result<()> {
+async fn restart_stale_daemon(paths: &GQYPaths, info: &DaemonInfo) -> Result<()> {
     shutdown_daemon(paths, info)
         .await
-        .context("waiting for the outdated Miyu daemon to stop")
+        .context("waiting for the outdated GQY daemon to stop")
 }
 
-pub async fn shutdown_daemon(paths: &MiyuPaths, info: &DaemonInfo) -> Result<()> {
+pub async fn shutdown_daemon(paths: &GQYPaths, info: &DaemonInfo) -> Result<()> {
     let process = daemon_process_identity(info.pid);
     let mut stream = connect(&paths.ipc_socket()).await?;
     send(
@@ -1015,11 +899,7 @@ pub async fn shutdown_daemon(paths: &MiyuPaths, info: &DaemonInfo) -> Result<()>
 }
 
 pub fn daemon_process_identity(pid: u32) -> DaemonProcessIdentity {
-    DaemonProcessIdentity {
-        pid,
-        #[cfg(target_os = "linux")]
-        start_time: linux_process_state(pid).map(|(_, start_time)| start_time),
-    }
+    DaemonProcessIdentity { pid }
 }
 
 pub async fn wait_for_daemon_exit(process: DaemonProcessIdentity, timeout: Duration) -> Result<()> {
@@ -1030,7 +910,7 @@ pub async fn wait_for_daemon_exit(process: DaemonProcessIdentity, timeout: Durat
         }
         if tokio::time::Instant::now() >= deadline {
             bail!(
-                "Miyu daemon PID {} did not stop within {} seconds",
+                "GQY daemon PID {} did not stop within {} seconds",
                 process.pid,
                 timeout.as_secs()
             );
@@ -1039,18 +919,7 @@ pub async fn wait_for_daemon_exit(process: DaemonProcessIdentity, timeout: Durat
     }
 }
 
-#[cfg(target_os = "linux")]
-fn daemon_process_matches(process: DaemonProcessIdentity) -> bool {
-    let Some((state, start_time)) = linux_process_state(process.pid) else {
-        return false;
-    };
-    state != 'Z'
-        && process
-            .start_time
-            .is_none_or(|expected| expected == start_time)
-}
-
-#[cfg(all(unix, not(target_os = "linux")))]
+#[cfg(unix)]
 fn daemon_process_matches(process: DaemonProcessIdentity) -> bool {
     if process.pid == 0 {
         return false;
@@ -1064,24 +933,7 @@ fn daemon_process_matches(_process: DaemonProcessIdentity) -> bool {
     false
 }
 
-#[cfg(target_os = "linux")]
-fn linux_process_state(pid: u32) -> Option<(char, u64)> {
-    if pid == 0 {
-        return None;
-    }
-    let stat = std::fs::read_to_string(format!("/proc/{pid}/stat")).ok()?;
-    let fields = stat
-        .rsplit_once(") ")?
-        .1
-        .split_whitespace()
-        .collect::<Vec<_>>();
-    let state = fields.first()?.chars().next()?;
-    // `fields[0]` is procfs field 3 (state); starttime is field 22.
-    let start_time = fields.get(19)?.parse().ok()?;
-    Some((state, start_time))
-}
-
-fn acquire_starter(paths: &MiyuPaths) -> Result<StarterLease> {
+fn acquire_starter(paths: &GQYPaths) -> Result<StarterLease> {
     prepare_runtime_dir(paths)?;
     let lock_file = OpenOptions::new()
         .create(true)
@@ -1097,7 +949,7 @@ fn acquire_starter(paths: &MiyuPaths) -> Result<StarterLease> {
 }
 
 fn start_daemon_process(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     launch: &DaemonLaunchConfig,
 ) -> Result<std::process::Child> {
     std::fs::create_dir_all(paths.logs_dir())?;
@@ -1108,7 +960,7 @@ fn start_daemon_process(
     // The daemon is this very binary re-executed with a hidden subcommand,
     // so a single installed file is always sufficient.
     let executable =
-        std::env::current_exe().context("resolving the Miyu executable to spawn the daemon")?;
+        std::env::current_exe().context("resolving the GQY executable to spawn the daemon")?;
     let mut command = std::process::Command::new(executable);
     command.arg("__daemon");
     append_daemon_process_args(&mut command, launch);
@@ -1124,7 +976,7 @@ fn start_daemon_process(
             Ok(())
         });
     }
-    command.spawn().context("starting Miyu daemon")
+    command.spawn().context("starting GQY daemon")
 }
 
 fn spawn_daemon_reaper(mut child: std::process::Child) {
@@ -1235,7 +1087,7 @@ mod tests {
 
     #[test]
     fn daemon_process_prefers_the_default_web_port_unless_overridden() {
-        let mut default = std::process::Command::new("miyu");
+        let mut default = std::process::Command::new("gqy");
         append_daemon_process_args(&mut default, &DaemonLaunchConfig::default());
         let default_args = default
             .get_args()
@@ -1248,7 +1100,7 @@ mod tests {
             password_file: Some(PathBuf::from("/private/password")),
             bind: None,
         };
-        let mut overridden = std::process::Command::new("miyu");
+        let mut overridden = std::process::Command::new("gqy");
         append_daemon_process_args(&mut overridden, &supplied);
         let overridden_args = overridden
             .get_args()
@@ -1261,8 +1113,8 @@ mod tests {
         assert!(overridden_args.iter().all(|arg| !arg.contains("secret")));
     }
 
-    fn test_paths(root: &Path) -> MiyuPaths {
-        MiyuPaths {
+    fn test_paths(root: &Path) -> GQYPaths {
+        GQYPaths {
             root_dir: root.to_path_buf(),
             config_dir: root.join("config"),
             config_file: root.join("config/config.jsonc"),
@@ -1271,7 +1123,7 @@ mod tests {
             cache_dir: root.join("cache"),
             state_dir: root.join("state"),
             pictures_dir: root.join("pictures"),
-            fish_hook_file: root.join("fish/miyu.fish"),
+            fish_hook_file: root.join("fish/gqy.fish"),
             bash_hook_file: root.join("shell/bash-hook.sh"),
             zsh_hook_file: root.join("shell/zsh-hook.zsh"),
             scripts_dir: root.join("config/scripts"),
@@ -1333,7 +1185,7 @@ mod tests {
 
         let restored = load_daemon_launch_config(&paths).unwrap();
         assert_eq!(restored, saved);
-        let mut command = std::process::Command::new("miyu");
+        let mut command = std::process::Command::new("gqy");
         append_daemon_process_args(&mut command, &restored);
         assert_eq!(
             command.get_args().collect::<Vec<_>>(),
@@ -1434,39 +1286,6 @@ mod tests {
         assert_eq!(load_daemon_launch_config(&paths).unwrap(), new_launch);
     }
 
-    #[cfg(target_os = "linux")]
-    #[test]
-    fn legacy_inline_password_and_port_are_recovered_into_managed_state() {
-        let temp = tempfile::tempdir().unwrap();
-        let paths = test_paths(temp.path());
-        let cmdline = b"/usr/bin/miyu\0__daemon\0--port\09412\0--password=legacy-secret\0";
-
-        let recovered = recover_legacy_daemon_launch_from_cmdline(&paths, cmdline, None).unwrap();
-
-        assert_eq!(recovered.port, 9412);
-        let password = recovered.password_file.unwrap();
-        let password_dir = paths.managed_web_password_dir();
-        assert_eq!(password.parent(), Some(password_dir.as_path()));
-        assert_eq!(std::fs::read_to_string(password).unwrap(), "legacy-secret");
-    }
-
-    #[cfg(target_os = "linux")]
-    #[test]
-    fn legacy_relative_password_file_is_copied_from_the_daemon_cwd() {
-        let temp = tempfile::tempdir().unwrap();
-        let paths = test_paths(temp.path());
-        std::fs::write(temp.path().join("external-password"), "file-secret\n").unwrap();
-        let cmdline = b"miyu\0__daemon\0--port=9500\0--password-file\0external-password\0";
-
-        let recovered =
-            recover_legacy_daemon_launch_from_cmdline(&paths, cmdline, Some(temp.path())).unwrap();
-
-        assert_eq!(recovered.port, 9500);
-        let password = recovered.password_file.unwrap();
-        assert_ne!(password, temp.path().join("external-password"));
-        assert_eq!(std::fs::read_to_string(password).unwrap(), "file-secret");
-    }
-
     #[test]
     fn admin_commands_round_trip_with_explicit_state() {
         let request = Request::new(Command::ResetConversation {
@@ -1520,7 +1339,7 @@ mod tests {
             cwd: Some(std::path::PathBuf::from("/tmp/workdir")),
             session_id: Some("sess_test".to_string()),
             origin_tty: Some(OriginTty {
-                path: std::path::PathBuf::from("/dev/pts/7"),
+                path: std::path::PathBuf::from("/dev/ttys007"),
                 shell_pid: 4321,
             }),
         });
@@ -1544,7 +1363,7 @@ mod tests {
                 assert_eq!(cwd, Some(std::path::PathBuf::from("/tmp/workdir")));
                 assert_eq!(session_id.as_deref(), Some("sess_test"));
                 let origin = origin_tty.expect("origin tty should round-trip");
-                assert_eq!(origin.path, std::path::PathBuf::from("/dev/pts/7"));
+                assert_eq!(origin.path, std::path::PathBuf::from("/dev/ttys007"));
                 assert_eq!(origin.shell_pid, 4321);
             }
             _ => panic!("unexpected command"),
@@ -1575,37 +1394,4 @@ mod tests {
         assert!(acquire_direct_core_at(lock).is_ok());
     }
 
-    #[cfg(target_os = "linux")]
-    #[test]
-    fn daemon_identity_uses_linux_process_start_time() {
-        let identity = daemon_process_identity(std::process::id());
-        assert!(identity.start_time.is_some());
-        assert!(daemon_process_matches(identity));
-    }
-
-    #[cfg(target_os = "linux")]
-    #[tokio::test]
-    async fn daemon_exit_wait_tracks_the_process_instead_of_ipc_files() {
-        let mut child = std::process::Command::new("sh")
-            .args(["-c", "sleep 0.1"])
-            .spawn()
-            .unwrap();
-        let identity = daemon_process_identity(child.id());
-        assert!(daemon_process_matches(identity));
-
-        wait_for_daemon_exit(identity, Duration::from_secs(2))
-            .await
-            .unwrap();
-        child.wait().unwrap();
-    }
-
-    #[cfg(target_os = "linux")]
-    #[tokio::test]
-    async fn daemon_exit_wait_times_out_while_the_same_process_is_alive() {
-        let identity = daemon_process_identity(std::process::id());
-        let error = wait_for_daemon_exit(identity, Duration::from_millis(30))
-            .await
-            .unwrap_err();
-        assert!(error.to_string().contains(&std::process::id().to_string()));
-    }
 }

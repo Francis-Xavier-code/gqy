@@ -34,9 +34,9 @@ pub fn notify(title: &str, body: &str) {
         spawn("powershell", &["-NoProfile", "-Command", &script]);
         return;
     }
-    // Linux/BSD: notify-send is the de-facto interface, and `--` keeps a body
-    // starting with a dash from being read as a flag.
-    spawn("notify-send", &["-a", "Miyu", "--", title, body]);
+    // Other Unix/BSD: notify-send is the de-facto interface, and `--` keeps a
+    // body starting with a dash from being read as a flag.
+    spawn("notify-send", &["-a", "GQY", "--", title, body]);
 }
 
 fn spawn(program: &str, args: &[&str]) {
@@ -90,6 +90,6 @@ mod tests {
     fn a_missing_backend_is_silent() {
         // The point of the module: no panic, no error, no blocking, even when
         // nothing on the machine can show a notification.
-        spawn("miyu-nonexistent-notification-backend", &["x"]);
+        spawn("gqy-nonexistent-notification-backend", &["x"]);
     }
 }
