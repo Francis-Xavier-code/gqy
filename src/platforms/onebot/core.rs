@@ -532,8 +532,8 @@ pub(crate) struct QqListenerManager {
 
 #[derive(Default)]
 pub(crate) struct QqListenerState {
-    active_port: Option<u16>,
-    task: Option<JoinHandle<()>>,
+    pub(crate) active_port: Option<u16>,
+    pub(crate) task: Option<JoinHandle<()>>,
 }
 
 pub(crate) struct PreparedQqListener {

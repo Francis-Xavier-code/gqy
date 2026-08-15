@@ -82,7 +82,7 @@ pub(crate) struct ToolStats {
     /// once, so the elapsed timer would only ever read `0s` — and worse, imply
     /// the work finished instantly. The job strip tracks it from here on.
     pub(crate) detached: bool,
-    seq: usize,
+    pub(crate) seq: usize,
 }
 
 impl ToolStats {

@@ -177,7 +177,7 @@ pub(crate) struct ResponsesRequest {
 #[derive(Debug, Serialize)]
 pub(crate) struct ResponsesReasoning {
     #[serde(skip_serializing_if = "Option::is_none")]
-    effort: Option<String>,
+    pub(crate) effort: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) summary: Option<String>,
 }
@@ -658,17 +658,17 @@ pub(crate) struct ChatCompletionResponse {
 #[derive(Debug, Deserialize)]
 pub(crate) struct ChatCompletionChoice {
     #[serde(default, deserialize_with = "null_as_default")]
-    finish_reason: Option<String>,
+    pub(crate) finish_reason: Option<String>,
     #[serde(default)]
-    message: ChatChoiceMessage,
+    pub(crate) message: ChatChoiceMessage,
 }
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct ChatStreamChoice {
     #[serde(default, deserialize_with = "null_as_default")]
-    finish_reason: Option<String>,
+    pub(crate) finish_reason: Option<String>,
     #[serde(default)]
-    delta: ChatChoiceMessage,
+    pub(crate) delta: ChatChoiceMessage,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -714,9 +714,9 @@ pub(crate) struct ToolCallDelta {
 #[derive(Debug, Default, Deserialize)]
 pub(crate) struct ToolCallFunctionDelta {
     #[serde(default, deserialize_with = "null_as_default")]
-    name: Option<String>,
+    pub(crate) name: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    arguments: Option<String>,
+    pub(crate) arguments: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -760,11 +760,11 @@ pub(crate) struct ResponsesStreamItem {
 #[derive(Debug, Deserialize)]
 pub(crate) struct ResponsesStreamResponse {
     #[serde(default, deserialize_with = "null_as_default")]
-    id: Option<String>,
+    pub(crate) id: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    usage: Option<ResponsesUsage>,
+    pub(crate) usage: Option<ResponsesUsage>,
     #[serde(default, deserialize_with = "null_as_default")]
-    incomplete_details: Option<ResponsesIncompleteDetails>,
+    pub(crate) incomplete_details: Option<ResponsesIncompleteDetails>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -822,35 +822,35 @@ pub(crate) struct AnthropicStreamEvent {
 #[derive(Debug, Deserialize)]
 pub(crate) struct AnthropicStreamMessage {
     #[serde(default, deserialize_with = "null_as_default")]
-    usage: Option<AnthropicUsage>,
+    pub(crate) usage: Option<AnthropicUsage>,
 }
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct AnthropicStreamBlock {
     #[serde(rename = "type")]
-    kind: String,
+    pub(crate) kind: String,
     #[serde(default, deserialize_with = "null_as_default")]
     pub(crate) id: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
     pub(crate) name: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    text: Option<String>,
+    pub(crate) text: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    thinking: Option<String>,
+    pub(crate) thinking: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct AnthropicStreamDelta {
     #[serde(rename = "type", default, deserialize_with = "null_as_default")]
-    kind: Option<String>,
+    pub(crate) kind: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    text: Option<String>,
+    pub(crate) text: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    thinking: Option<String>,
+    pub(crate) thinking: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    partial_json: Option<String>,
+    pub(crate) partial_json: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    signature: Option<String>,
+    pub(crate) signature: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -868,9 +868,9 @@ pub(crate) struct AnthropicUsage {
 #[derive(Debug, Deserialize)]
 pub(crate) struct AnthropicStreamError {
     #[serde(rename = "type", default, deserialize_with = "null_as_default")]
-    kind: Option<String>,
+    pub(crate) kind: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
-    message: Option<String>,
+    pub(crate) message: Option<String>,
 }
 
 #[derive(Default)]

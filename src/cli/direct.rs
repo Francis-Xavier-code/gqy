@@ -641,8 +641,8 @@ pub(crate) struct VariantMenuItem {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct VariantMenuOption {
-    label: String,
-    value: Option<String>,
+    pub(crate) label: String,
+    pub(crate) value: Option<String>,
 }
 
 impl VariantMenuItem {

@@ -716,10 +716,10 @@ pub(crate) fn thinking_variant_options_for_model(
 /// provider 记录(续传本就钉在单端点上,混池仅有过度抑制的轻微风险)。
 #[derive(Clone)]
 pub(crate) struct ResponsesContinuationHealth {
-    unsupported: Arc<std::sync::atomic::AtomicBool>,
-    store: std::path::PathBuf,
-    base_url: String,
-    provider_id: String,
+    pub(crate) unsupported: Arc<std::sync::atomic::AtomicBool>,
+    pub(crate) store: std::path::PathBuf,
+    pub(crate) base_url: String,
+    pub(crate) provider_id: String,
 }
 
 impl ResponsesContinuationHealth {
@@ -773,8 +773,8 @@ pub struct OpenAiCompatibleClient {
 
 #[derive(Clone, Copy)]
 pub(crate) struct RequestTimeouts {
-    response_header: Duration,
-    stream_idle: Duration,
+    pub(crate) response_header: Duration,
+    pub(crate) stream_idle: Duration,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -789,7 +789,7 @@ pub(crate) struct LlmEndpoint {
     pub(crate) client: Client,
     pub(crate) provider: ProviderConfig,
     pub(crate) api_key: String,
-    key_index: usize,
+    pub(crate) key_index: usize,
 }
 
 impl LlmEndpoint {

@@ -234,7 +234,7 @@ fn normalize_info_item(kind: &str, item: &Value) -> Value {
         normalized["deprecated"] = item.get("deprecated").cloned().unwrap_or(Value::Null);
         normalized["disabled"] = item.get("disabled").cloned().unwrap_or(Value::Null);
         normalized["artifacts"] = item.get("artifacts").cloned().unwrap_or(Value::Null);
-        normalized["dependencies"] = item.get("depends_on");
+        normalized["dependencies"] = item.get("depends_on").cloned().unwrap_or(Value::Null);
         normalized["url"] = item
             .pointer("/url")
             .and_then(Value::as_str)

@@ -419,5 +419,5 @@ pub(crate) fn active_judgement_allowed(
 #[derive(Default)]
 pub(crate) struct RuntimeState {
     pub(crate) sessions: HashMap<String, SessionRuntime>,
-    next_generation: u64,
+    pub(crate) next_generation: u64,
 }

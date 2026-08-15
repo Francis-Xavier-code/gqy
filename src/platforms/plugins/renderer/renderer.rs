@@ -229,7 +229,7 @@ pub(crate) struct WorkerProcess {
 
 #[derive(Default)]
 pub(crate) struct WorkerSlot {
-    process: Option<WorkerProcess>,
+    pub(crate) process: Option<WorkerProcess>,
     idle_task: Option<tokio::task::JoinHandle<()>>,
     generation: u64,
 }
@@ -1391,8 +1391,8 @@ pub(crate) struct LayoutBlock {
 }
 
 pub(crate) struct LayoutTable {
-    rows: Vec<LayoutTableRow>,
-    header_height: u32,
+    pub(crate) rows: Vec<LayoutTableRow>,
+    pub(crate) header_height: u32,
 }
 
 pub(crate) struct LayoutTableRow {

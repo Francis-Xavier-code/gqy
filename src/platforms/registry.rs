@@ -392,7 +392,7 @@ impl PlatformRuntime {
 pub(crate) struct SessionTurnState {
     slots: Arc<tokio::sync::Semaphore>,
     gate: Arc<tokio::sync::RwLock<()>>,
-    waiting: AtomicUsize,
+    pub(crate) waiting: AtomicUsize,
     max_queued: usize,
     preempting: AtomicBool,
     preemption_changed: tokio::sync::Notify,
