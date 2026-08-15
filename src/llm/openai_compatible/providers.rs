@@ -151,7 +151,7 @@ pub(crate) struct ChatRequest {
 
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct ChatStreamOptions {
-    include_usage: bool,
+    pub(crate) include_usage: bool,
 }
 
 #[derive(Debug, Serialize)]

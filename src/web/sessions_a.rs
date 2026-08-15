@@ -397,7 +397,7 @@ pub(crate) struct ModelResponse {
 
 #[derive(Serialize)]
 pub(crate) struct ThinkingVariantsResponse {
-    options: Vec<ThinkingVariantOptions>,
+    pub(crate) options: Vec<ThinkingVariantOptions>,
 }
 
 pub async fn run(paths: GQYPaths, args: WebArgs) -> Result<()> {

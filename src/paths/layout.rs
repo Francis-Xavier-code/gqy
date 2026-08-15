@@ -464,7 +464,7 @@ pub(crate) struct ResourceMigrationEntry {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct ResourceMigrationJournal {
-    entries: Vec<ResourceMigrationEntry>,
+    pub(crate) entries: Vec<ResourceMigrationEntry>,
     pub(crate) moved: usize,
     #[serde(default)]
     pub(crate) pending: Option<usize>,
