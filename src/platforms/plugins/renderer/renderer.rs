@@ -1396,11 +1396,11 @@ pub(crate) struct LayoutTable {
 }
 
 pub(crate) struct LayoutTableRow {
-    cells: Vec<LayoutTableCell>,
-    source_start: u32,
+    pub(crate) cells: Vec<LayoutTableCell>,
+    pub(crate) source_start: u32,
     pub(crate) source_end: u32,
-    header: bool,
-    stripe: bool,
+    pub(crate) header: bool,
+    pub(crate) stripe: bool,
 }
 
 pub(crate) struct LayoutTableCell {
