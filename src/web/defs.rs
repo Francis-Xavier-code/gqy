@@ -87,97 +87,97 @@ pub(crate) const AUTH_COOKIE: &str = "gqy_session";
 pub(crate) const LOGIN_WINDOW: Duration = Duration::from_secs(60);
 pub(crate) const LOGIN_ATTEMPT_LIMIT: u8 = 5;
 
-pub(crate) const INDEX_HTML: &str = include_str!("../web/index.html");
-pub(crate) const STYLES_CSS: &str = include_str!("../web/styles.css");
-pub(crate) const APP_JS: &str = include_str!("../web/app.js");
+pub(crate) const INDEX_HTML: &str = include_str!("../../web/index.html");
+pub(crate) const STYLES_CSS: &str = include_str!("../../web/styles.css");
+pub(crate) const APP_JS: &str = include_str!("../../web/app.js");
 // KaTeX 0.18.4(vendored):公式渲染;字体只带 woff2(css 里 woff2 列首,
 // 现代浏览器不会去请求 woff/ttf 回退项)。
-pub(crate) const KATEX_JS: &str = include_str!("../web/vendor/katex/katex.min.js");
-pub(crate) const KATEX_CSS: &str = include_str!("../web/vendor/katex/katex.min.css");
+pub(crate) const KATEX_JS: &str = include_str!("../../web/vendor/katex/katex.min.js");
+pub(crate) const KATEX_CSS: &str = include_str!("../../web/vendor/katex/katex.min.css");
 pub(crate) static KATEX_FONTS: &[(&str, &[u8])] = &[
     (
         "KaTeX_AMS-Regular.woff2",
-        include_bytes!("../web/vendor/katex/fonts/KaTeX_AMS-Regular.woff2"),
+        include_bytes!("../../web/vendor/katex/fonts/KaTeX_AMS-Regular.woff2"),
     ),
     (
         "KaTeX_Caligraphic-Bold.woff2",
-        include_bytes!("../web/vendor/katex/fonts/KaTeX_Caligraphic-Bold.woff2"),
+        include_bytes!("../../web/vendor/katex/fonts/KaTeX_Caligraphic-Bold.woff2"),
     ),
     (
         "KaTeX_Caligraphic-Regular.woff2",
-        include_bytes!("../web/vendor/katex/fonts/KaTeX_Caligraphic-Regular.woff2"),
+        include_bytes!("../../web/vendor/katex/fonts/KaTeX_Caligraphic-Regular.woff2"),
     ),
     (
         "KaTeX_Fraktur-Bold.woff2",
-        include_bytes!("../web/vendor/katex/fonts/KaTeX_Fraktur-Bold.woff2"),
+        include_bytes!("../../web/vendor/katex/fonts/KaTeX_Fraktur-Bold.woff2"),
     ),
     (
         "KaTeX_Fraktur-Regular.woff2",
-        include_bytes!("../web/vendor/katex/fonts/KaTeX_Fraktur-Regular.woff2"),
+        include_bytes!("../../web/vendor/katex/fonts/KaTeX_Fraktur-Regular.woff2"),
     ),
     (
         "KaTeX_Main-Bold.woff2",
-        include_bytes!("../web/vendor/katex/fonts/KaTeX_Main-Bold.woff2"),
+        include_bytes!("../../web/vendor/katex/fonts/KaTeX_Main-Bold.woff2"),
     ),
     (
         "KaTeX_Main-BoldItalic.woff2",
-        include_bytes!("../web/vendor/katex/fonts/KaTeX_Main-BoldItalic.woff2"),
+        include_bytes!("../../web/vendor/katex/fonts/KaTeX_Main-BoldItalic.woff2"),
     ),
     (
         "KaTeX_Main-Italic.woff2",
-        include_bytes!("../web/vendor/katex/fonts/KaTeX_Main-Italic.woff2"),
+        include_bytes!("../../web/vendor/katex/fonts/KaTeX_Main-Italic.woff2"),
     ),
     (
         "KaTeX_Main-Regular.woff2",
-        include_bytes!("../web/vendor/katex/fonts/KaTeX_Main-Regular.woff2"),
+        include_bytes!("../../web/vendor/katex/fonts/KaTeX_Main-Regular.woff2"),
     ),
     (
         "KaTeX_Math-BoldItalic.woff2",
-        include_bytes!("../web/vendor/katex/fonts/KaTeX_Math-BoldItalic.woff2"),
+        include_bytes!("../../web/vendor/katex/fonts/KaTeX_Math-BoldItalic.woff2"),
     ),
     (
         "KaTeX_Math-Italic.woff2",
-        include_bytes!("../web/vendor/katex/fonts/KaTeX_Math-Italic.woff2"),
+        include_bytes!("../../web/vendor/katex/fonts/KaTeX_Math-Italic.woff2"),
     ),
     (
         "KaTeX_SansSerif-Bold.woff2",
-        include_bytes!("../web/vendor/katex/fonts/KaTeX_SansSerif-Bold.woff2"),
+        include_bytes!("../../web/vendor/katex/fonts/KaTeX_SansSerif-Bold.woff2"),
     ),
     (
         "KaTeX_SansSerif-Italic.woff2",
-        include_bytes!("../web/vendor/katex/fonts/KaTeX_SansSerif-Italic.woff2"),
+        include_bytes!("../../web/vendor/katex/fonts/KaTeX_SansSerif-Italic.woff2"),
     ),
     (
         "KaTeX_SansSerif-Regular.woff2",
-        include_bytes!("../web/vendor/katex/fonts/KaTeX_SansSerif-Regular.woff2"),
+        include_bytes!("../../web/vendor/katex/fonts/KaTeX_SansSerif-Regular.woff2"),
     ),
     (
         "KaTeX_Script-Regular.woff2",
-        include_bytes!("../web/vendor/katex/fonts/KaTeX_Script-Regular.woff2"),
+        include_bytes!("../../web/vendor/katex/fonts/KaTeX_Script-Regular.woff2"),
     ),
     (
         "KaTeX_Size1-Regular.woff2",
-        include_bytes!("../web/vendor/katex/fonts/KaTeX_Size1-Regular.woff2"),
+        include_bytes!("../../web/vendor/katex/fonts/KaTeX_Size1-Regular.woff2"),
     ),
     (
         "KaTeX_Size2-Regular.woff2",
-        include_bytes!("../web/vendor/katex/fonts/KaTeX_Size2-Regular.woff2"),
+        include_bytes!("../../web/vendor/katex/fonts/KaTeX_Size2-Regular.woff2"),
     ),
     (
         "KaTeX_Size3-Regular.woff2",
-        include_bytes!("../web/vendor/katex/fonts/KaTeX_Size3-Regular.woff2"),
+        include_bytes!("../../web/vendor/katex/fonts/KaTeX_Size3-Regular.woff2"),
     ),
     (
         "KaTeX_Size4-Regular.woff2",
-        include_bytes!("../web/vendor/katex/fonts/KaTeX_Size4-Regular.woff2"),
+        include_bytes!("../../web/vendor/katex/fonts/KaTeX_Size4-Regular.woff2"),
     ),
     (
         "KaTeX_Typewriter-Regular.woff2",
-        include_bytes!("../web/vendor/katex/fonts/KaTeX_Typewriter-Regular.woff2"),
+        include_bytes!("../../web/vendor/katex/fonts/KaTeX_Typewriter-Regular.woff2"),
     ),
 ];
-pub(crate) const GQY_LOGO: &[u8] = include_bytes!("../pics/GQY-icon.png");
-pub(crate) const GQY_WALLPAPER: &[u8] = include_bytes!("../pics/GQY-image.png");
+pub(crate) const GQY_LOGO: &[u8] = include_bytes!("../../pics/GQY-icon.png");
+pub(crate) const GQY_WALLPAPER: &[u8] = include_bytes!("../../pics/GQY-image.png");
 
 #[derive(Clone)]
 pub(crate) struct DaemonState {
@@ -326,7 +326,7 @@ pub(crate) struct TurnResourceCache {
 }
 
 impl Default for TurnResourceCache {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             entries: HashMap::new(),
             order: VecDeque::new(),
@@ -1358,7 +1358,7 @@ impl ApiError {
 }
 
 impl IntoResponse for ApiError {
-    pub(crate) fn into_response(self) -> Response {
+    fn into_response(self) -> Response {
         (
             self.status,
             Json(json!({ "error": { "message": self.message } })),
