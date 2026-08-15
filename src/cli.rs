@@ -56,6 +56,8 @@ mod variant;
 use variant::*;
 mod live;
 use live::*;
+mod live2;
+use live2::*;
 mod jobs;
 use jobs::*;
 mod repl_ui;
