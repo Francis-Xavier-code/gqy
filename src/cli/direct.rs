@@ -360,10 +360,7 @@ pub(crate) async fn run_direct_repl(paths: &GQYPaths, initial_mode: AgentMode) -
                 continue;
             }
             agent.wipe_memory()?;
-            println!(
-                "{}",
-                t("long-term memory erased", "长期记忆已清空")
-            );
+            println!("{}", t("long-term memory erased", "长期记忆已清空"));
             continue;
         }
         if command.eq_ignore_ascii_case("/reset") && command_args.trim().is_empty() {
@@ -410,10 +407,7 @@ pub(crate) async fn run_direct_repl(paths: &GQYPaths, initial_mode: AgentMode) -
                     )
                 );
             } else {
-                println!(
-                    "{}: {command_input}",
-                    t("unknown command", "未知命令")
-                );
+                println!("{}: {command_input}", t("unknown command", "未知命令"));
             }
             continue;
         }
@@ -605,7 +599,11 @@ pub(crate) fn reload_repl_config(
 
 /// The footer/status display must reflect the session's pinned model pool,
 /// not just the global config.
-pub(crate) fn footer_config_for_session(paths: &GQYPaths, config: &AppConfig, session_id: &str) -> AppConfig {
+pub(crate) fn footer_config_for_session(
+    paths: &GQYPaths,
+    config: &AppConfig,
+    session_id: &str,
+) -> AppConfig {
     let mut config = config.clone();
     if let Ok(Some(models)) =
         StateStore::new(paths).and_then(|store| store.session_model_override(session_id))
@@ -820,4 +818,3 @@ pub(crate) fn inline_single_variant_select(
         }
     }
 }
-

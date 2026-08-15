@@ -70,7 +70,11 @@ pub(crate) fn spawn_hangup_watchdog() {
 }
 
 pub(crate) fn terminal_hangup() -> bool {
-    let mut pollfd = libc::pollfd { fd: libc::STDIN_FILENO, events: 0, revents: 0 };
+    let mut pollfd = libc::pollfd {
+        fd: libc::STDIN_FILENO,
+        events: 0,
+        revents: 0,
+    };
     let ready = unsafe { libc::poll(&mut pollfd, 1, 0) };
     ready == 1 && (pollfd.revents & (libc::POLLHUP | libc::POLLERR | libc::POLLNVAL)) != 0
 }
@@ -84,7 +88,10 @@ pub(crate) enum LiveReplOutcome {
     ),
     /// A daemon-initiated wake turn is running in this session; the caller
     /// should attach and render it live.
-    FollowWake { run_id: String, label: String },
+    FollowWake {
+        run_id: String,
+        label: String,
+    },
     /// Ctrl+C on an empty line while this session has background work: stop
     /// the work and stay in the REPL. Pressing it again then exits.
     StopJobs,
@@ -109,11 +116,13 @@ pub(crate) fn read_live_repl_input(
         // 等待权自持:PTY 死亡后 crossterm 的 poll 会在内部对 HUP fd
         // 无限自旋、永不返回(实测),所以不能把"等 80ms"交给它——用裸
         // poll 等待并率先识别挂断,有输入就绪时才让 crossterm 取事件。
-        let mut pollfd = libc::pollfd { fd: libc::STDIN_FILENO, events: libc::POLLIN, revents: 0 };
+        let mut pollfd = libc::pollfd {
+            fd: libc::STDIN_FILENO,
+            events: libc::POLLIN,
+            revents: 0,
+        };
         let ready = unsafe { libc::poll(&mut pollfd, 1, 80) };
-        if ready == 1
-            && (pollfd.revents & (libc::POLLHUP | libc::POLLERR | libc::POLLNVAL)) != 0
-        {
+        if ready == 1 && (pollfd.revents & (libc::POLLHUP | libc::POLLERR | libc::POLLNVAL)) != 0 {
             return Ok(LiveReplOutcome::Exit);
         }
         // 就绪判定必须问 crossterm(它的内部缓冲对裸 poll 不可见):
@@ -162,7 +171,9 @@ pub(crate) fn read_live_repl_input(
                     synchronized_terminal_update(CursorAfterUpdate::Preserve, || live.redraw())?
                 }
                 LiveEditorAction::ClearScreen => {
-                    synchronized_terminal_update(CursorAfterUpdate::Preserve, || live.clear_screen())?
+                    synchronized_terminal_update(CursorAfterUpdate::Preserve, || {
+                        live.clear_screen()
+                    })?
                 }
                 LiveEditorAction::EmptySubmit => {
                     synchronized_terminal_update(CursorAfterUpdate::Preserve, || {
@@ -483,11 +494,7 @@ pub(crate) async fn follow_wake_run(
     live.raw_mode_handoff = true;
     // Suppress the duplicate DB report for a turn that was rendered live.
     if let Some(turn_id) = turn_id {
-        jobs_shared
-            .rendered_turns
-            .lock()
-            .unwrap()
-            .insert(turn_id);
+        jobs_shared.rendered_turns.lock().unwrap().insert(turn_id);
     }
     Ok(())
 }
@@ -1358,7 +1365,11 @@ pub(crate) fn repl_visible_input_lines(
     vec![lines[0].clone(), omitted, lines[lines.len() - 1].clone()]
 }
 
-pub(crate) fn ensure_repl_space(stdout: &mut io::Stdout, input_row: &mut u16, needed_rows: u16) -> Result<()> {
+pub(crate) fn ensure_repl_space(
+    stdout: &mut io::Stdout,
+    input_row: &mut u16,
+    needed_rows: u16,
+) -> Result<()> {
     let (_, term_rows) = terminal::size().unwrap_or((80, 24));
     let term_rows = term_rows.max(1);
     if (*input_row).saturating_add(needed_rows) < term_rows {
@@ -1423,4 +1434,3 @@ pub(crate) fn replace_repl_input_with_user_echo(
     stdout.flush()?;
     Ok(())
 }
-

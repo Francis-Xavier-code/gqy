@@ -105,7 +105,8 @@ pub async fn run(cli: Cli, paths: GQYPaths) -> Result<()> {
         }
         Some(Command::Tool(args)) => run_tool(&paths, mode, args).await,
         Some(Command::Ask(args)) => {
-            let session = one_shot_session(&paths, session_arg.as_deref(), continue_session).await?;
+            let session =
+                one_shot_session(&paths, session_arg.as_deref(), continue_session).await?;
             run_chat_with_options(
                 &paths,
                 join_message(args.message),
@@ -277,7 +278,10 @@ pub(crate) async fn run_web(paths: &GQYPaths, mut args: WebArgs) -> Result<()> {
     Ok(())
 }
 
-pub(crate) fn web_launch_config(paths: &GQYPaths, args: &WebArgs) -> Result<Option<ipc::DaemonLaunchConfig>> {
+pub(crate) fn web_launch_config(
+    paths: &GQYPaths,
+    args: &WebArgs,
+) -> Result<Option<ipc::DaemonLaunchConfig>> {
     if !args.port_explicit
         && args.bind.is_none()
         && args.password.is_none()
@@ -413,9 +417,7 @@ pub(crate) async fn print_daemon_status(paths: &GQYPaths) -> Result<()> {
         t("running", "运行中"),
         info.pid,
     );
-    for line in
-        daemon_web_status_lines(t("WebUI:", "WebUI："), &daemon_web_access_urls(&info))
-    {
+    for line in daemon_web_status_lines(t("WebUI:", "WebUI："), &daemon_web_access_urls(&info)) {
         println!("{line}");
     }
     let engine = data
@@ -492,7 +494,13 @@ pub(crate) async fn run_request_monitor(paths: &GQYPaths) -> Result<()> {
         .get("file")
         .and_then(serde_json::Value::as_str)
         .map(str::to_string)
-        .unwrap_or_else(|| paths.logs_dir().join("requests-<date>.jsonl").display().to_string());
+        .unwrap_or_else(|| {
+            paths
+                .logs_dir()
+                .join("requests-<date>.jsonl")
+                .display()
+                .to_string()
+        });
     println!(
         "{}",
         t(
@@ -516,7 +524,9 @@ pub(crate) async fn run_request_monitor(paths: &GQYPaths) -> Result<()> {
             _ = tokio::signal::ctrl_c() => break,
             _ = tokio::time::sleep(Duration::from_millis(300)) => {}
         }
-        let Ok(meta) = std::fs::metadata(&path) else { continue };
+        let Ok(meta) = std::fs::metadata(&path) else {
+            continue;
+        };
         if meta.len() < offset {
             offset = 0; // 跨日换文件或被清空
         }
@@ -524,7 +534,9 @@ pub(crate) async fn run_request_monitor(paths: &GQYPaths) -> Result<()> {
             continue;
         }
         use std::io::{Read as _, Seek as _};
-        let Ok(mut handle) = std::fs::File::open(&path) else { continue };
+        let Ok(mut handle) = std::fs::File::open(&path) else {
+            continue;
+        };
         if handle.seek(std::io::SeekFrom::Start(offset)).is_err() {
             continue;
         }
@@ -539,7 +551,12 @@ pub(crate) async fn run_request_monitor(paths: &GQYPaths) -> Result<()> {
             let Ok(entry) = serde_json::from_str::<serde_json::Value>(line.trim()) else {
                 continue;
             };
-            let text = |key: &str| entry.get(key).and_then(serde_json::Value::as_str).unwrap_or("?");
+            let text = |key: &str| {
+                entry
+                    .get(key)
+                    .and_then(serde_json::Value::as_str)
+                    .unwrap_or("?")
+            };
             let body = entry.get("body");
             let messages = body
                 .and_then(|body| body.get("messages").or_else(|| body.get("input")))
@@ -579,7 +596,10 @@ pub(crate) async fn run_daemon_logs(paths: &GQYPaths, args: DaemonLogsArgs) -> R
         Some("request" | "requests") => return run_request_monitor(paths).await,
         Some(other) => bail!(
             "{}: {other}",
-            t("unknown logs topic (try: request)", "未知日志主题(可用: request)")
+            t(
+                "unknown logs topic (try: request)",
+                "未知日志主题(可用: request)"
+            )
         ),
     }
     let ansi = io::stdout().is_terminal() && std::env::var_os("NO_COLOR").is_none();
@@ -752,7 +772,12 @@ pub(crate) struct DaemonLogStreamFormatter {
 }
 
 impl DaemonLogStreamFormatter {
-    pub(crate) fn push(&mut self, bytes: &[u8], ansi: bool, output: &mut impl Write) -> io::Result<()> {
+    pub(crate) fn push(
+        &mut self,
+        bytes: &[u8],
+        ansi: bool,
+        output: &mut impl Write,
+    ) -> io::Result<()> {
         self.pending.extend_from_slice(bytes);
         let Some(last_newline) = self.pending.iter().rposition(|byte| *byte == b'\n') else {
             return Ok(());
@@ -873,7 +898,10 @@ pub(crate) fn daemon_log_follow_cursor_for_files(
     }
 }
 
-pub(crate) fn recent_daemon_log_snapshot(paths: &GQYPaths, limit: usize) -> Result<DaemonLogSnapshot> {
+pub(crate) fn recent_daemon_log_snapshot(
+    paths: &GQYPaths,
+    limit: usize,
+) -> Result<DaemonLogSnapshot> {
     let files = daemon_log_files(paths)?;
     if limit == 0 {
         return Ok(DaemonLogSnapshot {
@@ -1205,7 +1233,9 @@ pub(crate) enum ConfigReloadResponse {
     Busy,
 }
 
-pub(crate) fn validate_config_reload_response(frame: Option<IpcFrame>) -> Result<ConfigReloadResponse> {
+pub(crate) fn validate_config_reload_response(
+    frame: Option<IpcFrame>,
+) -> Result<ConfigReloadResponse> {
     if let Some(IpcFrame::Error { code, message }) = &frame {
         if *code == Some(ipc::ErrorCode::Busy)
             || (code.is_none() && message == ipc::ADMIN_BUSY_MESSAGE)
@@ -1368,7 +1398,9 @@ pub(crate) async fn run_tool_call(paths: &GQYPaths, args: ToolCallArgs) -> Resul
         args.arguments.clone().unwrap_or_else(|| "{}".to_string())
     };
     let session = std::env::var("GQY_SESSION").ok().filter(|s| !s.is_empty());
-    let origin = std::env::var("GQY_TURN_ORIGIN").ok().filter(|s| !s.is_empty());
+    let origin = std::env::var("GQY_TURN_ORIGIN")
+        .ok()
+        .filter(|s| !s.is_empty());
     let depth: u32 = std::env::var("GQY_BRIDGE_DEPTH")
         .ok()
         .and_then(|raw| raw.parse().ok())

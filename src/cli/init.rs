@@ -579,7 +579,12 @@ pub(crate) fn pop_menu_header(query: &str, selected: usize, total: usize, width:
     )
 }
 
-pub(crate) fn pop_menu_turn_lines(turn: &Turn, focused: bool, checked: bool, width: usize) -> [String; 3] {
+pub(crate) fn pop_menu_turn_lines(
+    turn: &Turn,
+    focused: bool,
+    checked: bool,
+    width: usize,
+) -> [String; 3] {
     let cursor = if focused { "›" } else { " " };
     let marker = if checked { "[*]" } else { "[ ]" };
     let lines = [
@@ -851,7 +856,10 @@ pub(crate) fn run_persona_picker(paths: &GQYPaths, argument: &str) -> Result<boo
         for name in &personas {
             println!("  {name}");
         }
-        println!("{}", t("switch with: /persona <name>", "切换：/persona <名称>"));
+        println!(
+            "{}",
+            t("switch with: /persona <name>", "切换：/persona <名称>")
+        );
         return Ok(false);
     };
     let Some(target) = chosen else {
@@ -1311,7 +1319,10 @@ pub(crate) async fn set_session_models(
     )
 }
 
-pub(crate) fn inline_fuzzy_select(items: &[String], mut active: Vec<bool>) -> Result<Option<Vec<bool>>> {
+pub(crate) fn inline_fuzzy_select(
+    items: &[String],
+    mut active: Vec<bool>,
+) -> Result<Option<Vec<bool>>> {
     let menu_lines = inline_fuzzy_lines(items.len());
     reserve_inline_fuzzy_space(menu_lines)?;
     let mut session = InlineRawMode::start()?;

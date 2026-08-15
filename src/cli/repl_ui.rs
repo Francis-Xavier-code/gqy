@@ -64,7 +64,11 @@ pub(crate) fn wrap_visible_width(value: &str, max_width: usize) -> Vec<String> {
     lines
 }
 
-pub(crate) fn repl_wrapped_input_rows_for_cols(prefix: &str, lines: &[String], cols: usize) -> Vec<String> {
+pub(crate) fn repl_wrapped_input_rows_for_cols(
+    prefix: &str,
+    lines: &[String],
+    cols: usize,
+) -> Vec<String> {
     let max_width = repl_content_width_for_cols(prefix, cols);
     let mut rows = Vec::new();
     for line in lines {
@@ -138,7 +142,12 @@ pub(crate) fn repl_should_browse_history(
     input.is_empty() || repl_history_is_clean(input, history, history_clean_index)
 }
 
-pub(crate) fn repl_move_cursor_vertical(prefix: &str, input: &str, cursor: usize, direction: i32) -> usize {
+pub(crate) fn repl_move_cursor_vertical(
+    prefix: &str,
+    input: &str,
+    cursor: usize,
+    direction: i32,
+) -> usize {
     if input.is_empty() || direction == 0 {
         return cursor.min(input.chars().count());
     }
@@ -444,7 +453,10 @@ pub(crate) fn placeholder_before_cursor(input: &str, cursor: usize) -> Option<(u
     None
 }
 
-pub(crate) fn placeholder_before_or_at_cursor(input: &str, cursor: usize) -> Option<(usize, usize)> {
+pub(crate) fn placeholder_before_or_at_cursor(
+    input: &str,
+    cursor: usize,
+) -> Option<(usize, usize)> {
     placeholder_at_cursor(input, cursor).or_else(|| placeholder_before_cursor(input, cursor))
 }
 
@@ -468,7 +480,11 @@ pub(crate) fn remove_range_chars(value: &mut String, char_start: usize, char_end
     value.replace_range(byte_start..byte_end, "");
 }
 
-pub(crate) fn parse_image_placeholder_index(input: &str, char_start: usize, char_end: usize) -> Option<usize> {
+pub(crate) fn parse_image_placeholder_index(
+    input: &str,
+    char_start: usize,
+    char_end: usize,
+) -> Option<usize> {
     let chars: Vec<char> = input.chars().collect();
     let segment: String = chars[char_start..char_end].iter().collect();
     let after_prefix = segment.strip_prefix("[Image ")?;
@@ -515,7 +531,10 @@ pub(crate) fn clear_placeholder_payload(
     }
 }
 
-pub(crate) fn expand_pasted_text_placeholders(input: &str, pasted_texts: &[Option<PastedText>]) -> String {
+pub(crate) fn expand_pasted_text_placeholders(
+    input: &str,
+    pasted_texts: &[Option<PastedText>],
+) -> String {
     let placeholders = find_pasted_text_placeholders(input);
     if placeholders.is_empty() {
         return input.to_string();
@@ -926,4 +945,3 @@ pub(crate) fn truncate_visible_width(value: &str, max_width: usize) -> String {
     output.push_str("...");
     output
 }
-

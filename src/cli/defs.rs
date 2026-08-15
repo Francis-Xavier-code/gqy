@@ -2,7 +2,6 @@
 
 use super::*;
 
-
 use keyboard_enhancement::KeyboardEnhancementState;
 
 pub(crate) const REPL_MAX_VISIBLE_INPUT_ROWS: u16 = 12;
@@ -46,7 +45,11 @@ pub(crate) fn meter_cumulative(cumulative: TurnTokens) -> render::TokenMeter {
 }
 
 impl ReplFooterStatus {
-    pub(crate) fn from_config(config: &AppConfig, session_tokens: u64, cumulative: TurnTokens) -> Self {
+    pub(crate) fn from_config(
+        config: &AppConfig,
+        session_tokens: u64,
+        cumulative: TurnTokens,
+    ) -> Self {
         let active = config.active_provider_model_choices();
         let mixed_models = active.len() > 1;
         let (provider_id, model) = match active.as_slice() {
@@ -297,7 +300,11 @@ pub(crate) fn repl_footer_left_parts(
     parts.join(" · ")
 }
 
-pub(crate) fn print_mixed_model_endpoint(show: bool, result: &crate::llm::ChatResult, variant: Option<&str>) {
+pub(crate) fn print_mixed_model_endpoint(
+    show: bool,
+    result: &crate::llm::ChatResult,
+    variant: Option<&str>,
+) {
     if !show {
         return;
     }
@@ -309,7 +316,11 @@ pub(crate) fn print_mixed_model_endpoint(show: bool, result: &crate::llm::ChatRe
     );
 }
 
-pub(crate) fn mixed_model_endpoint_label(provider: &str, model: &str, variant: Option<&str>) -> String {
+pub(crate) fn mixed_model_endpoint_label(
+    provider: &str,
+    model: &str,
+    variant: Option<&str>,
+) -> String {
     let variant = variant
         .filter(|variant| !variant.is_empty())
         .map(|variant| format!(" · {variant}"))
@@ -675,7 +686,7 @@ pub(crate) fn localize_subcommands(mut command: clap::Command) -> clap::Command 
             "Erase all conversation history, memory, group contexts and their artifacts",
             "抹掉所有会话历史、记忆、群聊上下文和其产物",
         ),
-                                                ("web", "Open the local GQY WebUI", "访问本地 GQY WebUI"),
+        ("web", "Open the local GQY WebUI", "访问本地 GQY WebUI"),
         (
             "daemon",
             "Manage the unified GQY background service",
@@ -730,8 +741,7 @@ pub(crate) fn localize_subcommands(mut command: clap::Command) -> clap::Command 
     .into_iter()
     .enumerate()
     {
-        command = command
-            .mut_subcommand(name, move |subcommand| subcommand.display_order(index));
+        command = command.mut_subcommand(name, move |subcommand| subcommand.display_order(index));
     }
     command = command
         .mut_subcommand("ask", localize_ask_command)
@@ -771,10 +781,7 @@ pub(crate) fn localize_export_command(command: clap::Command) -> clap::Command {
             ))
         })
         .mut_arg("platforms", |arg| {
-            arg.help(t(
-                "Include chat-platform history",
-                "包含通讯平台的聊天历史",
-            ))
+            arg.help(t("Include chat-platform history", "包含通讯平台的聊天历史"))
         })
         .mut_arg("no_secrets", |arg| {
             arg.help(t(
@@ -796,7 +803,10 @@ pub(crate) fn localize_export_command(command: clap::Command) -> clap::Command {
 pub(crate) fn localize_import_command(command: clap::Command) -> clap::Command {
     command
         .mut_arg("archive", |arg| {
-            arg.help(t("Archive produced by `gqy export`", "gqy export 生成的归档"))
+            arg.help(t(
+                "Archive produced by `gqy export`",
+                "gqy export 生成的归档",
+            ))
         })
         .mut_arg("force", |arg| {
             arg.help(t(

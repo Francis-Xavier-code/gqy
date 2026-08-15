@@ -5,7 +5,10 @@ use super::*;
 /// Single-select variant of the inline fuzzy menu: Tab marks a row (radio),
 /// Enter confirms the marked row (or the highlighted one when nothing is
 /// marked); Esc / q cancels.
-pub(crate) fn inline_fuzzy_select_single(items: &[String], initial: usize) -> Result<Option<usize>> {
+pub(crate) fn inline_fuzzy_select_single(
+    items: &[String],
+    initial: usize,
+) -> Result<Option<usize>> {
     let mut active = vec![false; items.len()];
     if let Some(slot) = active.get_mut(initial) {
         *slot = true;
@@ -93,7 +96,11 @@ pub(crate) fn inline_fuzzy_select_single(items: &[String], initial: usize) -> Re
     }
 }
 
-pub(crate) fn fuzzy_matches(matcher: &SkimMatcherV2, items: &[String], query: &str) -> Vec<(i64, usize)> {
+pub(crate) fn fuzzy_matches(
+    matcher: &SkimMatcherV2,
+    items: &[String],
+    query: &str,
+) -> Vec<(i64, usize)> {
     let mut matches = items
         .iter()
         .enumerate()
@@ -196,7 +203,12 @@ pub(crate) fn inline_fuzzy_header(query: &str, width: usize) -> String {
     format!("\x1b[1m{}\x1b[0m", truncate_visible_width(&line, width))
 }
 
-pub(crate) fn inline_fuzzy_item_line(item: &str, selected: bool, active: bool, width: usize) -> String {
+pub(crate) fn inline_fuzzy_item_line(
+    item: &str,
+    selected: bool,
+    active: bool,
+    width: usize,
+) -> String {
     let marker = if active { "[*]" } else { "[ ]" };
     let line = if selected {
         format!("› {marker} {item}")
@@ -278,7 +290,11 @@ pub(crate) enum InlineSelectKey {
     Ignore,
 }
 
-pub(crate) fn inline_select_key(code: KeyCode, modifiers: KeyModifiers, deletable: bool) -> InlineSelectKey {
+pub(crate) fn inline_select_key(
+    code: KeyCode,
+    modifiers: KeyModifiers,
+    deletable: bool,
+) -> InlineSelectKey {
     let control = modifiers.contains(KeyModifiers::CONTROL);
     match code {
         KeyCode::Char('c') if control => InlineSelectKey::Cancel,
@@ -501,7 +517,10 @@ pub(crate) fn inline_single_confirm_header(label: &str, width: usize) -> String 
     } else {
         format!("delete \"{label}\"? y/N")
     };
-    format!("\x1b[1m\x1b[31m{}\x1b[0m", truncate_visible_width(&line, width))
+    format!(
+        "\x1b[1m\x1b[31m{}\x1b[0m",
+        truncate_visible_width(&line, width)
+    )
 }
 
 pub(crate) fn inline_single_help_line(width: usize, deletable: bool) -> String {
@@ -540,7 +559,7 @@ pub(crate) struct InlineRawMode {
 impl InlineRawMode {
     pub(crate) fn start() -> Result<Self> {
         terminal::enable_raw_mode()?;
-    spawn_hangup_watchdog();
+        spawn_hangup_watchdog();
         Ok(Self {
             stdout: io::stdout(),
         })
@@ -710,7 +729,11 @@ pub(crate) fn run_shell_classify(shell_name: &str, message: &str) -> Result<()> 
     std::process::exit(1);
 }
 
-pub(crate) async fn run_shell_intercept(paths: &GQYPaths, shell_name: &str, message: String) -> Result<()> {
+pub(crate) async fn run_shell_intercept(
+    paths: &GQYPaths,
+    shell_name: &str,
+    message: String,
+) -> Result<()> {
     if !matches!(shell_name, "fish" | "bash" | "zsh") {
         bail!("{}: {shell_name}", t("unsupported shell", "不支持的 shell"));
     }
@@ -746,7 +769,10 @@ pub(crate) async fn run_shell_intercept(paths: &GQYPaths, shell_name: &str, mess
     result
 }
 
-pub(crate) fn expand_shell_pasted_text_placeholders(paths: &GQYPaths, message: &str) -> Result<String> {
+pub(crate) fn expand_shell_pasted_text_placeholders(
+    paths: &GQYPaths,
+    message: &str,
+) -> Result<String> {
     let placeholders = find_pasted_text_placeholders(message);
     if placeholders.is_empty() {
         return Ok(message.to_string());
@@ -959,4 +985,3 @@ pub(crate) fn drain_stdin() {
 
 pub(crate) const STDIN_MAX_CHARS: usize = 50_000;
 pub(crate) const STDIN_TIMEOUT_SECS: u64 = 5;
-

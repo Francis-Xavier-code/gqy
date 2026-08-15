@@ -254,13 +254,17 @@ pub(crate) async fn run_remote_repl(paths: &GQYPaths, mut mode: AgentMode) -> Re
                 ReplSlashCommand::Session => {
                     let arg = command_args.trim();
                     let state = if arg.is_empty() {
-                        match repl_pick_session(paths, &mut live_repl, mode, &active_session_id).await? {
+                        match repl_pick_session(paths, &mut live_repl, mode, &active_session_id)
+                            .await?
+                        {
                             Some(state) => state,
                             None => continue,
                         }
                     } else {
                         let target =
-                            match resolve_repl_session_target(paths, &mut live_repl, mode, arg).await? {
+                            match resolve_repl_session_target(paths, &mut live_repl, mode, arg)
+                                .await?
+                            {
                                 Some(target) => target,
                                 None => continue,
                             };
@@ -510,7 +514,7 @@ pub(crate) async fn run_remote_repl(paths: &GQYPaths, mut mode: AgentMode) -> Re
                     Err(error) => {
                         repl_note(&mut live_repl, &format!("\x1b[31m{error:#}\x1b[0m\n"))?
                     }
-                }
+                },
                 ReplSlashCommand::Models => {
                     // Switches this session's pinned model; the change takes
                     // effect from the next turn without a daemon reload.
@@ -861,10 +865,7 @@ pub(crate) async fn run_remote_repl(paths: &GQYPaths, mut mode: AgentMode) -> Re
                         &mut live_repl,
                         &format!(
                             "\x1b[2m{}\x1b[0m\n",
-                            t(
-                                "long-term memory erased",
-                                "长期记忆已清空"
-                            )
+                            t("long-term memory erased", "长期记忆已清空")
                         ),
                     )?;
                 }
@@ -1033,4 +1034,3 @@ pub(crate) async fn run_remote_repl(paths: &GQYPaths, mut mode: AgentMode) -> Re
     }
     Ok(())
 }
-

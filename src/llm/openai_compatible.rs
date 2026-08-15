@@ -1,10 +1,11 @@
-
 mod core;
 use core::*;
 mod client_impl;
 use client_impl::*;
 mod providers;
 use providers::*;
+mod providers2;
+use providers2::*;
 mod api;
 use api::*;
 #[cfg(test)]
@@ -13,6 +14,4 @@ mod tests;
 mod tests2;
 #[cfg(test)]
 mod tests3;
-impl OpenAiCompatibleClient {
-}
-
+impl OpenAiCompatibleClient {}
