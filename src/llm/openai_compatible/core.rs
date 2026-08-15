@@ -392,7 +392,10 @@ impl ProviderProtocol {
     }
 }
 
-pub(crate) fn effective_protocol(provider: &ProviderConfig, model: &str) -> Result<ProviderProtocol> {
+pub(crate) fn effective_protocol(
+    provider: &ProviderConfig,
+    model: &str,
+) -> Result<ProviderProtocol> {
     match ProviderProtocol::from_provider(provider)? {
         ProviderProtocol::Auto if provider_looks_anthropic(provider) => {
             Ok(ProviderProtocol::Anthropic)
@@ -434,7 +437,10 @@ pub(crate) fn anthropic_reasoning_budget(max_tokens: u32, requested: u64) -> Opt
     (max_tokens > 1024 && requested < u64::from(max_tokens)).then_some(requested)
 }
 
-pub(crate) fn supported_reasoning_variants(provider: &ProviderConfig, model: &str) -> Vec<ReasoningVariant> {
+pub(crate) fn supported_reasoning_variants(
+    provider: &ProviderConfig,
+    model: &str,
+) -> Vec<ReasoningVariant> {
     let Some(info) = models_cache::reasoning_info(&provider.id, model) else {
         return Vec::new();
     };
@@ -719,10 +725,8 @@ pub(crate) struct ResponsesContinuationHealth {
 impl ResponsesContinuationHealth {
     pub(crate) fn for_provider(paths: &GQYPaths, provider: &ProviderConfig) -> Self {
         let store = crate::llm::provider_capabilities::store_path(&paths.cache_dir);
-        let unsupported = crate::llm::provider_capabilities::continuation_unsupported(
-            &store,
-            &provider.base_url,
-        );
+        let unsupported =
+            crate::llm::provider_capabilities::continuation_unsupported(&store, &provider.base_url);
         Self {
             unsupported: Arc::new(std::sync::atomic::AtomicBool::new(unsupported)),
             store,
@@ -880,7 +884,10 @@ pub(crate) fn mark_endpoint_success(endpoint: &LlmEndpoint) {
     }
 }
 
-pub(crate) fn mark_endpoint_failure(endpoint: &LlmEndpoint, error: &anyhow::Error) -> Option<Duration> {
+pub(crate) fn mark_endpoint_failure(
+    endpoint: &LlmEndpoint,
+    error: &anyhow::Error,
+) -> Option<Duration> {
     let duration = cooldown_for_error(error)?;
     let mut scheduler = LLM_SCHEDULER.lock().ok()?;
     scheduler.mark_failure(endpoint.id(), duration);
@@ -945,8 +952,9 @@ pub(crate) fn endpoint_client(provider: &ProviderConfig) -> Result<Client> {
     // edit that changes the timeout naturally mints a new client; the map is
     // bounded by the number of distinct providers. `reqwest::Client` is an Arc
     // handle — clones share one pool.
-    pub(crate) static CLIENTS: std::sync::OnceLock<std::sync::Mutex<HashMap<(String, u64), Client>>> =
-        std::sync::OnceLock::new();
+    pub(crate) static CLIENTS: std::sync::OnceLock<
+        std::sync::Mutex<HashMap<(String, u64), Client>>,
+    > = std::sync::OnceLock::new();
     let timeout = provider.timeout_seconds.clamp(5, 30);
     let key = (provider.id.clone(), timeout);
     let mut cache = CLIENTS
@@ -996,4 +1004,3 @@ pub(crate) fn llm_endpoints(config: &AppConfig, paths: &GQYPaths) -> Result<Vec<
     }
     Ok(endpoints)
 }
-

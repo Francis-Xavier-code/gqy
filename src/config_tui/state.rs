@@ -10,7 +10,11 @@ pub(crate) fn run_form(stdout: &mut io::Stdout, title: &str, fields: &mut [Field
 /// reached from a menu row that already showed the value: the row said what it
 /// was, Enter said "change it", so a second Enter to begin typing is a keypress
 /// that asks a question nobody had.
-pub(crate) fn run_form_editing(stdout: &mut io::Stdout, title: &str, fields: &mut [Field]) -> Result<bool> {
+pub(crate) fn run_form_editing(
+    stdout: &mut io::Stdout,
+    title: &str,
+    fields: &mut [Field],
+) -> Result<bool> {
     run_form_from(stdout, title, fields, true)
 }
 
@@ -411,7 +415,10 @@ pub(crate) fn localized_choice_label(value: &str, zh: bool) -> Option<&'static s
     }
 }
 
-pub(crate) fn provider_model_choice_values(config: &AppConfig, include_current: bool) -> Vec<String> {
+pub(crate) fn provider_model_choice_values(
+    config: &AppConfig,
+    include_current: bool,
+) -> Vec<String> {
     let mut choices = vec![String::new()];
     if include_current {
         choices.push(format!(
@@ -623,12 +630,9 @@ pub(crate) fn edit_dialog_list(stdout: &mut io::Stdout, value: &mut String) -> R
             }
             KeyCode::Enter if !pairs.is_empty() => {
                 let (question, answer) = pairs[selected].clone();
-                if let Some(pair) = edit_dialog_pair(
-                    stdout,
-                    t(" EDIT DIALOG ", " 编辑对话 "),
-                    &question,
-                    &answer,
-                )? {
+                if let Some(pair) =
+                    edit_dialog_pair(stdout, t(" EDIT DIALOG ", " 编辑对话 "), &question, &answer)?
+                {
                     pairs[selected] = pair;
                 }
             }
@@ -750,7 +754,11 @@ pub(crate) fn draw_menu(
     Ok(())
 }
 
-pub(crate) fn menu_window(item_count: usize, selected: usize, visible_rows: usize) -> std::ops::Range<usize> {
+pub(crate) fn menu_window(
+    item_count: usize,
+    selected: usize,
+    visible_rows: usize,
+) -> std::ops::Range<usize> {
     if item_count == 0 || visible_rows == 0 {
         return 0..0;
     }
@@ -1297,4 +1305,3 @@ impl Field {
         self
     }
 }
-

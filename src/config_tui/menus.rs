@@ -491,11 +491,17 @@ pub(crate) fn parse_real_context_string_lines(
     Ok(values)
 }
 
-pub(crate) fn real_context_bool(fields: &[Field], index: usize) -> std::result::Result<bool, String> {
+pub(crate) fn real_context_bool(
+    fields: &[Field],
+    index: usize,
+) -> std::result::Result<bool, String> {
     parse_bool_field(&fields[index].value).map_err(|error| error.to_string())
 }
 
-pub(crate) fn real_context_value<T>(fields: &[Field], index: usize) -> std::result::Result<T, String>
+pub(crate) fn real_context_value<T>(
+    fields: &[Field],
+    index: usize,
+) -> std::result::Result<T, String>
 where
     T: std::str::FromStr,
 {
@@ -573,7 +579,9 @@ pub(crate) fn real_context_restraint_value(value: &str) -> Option<&'static str> 
     }
 }
 
-pub(crate) fn real_context_model_pool_summary(pool: Option<&[ActiveProviderModelConfig]>) -> String {
+pub(crate) fn real_context_model_pool_summary(
+    pool: Option<&[ActiveProviderModelConfig]>,
+) -> String {
     match pool {
         None | Some([]) => t("inherit platform", "继承平台池").to_string(),
         Some(entries) => route_pool_summary(Some(entries), PlatformModelPoolInheritance::Platform),
@@ -595,7 +603,9 @@ pub(crate) fn select_real_context_model_pool(
     )
 }
 
-pub(crate) fn reply_processor_values(config: &AppConfig) -> Result<(bool, ReplyProcessorSettingsForm)> {
+pub(crate) fn reply_processor_values(
+    config: &AppConfig,
+) -> Result<(bool, ReplyProcessorSettingsForm)> {
     let Some(instance) = config.platforms.qq.plugins.get(REPLY_PROCESSOR_PLUGIN_ID) else {
         return Ok((true, ReplyProcessorSettingsForm::default()));
     };
@@ -1028,7 +1038,10 @@ pub(crate) fn edit_model_form(
         ),
         thinking_variant_field(&variant_options, stored_variant.as_deref()),
         Field::new(
-            t("Temperature (empty = provider default)", "Temperature (留空=供应商默认)"),
+            t(
+                "Temperature (empty = provider default)",
+                "Temperature (留空=供应商默认)",
+            ),
             provider
                 .model_temperature
                 .get(model)
@@ -1155,7 +1168,10 @@ pub(crate) fn edit_model_form(
     }
 }
 
-pub(crate) fn thinking_variant_field(options: &ThinkingVariantOptions, stored: Option<&str>) -> Field {
+pub(crate) fn thinking_variant_field(
+    options: &ThinkingVariantOptions,
+    stored: Option<&str>,
+) -> Field {
     let mut choices = Vec::with_capacity(options.variants.len() + 2);
     choices.push(String::new());
     if let Some(stored) = stored.filter(|stored| {
@@ -1237,7 +1253,10 @@ pub(crate) fn edit_settings(stdout: &mut io::Stdout, config: &mut AppConfig) -> 
         .choices(&["compact", "pop"]),
         // Appended rather than inserted: the read-back below is positional.
         Field::new(
-            t("Turns replayed when reopening the REPL", "重开 REPL 回放的轮数"),
+            t(
+                "Turns replayed when reopening the REPL",
+                "重开 REPL 回放的轮数",
+            ),
             config.display.repl_replay_turns.to_string(),
         ),
         // 验收:default_mode 只能改 config.jsonc 不像话——空=裸 gqy 出帮助。
@@ -1432,4 +1451,3 @@ pub(crate) fn draw_inline_editor(
     stdout.flush()?;
     Ok(())
 }
-

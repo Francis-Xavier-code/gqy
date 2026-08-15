@@ -552,7 +552,10 @@ where
     Ok(false)
 }
 
-pub(crate) fn flush_anthropic_state<F>(state: &mut AnthropicStreamState, on_chunk: &mut F) -> Result<()>
+pub(crate) fn flush_anthropic_state<F>(
+    state: &mut AnthropicStreamState,
+    on_chunk: &mut F,
+) -> Result<()>
 where
     F: FnMut(ChatStreamChunk) -> Result<()>,
 {
@@ -1020,4 +1023,3 @@ pub(crate) fn clean_plain_text(mut text: String) -> String {
     text = text.replace("</system_reminder>", "");
     text
 }
-
