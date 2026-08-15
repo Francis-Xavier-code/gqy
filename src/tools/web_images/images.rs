@@ -979,8 +979,6 @@ pub(crate) fn parse_bing_results(html: &str, limit: usize) -> Vec<ImageCandidate
     candidates
 }
 
-#[allow(clippy::too_many_arguments)]
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn build_candidate(
     title: &str,
     page_url: &str,
@@ -1021,9 +1019,7 @@ pub(crate) fn build_candidate(
         search_description,
         provider_rank: 0,
     })
-#[allow(clippy::too_many_arguments)]
 }
-#[allow(clippy::too_many_arguments)]
 
 pub(crate) async fn download_and_store_images(
     config: &AppConfig,

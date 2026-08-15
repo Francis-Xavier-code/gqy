@@ -225,7 +225,6 @@ impl StateStore {
         )
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub fn consume_queued_prompts_with_checkpoint(
         &self,
         turn_id: &str,
@@ -689,7 +688,6 @@ impl StateStore {
             .load_redo_batch_prompts(&self.session(), turn_id, prompt_ids)
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub fn begin_redo(
         &self,
         turn_id: &str,

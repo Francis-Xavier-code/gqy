@@ -421,8 +421,6 @@ pub(crate) fn split_tag_pair(
     ))
 }
 
-#[allow(clippy::too_many_arguments)]
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn handle_sse_line<F>(
     line: &str,
     content: &mut String,

@@ -631,7 +631,6 @@ fn prune_folds_old_tool_reports_behind_the_harvest_gate() {
         store.start_turn(id, id, 999999).unwrap();
         store
             .conv_db
-#[allow(clippy::cloned_instead_of_copied)]
             .append_tool_reports(id, std::slice::from_ref(&big_report))
             .unwrap();
         store.complete_turn(id, "reply", None).unwrap();

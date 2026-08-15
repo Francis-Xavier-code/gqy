@@ -1,5 +1,6 @@
 //! plugins — 自 src/config.rs 拆分。
 
+#![allow(clippy::upper_case_acronyms)]
 pub(crate) use super::*;
 
 pub fn merge_real_context_settings(
@@ -386,7 +387,6 @@ impl Default for PlatformMemoryConfig {
 pub enum PlatformPersonaOverride {
     #[default]
     Inherit,
-#[allow(clippy::upper_case_acronyms)]
     GQY,
     Custom {
         name: String,

@@ -441,7 +441,6 @@ impl SessionTurnTicket {
                     if self
                         .state
                         .waiting
-#[allow(clippy::incompatible_msrv)]
                         .try_update(Ordering::AcqRel, Ordering::Acquire, |waiting| {
                             (waiting < self.state.max_queued).then_some(waiting + 1)
                         })
@@ -635,7 +634,6 @@ pub(crate) struct PlatformTurnContext {
 }
 
 impl PlatformTurnContext {
-    #[allow(clippy::too_many_arguments)]
     pub(crate) fn new(
         conversation: PlatformConversation,
         sender_id: String,

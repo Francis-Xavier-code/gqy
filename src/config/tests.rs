@@ -228,7 +228,6 @@ fn legacy_provider_temperatures_migrate_once() {
 #[test]
 fn empty_active_provider_models_normalizes_to_default_chat_model() {
     let mut config = AppConfig::default();
-#[allow(clippy::field_reassign_with_default)]
     config.active_provider_models = Some(Vec::new());
 
     config.normalize_builtin_providers();
@@ -636,7 +635,6 @@ fn qq_prompt_identity_options_default_on_and_roundtrip() {
     assert!(defaults.show_group_name);
     assert!(defaults.memory.write_enabled);
 
-#[allow(clippy::field_reassign_with_default)]
     let mut disabled = OneBotConfig::default();
     disabled.user_identification = false;
     disabled.show_group_name = false;

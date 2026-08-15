@@ -1,5 +1,6 @@
 //! oneshot — 自 src/cli.rs 拆分。
 
+#![allow(clippy::manual_is_multiple_of)]
 pub(crate) use super::*;
 
 pub(crate) async fn append_stdin_if_piped(message: String) -> String {
@@ -334,7 +335,6 @@ pub(crate) fn is_remote_turn_cancelled(error: &anyhow::Error) -> bool {
     error.downcast_ref::<RemoteTurnCancelled>().is_some()
 }
 
-#[allow(clippy::too_many_arguments)]
 /// 触发终端指纹。shellhook/单次 CLI 的 stdin 常被管道占用(--stdin 喂正文),
 /// 所以按 stderr→stdout→stdin 找第一个 tty;父进程就是触发它的 shell。后台任务
 /// 完成后 daemon 凭这份指纹校验「shell 还活着、仍在这个 tty、空闲在提示符」,
@@ -353,8 +353,6 @@ pub(crate) fn detect_origin_tty() -> Option<crate::ipc::OriginTty> {
     })
 }
 
-#[allow(clippy::too_many_arguments)]
-#[allow(clippy::too_many_arguments)]
 pub(crate) async fn try_run_remote_chat(
     paths: &GQYPaths,
     mut live: Option<&mut LiveReplTail>,
@@ -591,7 +589,6 @@ pub(crate) async fn try_run_remote_chat(
                         // The job strip is part of the live tail, so it keeps
                         // rendering during streaming; throttle to ~every 8th
                         // spinner frame.
-#[allow(clippy::manual_is_multiple_of)]
                         if let Some(feed) = jobs_feed {
                             job_strip_tick = job_strip_tick.wrapping_add(1);
                             if job_strip_tick % 8 == 0 && !live.external_output_active {

@@ -293,7 +293,6 @@ fn new_custom_provider_has_no_openai_defaults() {
 #[test]
 fn default_anthropic_provider_uses_the_global_context_window_default() {
     let mut config = AppConfig::default();
-#[allow(clippy::field_reassign_with_default)]
     config.active_provider = "anthropic".to_string();
     let provider = config
         .providers

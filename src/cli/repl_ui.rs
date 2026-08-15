@@ -1,5 +1,6 @@
 //! repl_ui — 自 src/cli.rs 拆分。
 
+#![allow(clippy::needless_lifetimes)]
 pub(crate) use super::*;
 
 pub(crate) fn submitted_echo_lines(mode: AgentMode, input: &str, cols: usize) -> Vec<String> {
@@ -84,7 +85,6 @@ pub(crate) fn repl_wrapped_input_rows_for_cols(
             width = width.saturating_add(char_width);
         }
         rows.push(current);
-#[allow(clippy::manual_is_multiple_of)]
         if width > 0 && width % max_width == 0 {
             rows.push(String::new());
         }
@@ -906,7 +906,6 @@ pub(crate) fn complete_repl_command(input: &str) -> Option<&'static str> {
     }
 }
 
-#[allow(clippy::needless_lifetimes)]
 pub(crate) fn resolve_repl_command<'a>(input: &'a str) -> &'a str {
     if input.starts_with('/') {
         if let Some(command) = complete_repl_command(input) {

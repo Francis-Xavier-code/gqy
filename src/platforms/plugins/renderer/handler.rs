@@ -234,7 +234,6 @@ pub(crate) fn layout_table(
     })
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn layout_table_row(
     font_system: &mut FontSystem,
     cells: &[Vec<RichSpan>],
@@ -291,7 +290,6 @@ pub(crate) fn layout_table_row(
     })
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn layout_rich_buffer(
     font_system: &mut FontSystem,
     spans: &[RichSpan],
@@ -437,7 +435,6 @@ pub(crate) fn attrs_for<'a>(
         Family::SansSerif
     };
     let family = named.map(Family::Name).unwrap_or(fallback);
-#[allow(clippy::if_same_then_else)]
     let foreground = if matches!(kind, BlockKind::Code) {
         palette.code_text
     } else if style.code {
@@ -1013,7 +1010,6 @@ pub(crate) fn draw_decoration(
     }
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn draw_table_fragment(
     image: &mut RgbaImage,
     font_system: &mut FontSystem,
@@ -1077,7 +1073,6 @@ pub(crate) fn draw_table_fragment(
     }
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn draw_table_cell_text(
     image: &mut RgbaImage,
     font_system: &mut FontSystem,
@@ -1201,7 +1196,6 @@ pub(crate) fn draw_checkbox(
     }
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn draw_line(
     image: &mut RgbaImage,
     x0: u32,

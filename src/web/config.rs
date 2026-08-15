@@ -1,5 +1,6 @@
 //! config — 自 src/web.rs 拆分。
 
+#![allow(clippy::unnecessary_lazy_evaluations)]
 pub(crate) use super::*;
 
 pub(crate) async fn get_config(

@@ -1,6 +1,7 @@
 //! tests — 自 src/web.rs 拆分。
 
 #![cfg(test)]
+#![allow(clippy::useless_conversion)]
 
 pub(crate) use super::*;
 

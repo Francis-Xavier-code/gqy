@@ -471,7 +471,6 @@ pub(crate) fn reserve_tool_followup(
     Some((run_id, turn_id, followup, reservation))
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) async fn enqueue_tool_followup(
     state: &DaemonState,
     conn: &ConnectionHandle,

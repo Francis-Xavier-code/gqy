@@ -1120,7 +1120,6 @@ impl StreamRenderer {
         Some(elapsed)
     }
 
-#[allow(clippy::needless_lifetimes)]
     pub fn display_tool_name<'a>(&self, name: &'a str) -> String {
         // Subagents keep their per-call description so parallel task calls
         // show as separate lines: "子代理·<描述>".

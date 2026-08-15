@@ -1,5 +1,6 @@
 //! client_impl — 自 src/llm/openai_compatible.rs 拆分。
 
+#![allow(clippy::obfuscated_if_else)]
 pub(crate) use super::*;
 
 impl OpenAiCompatibleClient {
@@ -268,7 +269,6 @@ impl OpenAiCompatibleClient {
 
     pub fn available_thinking_variants(&self) -> Vec<String> {
         let options = self.thinking_variant_options();
-#[allow(clippy::obfuscated_if_else)]
         (options.len() == 1)
             .then(|| options[0].variants.clone())
             .unwrap_or_default()

@@ -11,7 +11,6 @@ pub enum LoadPolicy {
     Hidden,
 }
 
-#[allow(clippy::derivable_impls)]
 impl Default for LoadPolicy {
     fn default() -> Self {
         Self::Summary

@@ -481,7 +481,6 @@ pub(crate) fn pop_matches(matcher: &SkimMatcherV2, items: &[String], query: &str
         .collect()
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn draw_inline_pop(
     stdout: &mut io::Stdout,
     anchor_y: u16,
@@ -744,7 +743,6 @@ pub(crate) async fn run_models_for_session(
                 );
                 return Ok(());
             }
-#[allow(clippy::unnecessary_lazy_evaluations)]
             let models = choices
                 .iter()
                 .zip(active)

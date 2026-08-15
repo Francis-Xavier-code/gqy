@@ -106,7 +106,6 @@ impl PendingRedoGuard {
         }
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub(crate) fn complete_with_model(
         mut self,
         content: &str,

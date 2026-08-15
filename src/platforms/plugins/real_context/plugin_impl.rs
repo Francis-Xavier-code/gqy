@@ -751,7 +751,6 @@ impl RealContextPlugin {
         }
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub fn fail_current_attempt(
         &self,
         context: &PlatformTurnContext,

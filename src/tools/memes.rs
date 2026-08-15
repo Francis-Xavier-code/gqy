@@ -887,10 +887,8 @@ fn meme_print_size(args: &Value, config: &MemesPluginConfig) -> Option<String> {
 
 pub(crate) fn configured_meme_size(config: &MemesPluginConfig) -> Option<String> {
     let (cols, rows) = crossterm::terminal::size().ok()?;
-#[allow(clippy::manual_clamp)]
     let width = ((cols as u32 * config.width_percent as u32) / 100)
         .max(1)
-#[allow(clippy::manual_clamp)]
         .min(160);
     let height = ((rows as u32 * config.height_percent as u32) / 100)
         .max(1)

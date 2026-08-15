@@ -1,5 +1,6 @@
 //! ui — 自 src/config_tui.rs 拆分。
 
+#![allow(clippy::collapsible_match)]
 pub(crate) use super::*;
 
 use crate::config::{
@@ -508,7 +509,6 @@ pub(crate) fn edit_api_quota_accounts(
                 let _ = edit_api_quota_account(stdout, name, &mut config.accounts[selected])?;
             }
             KeyCode::Enter | KeyCode::Char('i') => {
-#[allow(clippy::collapsible_if)]
                 if config.accounts.len() < 32 && add_api_quota_account(stdout, config, name)? {
                     selected = config.accounts.len().saturating_sub(1);
                 }

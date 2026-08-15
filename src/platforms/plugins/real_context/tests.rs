@@ -1,5 +1,6 @@
 //! tests — 自 src/platforms/plugins/real_context/mod.rs 外移。
 #![cfg(test)]
+#![allow(clippy::bool_assert_comparison)]
 
 pub(crate) use super::*;
 
@@ -167,7 +168,6 @@ fn explicit_direct_trigger_precedes_moderation_only_candidates() {
 #[test]
 fn direct_trigger_judgement_respects_takeover_and_privileged_bypass() {
     let mut settings = RealContextPluginSettings::default();
-#[allow(clippy::field_reassign_with_default)]
     settings.takeover_direct_trigger_enable = false;
     assert!(!active_judgement_allowed(&settings, true, false, false));
     assert!(active_judgement_allowed(&settings, false, false, false));
@@ -249,7 +249,6 @@ async fn direct_trigger_bypass_adds_and_cleans_up_the_waiting_reaction() {
     let plugin = RealContextPlugin::new();
     let event = inbound_event();
     // The bypass path under test requires takeover to stay off.
-#[allow(clippy::field_reassign_with_default)]
     let mut settings = RealContextPluginSettings::default();
     settings.takeover_direct_trigger_enable = false;
     let mut decision = TriggerDecision {
