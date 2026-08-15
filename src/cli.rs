@@ -63,6 +63,7 @@ pub use jobs::*;
 mod repl_ui;
 pub use repl_ui::*;
 mod keyboard_enhancement;
+pub use keyboard_enhancement::*;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]
