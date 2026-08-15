@@ -128,7 +128,7 @@ pub(crate) fn run_alarm_worker(args: AlarmWorkerArgs) -> Result<()> {
 }
 
 pub(crate) fn play_alarm_once(audio_file: Option<&std::path::Path>) -> Result<()> {
-    pub(crate) const ALARM_WAV: &[u8] = include_bytes!("assets/alarm.wav");
+    pub(crate) const ALARM_WAV: &[u8] = include_bytes!("../assets/alarm.wav");
     let (_stream, handle) = rodio::OutputStream::try_default()?;
     let audio = match audio_file {
         Some(path) => std::fs::read(path)?,
