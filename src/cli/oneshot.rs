@@ -870,7 +870,8 @@ pub(crate) async fn try_run_remote_chat(
             }
             "queue.removed" => {
                 if let Some(live) = live.as_deref_mut() {
-                    if let Some(prompt_id) = data.get("prompt_id").and_then(serde_json::Value::as_str)
+                    if let Some(prompt_id) =
+                        data.get("prompt_id").and_then(serde_json::Value::as_str)
                     {
                         synchronized_terminal_update(CursorAfterUpdate::Preserve, || {
                             live.drop_queued(&[prompt_id.to_string()])
@@ -1005,4 +1006,3 @@ pub(crate) async fn try_run_remote_chat(
         cumulative_tokens,
     }))
 }
-

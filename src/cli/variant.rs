@@ -181,7 +181,10 @@ pub(crate) fn draw_inline_variant(
     Ok(())
 }
 
-pub(crate) fn variant_menu_column_widths(items: &[VariantMenuItem], available: usize) -> (usize, usize) {
+pub(crate) fn variant_menu_column_widths(
+    items: &[VariantMenuItem],
+    available: usize,
+) -> (usize, usize) {
     if available == 0 {
         return (0, 0);
     }
@@ -814,4 +817,3 @@ impl LiveReplEditor {
         Ok(())
     }
 }
-

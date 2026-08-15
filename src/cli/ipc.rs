@@ -197,11 +197,17 @@ pub(crate) fn session_ref_from_index(
         })
 }
 
-pub(crate) fn session_entry_is_active(entry: &SessionListEntry, active_session_id: Option<&str>) -> bool {
+pub(crate) fn session_entry_is_active(
+    entry: &SessionListEntry,
+    active_session_id: Option<&str>,
+) -> bool {
     active_session_id.map_or(entry.is_current, |session_id| entry.id == session_id)
 }
 
-pub(crate) fn session_select_line(entry: &SessionListEntry, active_session_id: Option<&str>) -> String {
+pub(crate) fn session_select_line(
+    entry: &SessionListEntry,
+    active_session_id: Option<&str>,
+) -> String {
     let marker = if session_entry_is_active(entry, active_session_id) {
         "* "
     } else {
@@ -335,12 +341,11 @@ pub(crate) async fn resolve_repl_session_target(
         let entries = session_list_entries(&data);
         let target = match index {
             Some(index) => session_ref_from_index(&entries, index),
-            None => entries
-                .iter()
-                .find(|entry| entry.name == arg)
-                .map(|entry| crate::ipc::SessionRef::Id {
+            None => entries.iter().find(|entry| entry.name == arg).map(|entry| {
+                crate::ipc::SessionRef::Id {
                     id: entry.id.clone(),
-                }),
+                }
+            }),
         };
         let Some(target) = target else {
             repl_note(
@@ -360,7 +365,11 @@ pub(crate) async fn resolve_repl_session_target(
     }
 }
 
-pub(crate) fn reload_repl_queue(live: &mut LiveReplTail, paths: &GQYPaths, session_id: &str) -> Result<()> {
+pub(crate) fn reload_repl_queue(
+    live: &mut LiveReplTail,
+    paths: &GQYPaths,
+    session_id: &str,
+) -> Result<()> {
     let store = StateStore::new(paths)?.pinned(session_id);
     synchronized_terminal_update(CursorAfterUpdate::Shown, || live.reload_queue(&store))
 }
@@ -430,14 +439,8 @@ pub(crate) async fn repl_fallback_session_state(
         .await?
         .map(|(state, _)| state));
     }
-    let Some((_, data)) = repl_ipc_admin(
-        paths,
-        live,
-        IpcCommand::ListSessions {
-            mode: None,
-        },
-    )
-    .await?
+    let Some((_, data)) =
+        repl_ipc_admin(paths, live, IpcCommand::ListSessions { mode: None }).await?
     else {
         return Ok(None);
     };
@@ -572,13 +575,7 @@ pub(crate) async fn session_admin(
 /// Resolves a `--session` argument (name or list index) to a concrete
 /// session id, without moving the global current pointer.
 pub(crate) async fn resolve_session_id_for_turn(paths: &GQYPaths, arg: &str) -> Result<String> {
-    let (_, data) = session_admin(
-        paths,
-        IpcCommand::ListSessions {
-            mode: None,
-        },
-    )
-    .await?;
+    let (_, data) = session_admin(paths, IpcCommand::ListSessions { mode: None }).await?;
     let entries = session_list_entries(&data);
     if let Ok(index) = arg.parse::<usize>() {
         if let Some(entry) = index.checked_sub(1).and_then(|index| entries.get(index)) {
@@ -650,7 +647,9 @@ pub(crate) fn remote_tool_image_asset_id(event: &serde_json::Value) -> Option<&s
         .filter(|id| !id.trim().is_empty())
 }
 
-pub(crate) fn remote_image_preview(asset: &crate::state::ImageAssetData) -> Result<tempfile::NamedTempFile> {
+pub(crate) fn remote_image_preview(
+    asset: &crate::state::ImageAssetData,
+) -> Result<tempfile::NamedTempFile> {
     let suffix = if asset.asset.mime == "image/gif" {
         ".png"
     } else {
@@ -736,7 +735,10 @@ pub(crate) fn turn_meter(
     }
 }
 
-pub(crate) fn result_context_window(config: &AppConfig, result: &crate::llm::ChatResult) -> Option<usize> {
+pub(crate) fn result_context_window(
+    config: &AppConfig,
+    result: &crate::llm::ChatResult,
+) -> Option<usize> {
     if config.active_provider_model_choices().len() > 1 {
         return None;
     }
@@ -944,4 +946,3 @@ pub(crate) async fn run_repl(paths: &GQYPaths, initial_mode: AgentMode) -> Resul
         run_remote_repl(paths, initial_mode).await
     }
 }
-
