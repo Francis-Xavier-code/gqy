@@ -1,0 +1,395 @@
+//! platform_impl — 自 src/platforms/plugins/real_context/mod.rs 拆分。
+
+use super::*;
+
+impl PlatformPlugin for RealContextPlugin {
+    pub fn descriptor(&self) -> PluginDescriptor {
+        PluginDescriptor {
+            id: REAL_CONTEXT_PLUGIN_ID,
+            priority: 200,
+            default_enabled: true,
+        }
+    }
+
+    pub fn preempt_inbound(
+        &self,
+        context: &PlatformTurnContext,
+        event: &PlatformInboundEvent,
+    ) -> Result<bool> {
+        if event.kind != PlatformInboundEventKind::Message
+            || event.conversation.kind != ConversationKind::Group
+        {
+            return Ok(false);
+        }
+        let settings = self.settings(context)?;
+        if !settings.active_reply_supersede_enable {
+            return Ok(false);
+        }
+        let now = Instant::now();
+        let session_key = runtime_session_key(context);
+        let supersede_window = Duration::from_secs(settings.active_reply_supersede_window_seconds);
+        let generation = {
+            let runtime = self.runtime.lock().unwrap();
+            let pending = runtime
+                .sessions
+                .get(&session_key)
+                .and_then(|session| session.pending.get(&event.sender_id));
+            let Some(pending) =
+                pending.filter(|pending| now.duration_since(pending.started) <= supersede_window)
+            else {
+                return Ok(false);
+            };
+            pending.generation
+        };
+        match active_judgement_skip::contains(&context.state_store, &event.sender_id) {
+            Ok(true) => return Ok(false),
+            Ok(false) => {}
+            Err(error) => {
+                tracing::warn!(
+                    target: "gqy::qq",
+                    error = %error,
+                    sender_id = %event.sender_id,
+                    "{}",
+                    crate::i18n::text(
+                        "failed to read active judgement skip list; skipping supersede",
+                        "读取主动判断跳过名单失败；跳过接管当前生成"
+                    )
+                );
+                return Ok(false);
+            }
+        }
+        let targets = {
+            let runtime = self.runtime.lock().unwrap();
+            runtime
+                .sessions
+                .get(&session_key)
+                .and_then(|session| session.pending.get(&event.sender_id))
+                .filter(|pending| {
+                    pending.generation == generation
+                        && Instant::now().duration_since(pending.started) <= supersede_window
+                })
+                .map(|pending| pending.targets.clone())
+        };
+        let Some(targets) = targets else {
+            return Ok(false);
+        };
+        set_active_targets(context, &targets);
+        Ok(true)
+    }
+
+    pub fn turn_is_superseded(&self, context: &PlatformTurnContext) -> bool {
+        self.runtime
+            .lock()
+            .unwrap()
+            .sessions
+            .get(&runtime_session_key(context))
+            .and_then(|session| session.pending.get(&context.sender_id))
+            .is_some_and(|pending| *pending.cancel.borrow())
+    }
+
+    pub fn confirm_supersede<'a>(
+        &'a self,
+        context: &'a PlatformTurnContext,
+        event: &'a PlatformInboundEvent,
+    ) -> BoxFuture<'a, ()> {
+        Box::pin(async move {
+            let Ok(settings) = self.settings(context) else {
+                return;
+            };
+            let now = Instant::now();
+            let session_key = runtime_session_key(context);
+            let old_reactions = {
+                let mut runtime = self.runtime.lock().unwrap();
+                let Some(pending) = runtime
+                    .sessions
+                    .get_mut(&session_key)
+                    .and_then(|session| session.pending.get_mut(&event.sender_id))
+                else {
+                    return;
+                };
+                // 链式覆盖:补救窗口从新消息重新起算;目标并入新消息,
+                // 旧表情摘出待转移。
+                pending.started = now;
+                pending.committed = true;
+                pending.targets.push(active_reply_target(event));
+                normalize_active_targets(&mut pending.targets, &event.sender_id);
+                std::mem::take(&mut pending.reactions)
+            };
+            for (message_id, reaction_id) in old_reactions {
+                self.cancel_reaction_expiration(context, &message_id, &reaction_id);
+                if let Err(error) = context
+                    .set_message_reaction(&message_id, &reaction_id, false)
+                    .await
+                {
+                    tracing::debug!(error = %error, %message_id, "{}", crate::i18n::text("superseded QQ reaction could not be removed", "无法移除已被新消息覆盖的 QQ 表情回应"));
+                }
+            }
+            let reactions = self.add_reactions(context, event, &settings).await;
+            let mut runtime = self.runtime.lock().unwrap();
+            if let Some(pending) = runtime
+                .sessions
+                .get_mut(&session_key)
+                .and_then(|session| session.pending.get_mut(&event.sender_id))
+            {
+                pending.reactions = reactions;
+            }
+        })
+    }
+
+    pub fn after_turn_aborted<'a>(
+        &'a self,
+        context: &'a PlatformTurnContext,
+    ) -> BoxFuture<'a, Result<()>> {
+        Box::pin(async move {
+            let settings = self.settings(context)?;
+            let session_key = runtime_session_key(context);
+            let mut reactions = {
+                let mut runtime = self.runtime.lock().unwrap();
+                let pending = runtime
+                    .sessions
+                    .get_mut(&session_key)
+                    .and_then(|session| session.pending.get(&context.sender_id));
+                if pending.is_some_and(|pending| *pending.cancel.borrow()) {
+                    return Ok(());
+                }
+                runtime
+                    .sessions
+                    .get_mut(&session_key)
+                    .and_then(|session| session.pending.remove(&context.sender_id))
+                    .map(|pending| pending.reactions)
+                    .unwrap_or_default()
+            };
+            if reactions.is_empty() && settings.active_reply_reaction_enable {
+                if let Some(event) = context
+                    .inbound_event()
+                    .filter(|event| !event.message_id.is_empty())
+                {
+                    reactions.extend(
+                        settings
+                            .active_reply_reaction_emoji_ids
+                            .iter()
+                            .map(|reaction| (event.message_id.clone(), reaction.to_string())),
+                    );
+                }
+            }
+            for (message_id, reaction_id) in reactions {
+                self.cancel_reaction_expiration(context, &message_id, &reaction_id);
+                if let Err(error) = context
+                    .set_message_reaction(&message_id, &reaction_id, false)
+                    .await
+                {
+                    tracing::debug!(error = %error, %message_id, %reaction_id, "{}", crate::i18n::text("aborted QQ reaction could not be removed", "无法移除已中止的 QQ 表情回应"));
+                }
+            }
+            Ok(())
+        })
+    }
+
+    pub fn register_tools(
+        &self,
+        registry: &mut ToolRegistry,
+        context: Arc<PlatformTurnContext>,
+    ) -> Result<()> {
+        let settings = self.settings(&context)?;
+        active_judgement_skip::register_tools(registry, context.clone());
+        if context.conversation.kind == ConversationKind::Group {
+            message_history::register_group_member_tool(
+                registry,
+                context.clone(),
+                settings.group_member_search_max_results,
+            );
+        }
+        affection::register_query_tool(registry, context.clone(), settings);
+        Ok(())
+    }
+
+    pub fn accept_followup(
+        &self,
+        context: &PlatformTurnContext,
+        event: &PlatformInboundEvent,
+    ) -> Result<()> {
+        let settings = self.settings(context)?;
+        adaptive_response_target(context, event, &settings);
+        context.remove_plugin_value(REPLY_MARKED_KEY);
+        let session_key = runtime_session_key(context);
+        if let Some(pending) = self
+            .runtime
+            .lock()
+            .unwrap()
+            .sessions
+            .get_mut(&session_key)
+            .and_then(|session| session.pending.get_mut(&event.sender_id))
+        {
+            pending.targets.push(active_reply_target(event));
+        }
+        Ok(())
+    }
+
+    pub fn decide_trigger<'a>(
+        &'a self,
+        context: &'a PlatformTurnContext,
+        event: &'a PlatformInboundEvent,
+        decision: &'a mut TriggerDecision,
+    ) -> BoxFuture<'a, Result<()>> {
+        Box::pin(async move {
+            if event.kind != PlatformInboundEventKind::Message
+                || event.conversation.kind != ConversationKind::Group
+            {
+                return Ok(());
+            }
+            let settings = self.settings(context)?;
+            self.decide_group_trigger(context, event, decision, &settings)
+                .await
+        })
+    }
+
+    pub fn before_turn<'a>(
+        &'a self,
+        context: &'a PlatformTurnContext,
+        input: &'a mut PlatformTurnInput,
+    ) -> BoxFuture<'a, Result<()>> {
+        Box::pin(async move {
+            let settings = self.settings(context)?;
+            self.inject_context(context, input, &settings).await
+        })
+    }
+
+    pub fn before_send<'a>(
+        &'a self,
+        _context: &'a PlatformTurnContext,
+        mut message: OutboundMessage,
+    ) -> BoxFuture<'a, Result<PreparedSend>> {
+        Box::pin(async move {
+            if !message.metadata.contains_key(ORIGINAL_TEXT_KEY) {
+                message.metadata.insert(
+                    ORIGINAL_TEXT_KEY.to_string(),
+                    Value::String(outbound_text(&message)),
+                );
+            }
+            Ok(PreparedSend::unchanged(message))
+        })
+    }
+
+    pub fn after_send<'a>(
+        &'a self,
+        context: &'a PlatformTurnContext,
+        message: &'a OutboundMessage,
+        _receipt: &'a SendReceipt,
+    ) -> BoxFuture<'a, Result<()>> {
+        Box::pin(async move {
+            let settings = self.settings(context)?;
+            if matches!(
+                message.origin,
+                OutboundOrigin::FinalReply | OutboundOrigin::Tool
+            ) {
+                self.finish_reply(context, message, &settings).await;
+            }
+            if message.origin == OutboundOrigin::FinalReply
+                && context.conversation.kind == ConversationKind::Group
+            {
+                let trigger = context
+                    .plugin_value(TRIGGER_KEY)
+                    .and_then(|value| value.as_str().and_then(TriggerKind::parse));
+                let direct_interaction = matches!(
+                    trigger,
+                    Some(TriggerKind::Direct | TriggerKind::Continuation | TriggerKind::Supersede)
+                );
+                affection::touch_after_reply(context, &settings, direct_interaction)?;
+                let reply = message
+                    .metadata
+                    .get(ORIGINAL_TEXT_KEY)
+                    .and_then(Value::as_str)
+                    .map(str::to_string)
+                    .unwrap_or_else(|| outbound_text(message));
+                if !reply.trim().is_empty() {
+                    let store = self.store(context);
+                    if let Some(job) = affection::update_job(
+                        context,
+                        settings.clone(),
+                        store,
+                        group_key(context)?,
+                        &reply,
+                    ) {
+                        self.affection_updates.enqueue(job);
+                    }
+                }
+            }
+            Ok(())
+        })
+    }
+
+    pub fn after_session_reset<'a>(
+        &'a self,
+        context: &'a PlatformTurnContext,
+    ) -> BoxFuture<'a, Result<()>> {
+        Box::pin(async move {
+            if context.conversation.kind != ConversationKind::Group {
+                return Ok(());
+            }
+            self.store(context)
+                .reset_context(
+                    group_key(context)?,
+                    context.config.active_persona_scope(),
+                    now_unix(),
+                )
+                .await?;
+            self.runtime
+                .lock()
+                .unwrap()
+                .sessions
+                .remove(&runtime_session_key(context));
+            Ok(())
+        })
+    }
+
+    pub fn after_persona_reset<'a>(
+        &'a self,
+        context: &'a PlatformPersonaResetContext<'a>,
+    ) -> BoxFuture<'a, Result<()>> {
+        Box::pin(async move {
+            let persona = context.config.active_persona_scope();
+            let store = message_history::store_for_paths(context.paths);
+            for binding in context
+                .bindings
+                .iter()
+                .filter(|binding| binding.key.conversation_kind == "group")
+            {
+                let group = GroupKey::new(
+                    binding.key.platform.clone(),
+                    binding.key.account_id.clone(),
+                    binding.key.conversation_id.clone(),
+                )?;
+                store
+                    .reset_context(group, persona.clone(), now_unix())
+                    .await?;
+            }
+
+            let mut runtime = self.runtime.lock().unwrap();
+            for binding in context.bindings {
+                let key = format!(
+                    "{}:{}:{}:{}|persona:{}",
+                    binding.key.platform,
+                    binding.key.account_id,
+                    binding.key.conversation_kind,
+                    binding.key.conversation_id,
+                    persona
+                );
+                if let Some(session) = runtime.sessions.remove(&key) {
+                    for pending in session.pending.into_values() {
+                        let _ = pending.cancel.send(true);
+                    }
+                }
+            }
+            Ok(())
+        })
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum TriggerKind {
+    Probability,
+    Continuation,
+    Direct,
+    Moderation,
+    Supersede,
+}
