@@ -17,9 +17,6 @@ use std::time::SystemTime;
 
 mod score;
 use score::*;
-
-mod score;
-use score::*;
 mod validate;
 use validate::*;
 mod store;
