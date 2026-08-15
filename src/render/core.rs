@@ -2,9 +2,6 @@
 
 use super::*;
 
-pub(crate) mod math;
-pub(crate) mod wait_spinner;
-
 use crate::i18n::text as t;
 use crate::llm::{ChatResult, ChatStreamChunk, ChatStreamKind, Usage};
 use crate::render::wait_spinner::{braille_frame, SpinnerStyle, WaitSpinner, SPINNER_INTERVAL};
