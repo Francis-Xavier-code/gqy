@@ -2,8 +2,6 @@
 
 use super::*;
 
-mod app_impl2;
-use app_impl2::*;
 impl AppConfig {
     pub fn display_language_hint(paths: &GQYPaths) -> Option<String> {
         let raw = std::fs::read_to_string(&paths.config_file).ok()?;

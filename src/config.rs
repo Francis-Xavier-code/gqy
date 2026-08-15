@@ -7,6 +7,8 @@ mod defaults;
 use defaults::*;
 mod app_impl;
 use app_impl::*;
+mod app_impl2;
+use app_impl2::*;
 mod schema;
 use schema::*;
 #[cfg(test)]
