@@ -3,7 +3,7 @@ use super::{ToolRegistry, ToolSpec};
 use crate::config::{AppConfig, ModelTier};
 use crate::i18n::agent_text as t;
 use crate::llm::OpenAiCompatibleClient;
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use anyhow::{bail, Result};
 use serde_json::{json, Value};
 
@@ -55,7 +55,7 @@ const GENERAL_TOOL_TIMEOUT: u64 = 120;
 #[derive(Clone)]
 struct TaskContext {
     config: AppConfig,
-    paths: MiyuPaths,
+    paths: GQYPaths,
     tools: ToolRegistry,
 }
 
@@ -107,7 +107,7 @@ impl SubagentType {
 pub fn register(
     registry: &mut ToolRegistry,
     config: AppConfig,
-    paths: MiyuPaths,
+    paths: GQYPaths,
     tools: ToolRegistry,
 ) {
     let config_for_status = config.clone();

@@ -255,7 +255,7 @@ impl Usage {
     }
 
     /// Fold provider-specific raw fields into the normalized cache columns.
-    /// Idempotent; call once wherever a provider usage payload enters Miyu.
+    /// Idempotent; call once wherever a provider usage payload enters GQY.
     pub fn normalize_cache_fields(&mut self) {
         if let Some(hit) = self.prompt_cache_hit_tokens {
             self.cache_read_tokens = self.cache_read_tokens.max(hit);

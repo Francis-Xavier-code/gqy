@@ -1,7 +1,7 @@
 use super::{ToolRegistry, ToolSpec};
 use crate::config::AppConfig;
 use crate::i18n::agent_text as t;
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use crate::skills::{self, SkillEntry, SkillScope};
 use anyhow::{Context, Result};
 use serde_json::{json, Value};
@@ -9,7 +9,7 @@ use serde_json::{json, Value};
 pub fn register_skills(
     registry: &mut ToolRegistry,
     config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
 ) -> Result<()> {
     let (entries, fingerprint) = stable_catalog(config, paths)?;
     register_load_skill(registry, config.clone(), paths.clone(), &entries);
@@ -20,7 +20,7 @@ pub fn register_skills(
 pub fn refresh_skills(
     registry: &mut ToolRegistry,
     config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
 ) -> Result<bool> {
     if !registry.contains("load_skill") {
         return Ok(false);
@@ -42,7 +42,7 @@ pub(crate) struct SkillCatalogSnapshot {
 pub(crate) fn prepare_skill_refresh(
     current: Option<[u8; 32]>,
     config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
 ) -> Result<Option<SkillCatalogSnapshot>> {
     let fingerprint = skills::catalog_fingerprint(config, paths)?;
     if current == Some(fingerprint) {
@@ -58,14 +58,14 @@ pub(crate) fn prepare_skill_refresh(
 pub(crate) fn apply_skill_refresh(
     registry: &mut ToolRegistry,
     config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     snapshot: SkillCatalogSnapshot,
 ) {
     register_load_skill(registry, config.clone(), paths.clone(), &snapshot.entries);
     registry.set_skill_catalog_fingerprint(snapshot.fingerprint);
 }
 
-fn stable_catalog(config: &AppConfig, paths: &MiyuPaths) -> Result<(Vec<SkillEntry>, [u8; 32])> {
+fn stable_catalog(config: &AppConfig, paths: &GQYPaths) -> Result<(Vec<SkillEntry>, [u8; 32])> {
     for _ in 0..3 {
         let before = skills::catalog_fingerprint(config, paths)?;
         let entries = skills::discover(config, paths)?;
@@ -77,7 +77,7 @@ fn stable_catalog(config: &AppConfig, paths: &MiyuPaths) -> Result<(Vec<SkillEnt
     anyhow::bail!("skill catalog kept changing while it was being refreshed")
 }
 
-pub fn register_authoring(registry: &mut ToolRegistry, config: AppConfig, paths: MiyuPaths) {
+pub fn register_authoring(registry: &mut ToolRegistry, config: AppConfig, paths: GQYPaths) {
     register_create_skill(registry, config.clone(), paths.clone());
     register_update_skill(registry, config.clone(), paths.clone());
     register_delete_skill(registry, config, paths.clone());
@@ -88,7 +88,7 @@ pub fn register_authoring(registry: &mut ToolRegistry, config: AppConfig, paths:
 fn register_load_skill(
     registry: &mut ToolRegistry,
     config: AppConfig,
-    paths: MiyuPaths,
+    paths: GQYPaths,
     entries: &[SkillEntry],
 ) {
     let description = format!(
@@ -98,8 +98,8 @@ fn register_load_skill(
             "加载指定技能的完整指令和资源到当前对话。技能名称必须匹配下方列出的可用技能之一。",
         ),
         t(
-            "Use this tool before applying a skill or using any scripts/resources from that skill. Skill allowed-tools metadata never grants Miyu permissions.",
-            "应用 skill 或使用其中的脚本/资源前，必须先加载该 skill。Skill 的 allowed-tools 元数据不会授予 Miyu 权限。",
+            "Use this tool before applying a skill or using any scripts/resources from that skill. Skill allowed-tools metadata never grants GQY permissions.",
+            "应用 skill 或使用其中的脚本/资源前，必须先加载该 skill。Skill 的 allowed-tools 元数据不会授予 GQY 权限。",
         ),
         available_skills_xml(entries),
     );
@@ -129,13 +129,13 @@ fn register_load_skill(
     ));
 }
 
-fn register_create_skill(registry: &mut ToolRegistry, config: AppConfig, paths: MiyuPaths) {
+fn register_create_skill(registry: &mut ToolRegistry, config: AppConfig, paths: GQYPaths) {
     registry.register(
         ToolSpec::new(
             "create_skill",
             t(
-                "Create a hidden draft for a new Miyu skill. Use the returned absolute skill_dir and skill_file with apply_patch, then call publish_skill. This never overwrites an existing skill.",
-                "为新的 Miyu skill 创建隐藏草稿。使用返回的绝对 skill_dir 和 skill_file 配合 apply_patch 编辑，随后调用 publish_skill。此操作不会覆盖已有 skill。",
+                "Create a hidden draft for a new GQY skill. Use the returned absolute skill_dir and skill_file with apply_patch, then call publish_skill. This never overwrites an existing skill.",
+                "为新的 GQY skill 创建隐藏草稿。使用返回的绝对 skill_dir 和 skill_file 配合 apply_patch 编辑，随后调用 publish_skill。此操作不会覆盖已有 skill。",
             ),
             json!({
                 "type": "object",
@@ -173,7 +173,7 @@ fn register_create_skill(registry: &mut ToolRegistry, config: AppConfig, paths: 
     );
 }
 
-fn register_update_skill(registry: &mut ToolRegistry, config: AppConfig, paths: MiyuPaths) {
+fn register_update_skill(registry: &mut ToolRegistry, config: AppConfig, paths: GQYPaths) {
     registry.register(
         ToolSpec::new(
             "update_skill",
@@ -208,7 +208,7 @@ fn register_update_skill(registry: &mut ToolRegistry, config: AppConfig, paths: 
     );
 }
 
-fn register_delete_skill(registry: &mut ToolRegistry, config: AppConfig, paths: MiyuPaths) {
+fn register_delete_skill(registry: &mut ToolRegistry, config: AppConfig, paths: GQYPaths) {
     registry.register(
         ToolSpec::new(
             "delete_skill",
@@ -243,13 +243,13 @@ fn register_delete_skill(registry: &mut ToolRegistry, config: AppConfig, paths: 
     );
 }
 
-fn register_publish_skill(registry: &mut ToolRegistry, paths: MiyuPaths) {
+fn register_publish_skill(registry: &mut ToolRegistry, paths: GQYPaths) {
     registry.register(
         ToolSpec::new(
             "publish_skill",
             t(
-                "Validate and atomically publish a Miyu skill draft. Create drafts never overwrite; update drafts use revision checks. Scripts remain resources and are not registered as tools.",
-                "校验并原子发布 Miyu skill 草稿。创建草稿绝不覆盖；更新草稿执行版本检查。scripts 仍是资源，不会注册为工具。",
+                "Validate and atomically publish a GQY skill draft. Create drafts never overwrite; update drafts use revision checks. Scripts remain resources and are not registered as tools.",
+                "校验并原子发布 GQY skill 草稿。创建草稿绝不覆盖；更新草稿执行版本检查。scripts 仍是资源，不会注册为工具。",
             ),
             json!({
                 "type": "object",
@@ -272,13 +272,13 @@ fn register_publish_skill(registry: &mut ToolRegistry, paths: MiyuPaths) {
     );
 }
 
-fn register_list_skill_drafts(registry: &mut ToolRegistry, paths: MiyuPaths) {
+fn register_list_skill_drafts(registry: &mut ToolRegistry, paths: GQYPaths) {
     registry.register(
         ToolSpec::new(
             "list_skill_drafts",
             t(
-                "List retained Miyu skill drafts. Drafts with no changes for 30 days are removed before listing.",
-                "列出保留的 Miyu skill 草稿。列出前会清理 30 天未修改的草稿。",
+                "List retained GQY skill drafts. Drafts with no changes for 30 days are removed before listing.",
+                "列出保留的 GQY skill 草稿。列出前会清理 30 天未修改的草稿。",
             ),
             json!({"type":"object","properties":{},"additionalProperties":false}),
             move |_| {
@@ -299,7 +299,7 @@ fn register_list_skill_drafts(registry: &mut ToolRegistry, paths: MiyuPaths) {
     );
 }
 
-fn load_skill(args: Value, config: &AppConfig, paths: &MiyuPaths) -> Result<String> {
+fn load_skill(args: Value, config: &AppConfig, paths: &GQYPaths) -> Result<String> {
     let name = required_string(&args, "name")?;
     let loaded = skills::load(&name, config, paths)?;
     let base_dir = loaded
@@ -362,7 +362,7 @@ fn skill_metadata_xml(metadata: &crate::skills::SkillMetadata) -> String {
     format!("<skill_metadata>\n{}\n</skill_metadata>", fields.join("\n"))
 }
 
-fn create_skill(args: Value, config: &AppConfig, paths: &MiyuPaths) -> Result<String> {
+fn create_skill(args: Value, config: &AppConfig, paths: &GQYPaths) -> Result<String> {
     let name = required_string(&args, "name")?;
     let description = required_string(&args, "description")?;
     let scope = SkillScope::parse(args.get("scope").and_then(Value::as_str))?;
@@ -375,7 +375,7 @@ fn create_skill(args: Value, config: &AppConfig, paths: &MiyuPaths) -> Result<St
     }))?)
 }
 
-fn update_skill(args: Value, config: &AppConfig, paths: &MiyuPaths) -> Result<String> {
+fn update_skill(args: Value, config: &AppConfig, paths: &GQYPaths) -> Result<String> {
     let name = required_string(&args, "name")?;
     let scope_value = required_string(&args, "scope")?;
     let scope = SkillScope::parse(Some(&scope_value))?;
@@ -388,7 +388,7 @@ fn update_skill(args: Value, config: &AppConfig, paths: &MiyuPaths) -> Result<St
     }))?)
 }
 
-fn publish_skill(args: Value, paths: &MiyuPaths) -> Result<String> {
+fn publish_skill(args: Value, paths: &GQYPaths) -> Result<String> {
     let draft_id = required_string(&args, "draft_id")?;
     let published = skills::publish_draft(paths, &draft_id)?;
     Ok(serde_json::to_string_pretty(&json!({
@@ -399,7 +399,7 @@ fn publish_skill(args: Value, paths: &MiyuPaths) -> Result<String> {
     }))?)
 }
 
-fn delete_skill(args: Value, config: &AppConfig, paths: &MiyuPaths) -> Result<String> {
+fn delete_skill(args: Value, config: &AppConfig, paths: &GQYPaths) -> Result<String> {
     let name = required_string(&args, "name")?;
     let scope_value = required_string(&args, "scope")?;
     let scope = SkillScope::parse(Some(&scope_value))?;
@@ -453,8 +453,8 @@ mod tests {
     use super::*;
     use std::path::PathBuf;
 
-    fn test_paths(root: &std::path::Path) -> MiyuPaths {
-        MiyuPaths {
+    fn test_paths(root: &std::path::Path) -> GQYPaths {
+        GQYPaths {
             root_dir: root.to_path_buf(),
             config_dir: root.join("config"),
             config_file: root.join("config/config.jsonc"),
@@ -463,7 +463,7 @@ mod tests {
             cache_dir: root.join("cache"),
             state_dir: root.join("state"),
             pictures_dir: root.join("data/pictures"),
-            fish_hook_file: root.join("fish/miyu.fish"),
+            fish_hook_file: root.join("fish/gqy.fish"),
             bash_hook_file: root.join("config/shell/bash-hook.sh"),
             zsh_hook_file: root.join("config/shell/zsh-hook.zsh"),
             scripts_dir: root.join("data/scripts"),
@@ -491,7 +491,7 @@ mod tests {
         std::fs::create_dir_all(&directory).unwrap();
         std::fs::write(
             directory.join("SKILL.md"),
-            "---\nname: sample-skill\ndescription: Sample workflow\nlicense: MIT\ncompatibility: Miyu\nallowed-tools: run_command\nmetadata:\n  author: test\n---\n\nBody.",
+            "---\nname: sample-skill\ndescription: Sample workflow\nlicense: MIT\ncompatibility: GQY\nallowed-tools: run_command\nmetadata:\n  author: test\n---\n\nBody.",
         )
         .unwrap();
 
@@ -502,7 +502,7 @@ mod tests {
         )
         .unwrap();
         assert!(loaded.contains("<license>MIT</license>"));
-        assert!(loaded.contains("<compatibility>Miyu</compatibility>"));
+        assert!(loaded.contains("<compatibility>GQY</compatibility>"));
         assert!(loaded
             .contains("<allowed_tools grants_permissions=\"false\">run_command</allowed_tools>"));
         assert!(loaded.contains("<entry key=\"author\">test</entry>"));

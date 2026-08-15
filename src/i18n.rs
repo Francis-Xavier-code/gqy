@@ -54,7 +54,7 @@ impl Locale {
     where
         F: FnMut(&str) -> Option<String>,
     {
-        if let Some(value) = env("MIYU_LANG") {
+        if let Some(value) = env("GQY_LANG") {
             if let Some(language) = UiLanguage::parse(&value) {
                 return language
                     .locale()
@@ -162,7 +162,7 @@ mod tests {
     #[test]
     fn resolves_environment_then_config_then_system_locale() {
         let locale = Locale::resolve_with("zh", |key| match key {
-            "MIYU_LANG" => Some("en_US.UTF-8".to_string()),
+            "GQY_LANG" => Some("en_US.UTF-8".to_string()),
             "LANG" => Some("zh_CN.UTF-8".to_string()),
             _ => None,
         });
@@ -181,7 +181,7 @@ mod tests {
         assert_eq!(locale, Locale::Zh);
 
         let locale = Locale::resolve_with("zh", |key| match key {
-            "MIYU_LANG" => Some("auto".to_string()),
+            "GQY_LANG" => Some("auto".to_string()),
             "LANG" => Some("en_US.UTF-8".to_string()),
             _ => None,
         });
@@ -191,7 +191,7 @@ mod tests {
     #[test]
     fn system_locale_detection_ignores_ui_override() {
         let mut env = |key: &str| match key {
-            "MIYU_LANG" => Some("en".to_string()),
+            "GQY_LANG" => Some("en".to_string()),
             "LANG" => Some("zh_CN.UTF-8".to_string()),
             _ => None,
         };

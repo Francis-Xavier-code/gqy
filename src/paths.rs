@@ -13,9 +13,9 @@ const RESOURCE_LAYOUT_MARKER: &str = ".resource-layout-v1";
 const RESOURCE_MIGRATION_JOURNAL: &str = ".resource-layout-v1.journal.json";
 
 #[derive(Debug, Clone)]
-pub struct MiyuPaths {
-    /// Everything below lives under this root (`~/.miyu`, or `MIYU_HOME`).
-    /// Kept as its own field because the model is told where Miyu's files are
+pub struct GQYPaths {
+    /// Everything below lives under this root (`~/.gqy`, or `GQY_HOME`).
+    /// Kept as its own field because the model is told where GQY's files are
     /// and guessing it back from a child directory would silently break the
     /// day the layout changes.
     pub root_dir: PathBuf,
@@ -33,12 +33,13 @@ pub struct MiyuPaths {
     pub system_scripts_dir: PathBuf,
 }
 
-impl MiyuPaths {
+impl GQYPaths {
     pub fn new() -> Result<Self> {
         let base = BaseDirs::new().context(t(
             "could not determine XDG base directories",
             "无法确定 XDG 基础目录",
         ))?;
+        // legacy 目录名保留 miyu:迁移逻辑要能找到改名前的旧数据。
         let legacy_config_dir = base.config_dir().join("miyu");
         let legacy_data_dir = base.data_dir().join("miyu");
         let legacy_cache_dir = base.cache_dir().join("miyu");
@@ -54,10 +55,10 @@ impl MiyuPaths {
             .map(PathBuf::from)
             .or_else(|| UserDirs::new().and_then(|dirs| dirs.picture_dir().map(PathBuf::from)))
             .unwrap_or_else(|| base.home_dir().join("Pictures"));
-        let explicit_home = std::env::var_os("MIYU_HOME").map(PathBuf::from);
+        let explicit_home = std::env::var_os("GQY_HOME").map(PathBuf::from);
         let root_dir = explicit_home
             .clone()
-            .unwrap_or_else(|| base.home_dir().join(".miyu"));
+            .unwrap_or_else(|| base.home_dir().join(".gqy"));
         let config_dir = root_dir.join("config");
         let data_dir = root_dir.join("data");
         let cache_dir = root_dir.join("cache");
@@ -127,7 +128,7 @@ impl MiyuPaths {
         } else {
             data_dir.join("pictures")
         };
-        let fish_hook_file = base.config_dir().join("fish/conf.d/miyu.fish");
+        let fish_hook_file = base.config_dir().join("fish/conf.d/gqy.fish");
         let bash_hook_file = config_dir.join("shell/bash-hook.sh");
         let zsh_hook_file = config_dir.join("shell/zsh-hook.zsh");
         let resource_config_dir = if use_legacy_temporarily || resource_migration_deferred {
@@ -136,7 +137,7 @@ impl MiyuPaths {
             data_dir.clone()
         };
         let scripts_dir = resource_config_dir.join("scripts");
-        let system_scripts_dir = PathBuf::from("/usr/share/miyu/scripts");
+        let system_scripts_dir = PathBuf::from("/usr/share/gqy/scripts");
 
         Ok(Self {
             // The canonical home even inside the transient legacy window: that
@@ -181,7 +182,7 @@ impl MiyuPaths {
         Ok(())
     }
 
-    /// Returns the root used for Miyu-owned, user-authored resources. During
+    /// Returns the root used for GQY-owned, user-authored resources. During
     /// an upgrade this intentionally remains the old config directory until
     /// the resource migration marker has been committed.
     pub fn resource_dir(&self) -> &Path {
@@ -247,9 +248,9 @@ impl MiyuPaths {
         match std::env::var_os("XDG_RUNTIME_DIR") {
             Some(runtime_dir) => runtime_dir_for(
                 Path::new(&runtime_dir),
-                std::env::var_os("MIYU_HOME").as_deref().map(Path::new),
+                std::env::var_os("GQY_HOME").as_deref().map(Path::new),
             ),
-            None => self.state_dir.join("miyu"),
+            None => self.state_dir.join("gqy"),
         }
     }
 
@@ -364,11 +365,11 @@ impl MiyuPaths {
 
 fn runtime_dir_for(runtime_root: &Path, explicit_home: Option<&Path>) -> PathBuf {
     let name = explicit_home.map_or_else(
-        || "miyu".to_string(),
+        || "gqy".to_string(),
         |home| {
             let normalized = normalize_home(home);
             let digest = blake3::hash(normalized.as_os_str().as_encoded_bytes());
-            format!("miyu-{}", &digest.to_hex()[..12])
+            format!("gqy-{}", &digest.to_hex()[..12])
         },
     );
     runtime_root.join(name)
@@ -506,14 +507,14 @@ fn current_process_is_daemon() -> bool {
 
 fn resource_runtime_dir(layout: &Layout) -> PathBuf {
     if cfg!(test) {
-        return layout.state_dir.join("miyu");
+        return layout.state_dir.join("gqy");
     }
     match std::env::var_os("XDG_RUNTIME_DIR") {
         Some(runtime_root) => runtime_dir_for(
             Path::new(&runtime_root),
-            std::env::var_os("MIYU_HOME").as_deref().map(Path::new),
+            std::env::var_os("GQY_HOME").as_deref().map(Path::new),
         ),
-        None => layout.state_dir.join("miyu"),
+        None => layout.state_dir.join("gqy"),
     }
 }
 
@@ -551,12 +552,12 @@ fn marker_exists_at(path: &Path, label: &str) -> Result<bool> {
     match fs::symlink_metadata(path) {
         Ok(metadata) if metadata.file_type().is_symlink() => {
             bail!(
-                "Miyu {label} must not be a symbolic link: {}",
+                "GQY {label} must not be a symbolic link: {}",
                 path.display()
             )
         }
         Ok(metadata) if !metadata.is_file() => {
-            bail!("Miyu {label} is not a regular file: {}", path.display())
+            bail!("GQY {label} is not a regular file: {}", path.display())
         }
         Ok(_) => Ok(true),
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(false),
@@ -566,7 +567,7 @@ fn marker_exists_at(path: &Path, label: &str) -> Result<bool> {
 
 fn migrate_resource_layout(layout: &Layout) -> Result<()> {
     if !try_migrate_resource_layout(layout, false)? {
-        bail!("Miyu resource migration is deferred while another daemon or starter is active");
+        bail!("GQY resource migration is deferred while another daemon or starter is active");
     }
     Ok(())
 }
@@ -615,7 +616,7 @@ fn try_migrate_resource_layout(layout: &Layout, current_process_is_daemon: bool)
             return match recovery {
                 Ok(()) => Err(error).with_context(|| {
                     format!(
-                        "migrating Miyu resource from {} to {}",
+                        "migrating GQY resource from {} to {}",
                         entry.source.display(),
                         entry.destination.display()
                     )
@@ -698,7 +699,7 @@ fn preflight_resource_entries(layout: &Layout, entries: &[ResourceMigrationEntry
         let source_metadata = fs::symlink_metadata(&entry.source)?;
         if source_metadata.file_type().is_symlink() {
             bail!(
-                "Miyu resource migration refuses symbolic-link source {}",
+                "GQY resource migration refuses symbolic-link source {}",
                 entry.source.display()
             );
         }
@@ -708,7 +709,7 @@ fn preflight_resource_entries(layout: &Layout, entries: &[ResourceMigrationEntry
         ensure_resource_same_filesystem(&entry.source, &entry.destination)?;
         match fs::symlink_metadata(&entry.destination) {
             Ok(_) => bail!(
-                "Miyu resource migration destination already exists: {}; move or remove it and retry",
+                "GQY resource migration destination already exists: {}; move or remove it and retry",
                 entry.destination.display()
             ),
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
@@ -729,7 +730,7 @@ fn ensure_destination_ancestors(layout: &Layout, destination: &Path) -> Result<(
         .strip_prefix(&layout.data_dir)
         .with_context(|| {
             format!(
-                "resource destination escapes Miyu data directory: {}",
+                "resource destination escapes GQY data directory: {}",
                 destination.display()
             )
         })?;
@@ -741,11 +742,11 @@ fn ensure_destination_ancestors(layout: &Layout, destination: &Path) -> Result<(
         }
         match fs::symlink_metadata(&current) {
             Ok(metadata) if metadata.file_type().is_symlink() => bail!(
-                "Miyu resource migration refuses symbolic-link destination ancestor {}",
+                "GQY resource migration refuses symbolic-link destination ancestor {}",
                 current.display()
             ),
             Ok(metadata) if !metadata.is_dir() => bail!(
-                "Miyu resource migration destination ancestor is not a directory: {}",
+                "GQY resource migration destination ancestor is not a directory: {}",
                 current.display()
             ),
             Ok(_) => {}
@@ -777,7 +778,7 @@ fn ensure_resource_same_filesystem(source: &Path, destination: &Path) -> Result<
     };
     if source_device != destination_device {
         bail!(
-            "Miyu resource migration requires source and destination on the same filesystem: {} -> {}",
+            "GQY resource migration requires source and destination on the same filesystem: {} -> {}",
             source.display(),
             destination.display()
         );
@@ -803,7 +804,7 @@ fn ensure_resource_targets_do_not_overlap(
     let nested_source = parent.source.join(relative);
     if entry_exists(&nested_source)? && entry_exists(&child.source)? {
         bail!(
-            "Miyu resource migration found overlapping sources for {} and {}; remove one duplicate and retry",
+            "GQY resource migration found overlapping sources for {} and {}; remove one duplicate and retry",
             nested_source.display(),
             child.source.display()
         );
@@ -854,11 +855,11 @@ fn recover_resource_migration(layout: &Layout) -> Result<()> {
     let mut journal: ResourceMigrationJournal = serde_json::from_str(&raw)
         .with_context(|| format!("parsing resource migration journal {}", path.display()))?;
     if journal.moved > journal.entries.len() {
-        bail!("invalid Miyu resource migration journal: moved count is out of range");
+        bail!("invalid GQY resource migration journal: moved count is out of range");
     }
     if let Some(index) = journal.pending {
         if index != journal.moved || index >= journal.entries.len() {
-            bail!("invalid Miyu resource migration journal: pending index is out of range");
+            bail!("invalid GQY resource migration journal: pending index is out of range");
         }
         let entry = &journal.entries[index];
         match (
@@ -871,12 +872,12 @@ fn recover_resource_migration(layout: &Layout) -> Result<()> {
                 journal.pending = None;
             }
             (true, true) => bail!(
-                "cannot recover Miyu resource migration because both paths exist: {} and {}",
+                "cannot recover GQY resource migration because both paths exist: {} and {}",
                 entry.source.display(),
                 entry.destination.display()
             ),
             (false, false) => bail!(
-                "cannot recover Miyu resource migration because both paths are missing: {} and {}",
+                "cannot recover GQY resource migration because both paths are missing: {} and {}",
                 entry.source.display(),
                 entry.destination.display()
             ),
@@ -893,7 +894,7 @@ fn recover_resource_migration(layout: &Layout) -> Result<()> {
             (false, true) => {
                 atomic_resource_move(&entry.destination, &entry.source).with_context(|| {
                     format!(
-                        "rolling back Miyu resource migration from {} to {}",
+                        "rolling back GQY resource migration from {} to {}",
                         entry.destination.display(),
                         entry.source.display()
                     )
@@ -901,12 +902,12 @@ fn recover_resource_migration(layout: &Layout) -> Result<()> {
             }
             (true, false) => {}
             (true, true) => bail!(
-                "cannot recover Miyu resource migration because both paths exist: {} and {}",
+                "cannot recover GQY resource migration because both paths exist: {} and {}",
                 entry.source.display(),
                 entry.destination.display()
             ),
             (false, false) => bail!(
-                "cannot recover Miyu resource migration because both paths are missing: {} and {}",
+                "cannot recover GQY resource migration because both paths are missing: {} and {}",
                 entry.source.display(),
                 entry.destination.display()
             ),
@@ -967,7 +968,7 @@ fn legacy_daemon_is_running_at(legacy: &LegacyLayout, xdg_runtime_dir: Option<&P
     }
     runtime_dirs
         .into_iter()
-        .map(|runtime_dir| runtime_dir.join("miyu"))
+        .map(|runtime_dir| runtime_dir.join("gqy"))
         .any(|runtime_dir| {
             std::os::unix::net::UnixStream::connect(runtime_dir.join("core.sock")).is_ok()
                 || runtime_lock_is_held(&runtime_dir.join("core.lock"))
@@ -1014,8 +1015,8 @@ fn migrate_legacy_layout(legacy: &LegacyLayout, next: &Layout) -> Result<()> {
         return Ok(());
     }
     // Repeat the full preflight while holding the layout lock. The first pass
-    // guarantees a known conflict does not even create ~/.miyu; this pass
-    // closes the race with another new Miyu process before any data moves.
+    // guarantees a known conflict does not even create ~/.gqy; this pass
+    // closes the race with another new GQY process before any data moves.
     let active = preflight_with_disposable_cache(&mappings, &legacy.cache_dir)?;
     let next_bash_hook = next.config_dir.join("shell/bash-hook.sh");
     let next_zsh_hook = next.config_dir.join("shell/zsh-hook.zsh");
@@ -1026,7 +1027,7 @@ fn migrate_legacy_layout(legacy: &LegacyLayout, next: &Layout) -> Result<()> {
     for mapping in &active {
         migrate_entry_unchecked(&mapping.source, &mapping.destination).with_context(|| {
             format!(
-                "migrating Miyu user files from {} to {}",
+                "migrating GQY user files from {} to {}",
                 mapping.source.display(),
                 mapping.destination.display()
             )
@@ -1037,7 +1038,7 @@ fn migrate_legacy_layout(legacy: &LegacyLayout, next: &Layout) -> Result<()> {
         let home = next
             .root_dir
             .parent()
-            .context("the Miyu home directory has no parent")?;
+            .context("the GQY home directory has no parent")?;
         let bash_hook = had_bash_hook.then_some(next_bash_hook);
         let zsh_hook = had_zsh_hook.then_some(next_zsh_hook);
         crate::shell::refresh_migrated_hook_sources(
@@ -1045,7 +1046,7 @@ fn migrate_legacy_layout(legacy: &LegacyLayout, next: &Layout) -> Result<()> {
             bash_hook.as_deref(),
             zsh_hook.as_deref(),
         )
-        .context("refreshing shell hook paths after Miyu directory migration")?;
+        .context("refreshing shell hook paths after GQY directory migration")?;
     }
 
     write_marker(&next.marker())?;
@@ -1085,7 +1086,7 @@ fn existing_mappings(mappings: &[MigrationMapping]) -> Result<Vec<MigrationMappi
             || mapping.source.starts_with(&mapping.destination)
         {
             bail!(
-                "Miyu directory migration cannot move overlapping paths: {} and {}",
+                "GQY directory migration cannot move overlapping paths: {} and {}",
                 mapping.source.display(),
                 mapping.destination.display()
             );
@@ -1099,7 +1100,7 @@ fn existing_mappings(mappings: &[MigrationMapping]) -> Result<Vec<MigrationMappi
                 || right.source.starts_with(&left.source)
             {
                 bail!(
-                    "Miyu directory migration has overlapping legacy sources: {} and {}",
+                    "GQY directory migration has overlapping legacy sources: {} and {}",
                     left.source.display(),
                     right.source.display()
                 );
@@ -1124,7 +1125,7 @@ fn acquire_migration_lock(root: &Path) -> Result<MigrationLease> {
         .with_context(|| format!("opening migration lock directory {}", root.display()))?;
     let result = unsafe { libc::flock(file.as_raw_fd(), libc::LOCK_EX) };
     if result != 0 {
-        return Err(std::io::Error::last_os_error()).context("locking Miyu directory migration");
+        return Err(std::io::Error::last_os_error()).context("locking GQY directory migration");
     }
     Ok(MigrationLease(file))
 }
@@ -1147,11 +1148,11 @@ fn ensure_private_dir(path: &Path) -> Result<()> {
 fn ensure_existing_directory(path: &Path) -> Result<()> {
     match fs::symlink_metadata(path) {
         Ok(metadata) if metadata.file_type().is_symlink() => bail!(
-            "Miyu refuses to use a symbolic-link directory: {}",
+            "GQY refuses to use a symbolic-link directory: {}",
             path.display()
         ),
         Ok(metadata) if !metadata.is_dir() => bail!(
-            "Miyu expected a directory but found another file: {}",
+            "GQY expected a directory but found another file: {}",
             path.display()
         ),
         Ok(_) => Ok(()),
@@ -1164,11 +1165,11 @@ fn layout_marker_exists(layout: &Layout) -> Result<bool> {
     let marker = layout.marker();
     match fs::symlink_metadata(&marker) {
         Ok(metadata) if metadata.file_type().is_symlink() => bail!(
-            "Miyu layout marker must not be a symbolic link: {}",
+            "GQY layout marker must not be a symbolic link: {}",
             marker.display()
         ),
         Ok(metadata) if !metadata.is_file() => bail!(
-            "Miyu layout marker is not a regular file: {}",
+            "GQY layout marker is not a regular file: {}",
             marker.display()
         ),
         Ok(_) => Ok(true),
@@ -1209,7 +1210,7 @@ fn migrate_entry(source: &Path, destination: &Path) -> Result<()> {
 /// Runs `existing_mappings` + `preflight_mappings`, except that the cache is
 /// treated as disposable: caches routinely contain relative symlinks (for
 /// example HuggingFace-style blob layouts), and refusing to move one would
-/// otherwise brick startup forever over data Miyu can rebuild. When the cache
+/// otherwise brick startup forever over data GQY can rebuild. When the cache
 /// tree alone fails preflight it is discarded and dropped from the migration
 /// instead of failing it.
 fn preflight_with_disposable_cache(
@@ -1233,8 +1234,8 @@ fn preflight_with_disposable_cache(
             eprintln!(
                 "{}: {reason:#}",
                 t(
-                    "discarding the legacy Miyu cache instead of migrating it",
-                    "旧版 Miyu 缓存无法迁移，已直接丢弃"
+                    "discarding the legacy GQY cache instead of migrating it",
+                    "旧版 GQY 缓存无法迁移，已直接丢弃"
                 )
             );
             discard_legacy_cache(&cache.source);
@@ -1283,7 +1284,7 @@ fn ensure_supported_entry_tree(path: &Path) -> Result<()> {
         let target = fs::read_link(path)?;
         if target.is_relative() {
             bail!(
-                "Miyu directory migration refuses relative symbolic link {}; its target would change after moving",
+                "GQY directory migration refuses relative symbolic link {}; its target would change after moving",
                 path.display()
             );
         }
@@ -1312,7 +1313,7 @@ fn ensure_absolute_symlink_targets_stable(
             for (source, destination) in projections {
                 if let Ok(relative) = target.strip_prefix(source) {
                     bail!(
-                        "Miyu directory migration refuses symbolic link {} because its absolute target moves from {} to {}",
+                        "GQY directory migration refuses symbolic link {} because its absolute target moves from {} to {}",
                         path.display(),
                         target.display(),
                         destination.join(relative).display()
@@ -1364,7 +1365,7 @@ fn projected_source_entry(source_root: &Path, relative: &Path) -> Result<Option<
         let metadata = fs::symlink_metadata(&current)?;
         if !metadata.is_dir() {
             bail!(
-                "Miyu directory migration found a projected path conflict at {}",
+                "GQY directory migration found a projected path conflict at {}",
                 current.display()
             );
         }
@@ -1405,7 +1406,7 @@ fn ensure_projected_entries_compatible(
         return Ok(());
     }
     bail!(
-        "Miyu directory migration found conflicting legacy entries {} and {} projected to {}",
+        "GQY directory migration found conflicting legacy entries {} and {} projected to {}",
         left.display(),
         right.display(),
         projected_destination.display()
@@ -1427,7 +1428,7 @@ fn ensure_no_conflicts(source: &Path, destination: &Path) -> Result<()> {
                 return Ok(());
             }
             bail!(
-                "Miyu directory migration found conflicting entries: {} and {}; move or rename one of them and retry",
+                "GQY directory migration found conflicting entries: {} and {}; move or rename one of them and retry",
                 source.display(),
                 destination.display()
             );
@@ -1455,7 +1456,7 @@ fn migrate_entry_unchecked(source: &Path, destination: &Path) -> Result<()> {
                 return Ok(());
             }
             bail!(
-                "Miyu directory migration found a conflict that appeared after preflight: {} and {}",
+                "GQY directory migration found a conflict that appeared after preflight: {} and {}",
                 source.display(),
                 destination.display()
             );
@@ -1510,7 +1511,7 @@ fn copy_entry(source: &Path, metadata: &fs::Metadata, destination: &Path) -> Res
         bail!("unsupported file type while migrating {}", source.display());
     }
     let temporary = destination.with_extension(format!(
-        "miyu-migrate-{}-{}",
+        "gqy-migrate-{}-{}",
         std::process::id(),
         rand::random::<u64>()
     ));
@@ -1600,11 +1601,11 @@ mod tests {
                 pictures_dirs: vec![root.join("Pictures/miyu"), root.join("Pictures/Miyu")],
             },
             Layout {
-                root_dir: root.join(".miyu"),
-                config_dir: root.join(".miyu/config"),
-                data_dir: root.join(".miyu/data"),
-                cache_dir: root.join(".miyu/cache"),
-                state_dir: root.join(".miyu/state"),
+                root_dir: root.join(".gqy"),
+                config_dir: root.join(".gqy/config"),
+                data_dir: root.join(".gqy/data"),
+                cache_dir: root.join(".gqy/cache"),
+                state_dir: root.join(".gqy/state"),
             },
         )
     }
@@ -1868,12 +1869,12 @@ mod tests {
         fs::write(legacy.config_dir.join("shell/zsh-hook.zsh"), "zsh hook").unwrap();
         fs::write(
             temp.path().join(".bashrc"),
-            "before\n# >>> miyu bash hook >>>\nsource '/legacy/bash-hook.sh'\n# <<< miyu bash hook <<<\nafter\n",
+            "before\n# >>> gqy bash hook >>>\nsource '/legacy/bash-hook.sh'\n# <<< gqy bash hook <<<\nafter\n",
         )
         .unwrap();
         fs::write(
             temp.path().join(".zshrc"),
-            "before\n# >>> miyu zsh hook >>>\nsource '/legacy/zsh-hook.zsh'\n# <<< miyu zsh hook <<<\nafter\n",
+            "before\n# >>> gqy zsh hook >>>\nsource '/legacy/zsh-hook.zsh'\n# <<< gqy zsh hook <<<\nafter\n",
         )
         .unwrap();
         fs::write(legacy.data_dir.join("data.bin"), "data").unwrap();
@@ -2124,7 +2125,7 @@ mod tests {
         fs::write(legacy.config_dir.join("shell/bash-hook.sh"), "bash hook").unwrap();
         fs::write(
             temp.path().join(".bashrc"),
-            "# >>> miyu bash hook >>>\nsource '/legacy/bash-hook.sh'\n",
+            "# >>> gqy bash hook >>>\nsource '/legacy/bash-hook.sh'\n",
         )
         .unwrap();
 
@@ -2135,7 +2136,7 @@ mod tests {
 
         fs::write(
             temp.path().join(".bashrc"),
-            "# >>> miyu bash hook >>>\nsource '/legacy/bash-hook.sh'\n# <<< miyu bash hook <<<\n",
+            "# >>> gqy bash hook >>>\nsource '/legacy/bash-hook.sh'\n# <<< gqy bash hook <<<\n",
         )
         .unwrap();
         migrate_legacy_layout(&legacy, &next).unwrap();
@@ -2212,7 +2213,7 @@ mod tests {
         let runtime_root = Path::new("/run/user/1000");
         assert_eq!(
             runtime_dir_for(runtime_root, None),
-            runtime_root.join("miyu")
+            runtime_root.join("gqy")
         );
     }
 
@@ -2232,14 +2233,14 @@ mod tests {
             .file_name()
             .unwrap()
             .to_string_lossy()
-            .starts_with("miyu-"));
+            .starts_with("gqy-"));
     }
 
     #[test]
     fn resource_path_remapping_includes_the_legacy_xdg_config_root() {
         let base = BaseDirs::new().unwrap();
-        let root = base.home_dir().join(".miyu");
-        let paths = MiyuPaths {
+        let root = base.home_dir().join(".gqy");
+        let paths = GQYPaths {
             root_dir: root.to_path_buf(),
             config_dir: root.join("config"),
             config_file: root.join("config/config.jsonc"),
@@ -2248,14 +2249,14 @@ mod tests {
             cache_dir: root.join("cache"),
             state_dir: root.join("state"),
             pictures_dir: root.join("data/pictures"),
-            fish_hook_file: base.config_dir().join("fish/conf.d/miyu.fish"),
+            fish_hook_file: base.config_dir().join("fish/conf.d/gqy.fish"),
             bash_hook_file: root.join("config/shell/bash-hook.sh"),
             zsh_hook_file: root.join("config/shell/zsh-hook.zsh"),
             scripts_dir: root.join("data/scripts"),
-            system_scripts_dir: PathBuf::from("/usr/share/miyu/scripts"),
+            system_scripts_dir: PathBuf::from("/usr/share/gqy/scripts"),
         };
         assert_eq!(
-            paths.migrated_resource_path(&base.config_dir().join("miyu/prompts/team")),
+            paths.migrated_resource_path(&base.config_dir().join("gqy/prompts/team")),
             Some(root.join("data/prompts/team"))
         );
         assert_eq!(
@@ -2281,7 +2282,7 @@ mod tests {
     fn legacy_layout_stays_put_while_the_core_lock_is_held() {
         let temp = tempfile::tempdir().unwrap();
         let (legacy, _) = test_layouts(temp.path());
-        let runtime_dir = legacy.state_dir.join("miyu");
+        let runtime_dir = legacy.state_dir.join("gqy");
         fs::create_dir_all(&runtime_dir).unwrap();
         let lock = OpenOptions::new()
             .create(true)
@@ -2306,7 +2307,7 @@ mod tests {
     fn legacy_layout_stays_put_while_the_starter_lock_is_held() {
         let temp = tempfile::tempdir().unwrap();
         let (legacy, _) = test_layouts(temp.path());
-        let runtime_dir = legacy.state_dir.join("miyu");
+        let runtime_dir = legacy.state_dir.join("gqy");
         fs::create_dir_all(&runtime_dir).unwrap();
         let lock = OpenOptions::new()
             .create(true)
@@ -2354,7 +2355,7 @@ mod tests {
         let (_, layout) = test_layouts(temp.path());
         fs::create_dir_all(layout.config_dir.join("skills/demo")).unwrap();
         fs::write(layout.config_dir.join("skills/demo/SKILL.md"), "skill").unwrap();
-        let runtime_dir = layout.state_dir.join("miyu");
+        let runtime_dir = layout.state_dir.join("gqy");
         fs::create_dir_all(&runtime_dir).unwrap();
         let starter = OpenOptions::new()
             .create(true)

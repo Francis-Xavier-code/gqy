@@ -8,7 +8,7 @@ use crate::llm::{
     ChatResult, ChatStreamChunk, OpenAiCompatibleClient, ThinkingVariantOptions, TurnTokens, Usage,
 };
 use crate::memory::{MemoryOrganizer, MemoryStore};
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use crate::render;
 use crate::shell;
 use crate::state::{QueuedPrompt, QueuedPromptAttachment, StateStore, Turn, TurnStatus};
@@ -377,7 +377,7 @@ fn primary_footer_text(text: &str) -> String {
 }
 
 #[derive(Debug, Parser)]
-#[command(name = "miyu", version, about = "Miyu CLI AI Agent")]
+#[command(name = "gqy", version, about = "GQY CLI AI Agent")]
 pub struct Cli {
     #[arg(long, global = true)]
     pub debug: bool,
@@ -453,10 +453,10 @@ fn extract_debug_flag(args: &mut Vec<OsString>) -> bool {
 fn localized_command() -> clap::Command {
     let mut command = Cli::command();
     command = command
-        .about(t("Miyu AI assistant", "Miyu AI 助手"))
+        .about(t("GQY AI assistant", "GQY AI 助手"))
         .override_usage(t(
-            "miyu [OPTIONS] [MESSAGE]... [COMMAND]",
-            "miyu [选项] [消息]... [命令]",
+            "gqy [OPTIONS] [MESSAGE]... [COMMAND]",
+            "gqy [选项] [消息]... [命令]",
         ));
     if is_zh() {
         command = command
@@ -464,12 +464,12 @@ fn localized_command() -> clap::Command {
             .arg_required_else_help(false)
             .next_help_heading("选项")
             .help_template("{about}\n\n用法: {usage}\n\n命令:\n{subcommands}\n参数:\n{positionals}\n选项:\n{options}\n{after-help}")
-            .after_help("提示：不带参数进入 REPL；直接输入消息会发送一次对话。可在配置界面设置语言，MIYU_LANG 可临时覆盖。")
+            .after_help("提示：不带参数进入 REPL；直接输入消息会发送一次对话。可在配置界面设置语言，GQY_LANG 可临时覆盖。")
             .disable_help_subcommand(true);
     } else {
         command = command
             .after_help(
-                "Tip: run without arguments to enter the REPL; pass MESSAGE to send one chat turn. Set the language in the configuration UI; MIYU_LANG is a temporary override.",
+                "Tip: run without arguments to enter the REPL; pass MESSAGE to send one chat turn. Set the language in the configuration UI; GQY_LANG is a temporary override.",
             )
             .disable_help_subcommand(true);
     }
@@ -490,7 +490,7 @@ fn root_help_template() -> String {
         "  fish-init          Integrate with fish; then chat in natural language directly in the terminal
   bash-init          Integrate with bash
   zsh-init           Integrate with zsh
-  remove-shell-hook  Safely remove installed Miyu shell hooks
+  remove-shell-hook  Safely remove installed GQY shell hooks
   models             Switch the terminal-integration session's model
   variant            Switch the terminal session model's thinking level
   history            Show conversation history
@@ -500,7 +500,7 @@ fn root_help_template() -> String {
         "  fish-init          集成到 fish，集成后可在终端直接使用自然语言交流
   bash-init          集成到 bash
   zsh-init           集成到 zsh
-  remove-shell-hook  安全删除已安装的 Miyu shell hook
+  remove-shell-hook  安全删除已安装的 GQY shell hook
   models             修改终端集成会话的模型
   variant            切换终端集成会话模型的思考档位
   history            显示会话历史
@@ -601,8 +601,8 @@ fn localize_top_args(command: clap::Command) -> clap::Command {
     command
         .mut_arg("debug", |arg| {
             arg.help(t(
-                "Write detailed diagnostics to the Miyu log directory",
-                "将详细诊断信息写入 Miyu 日志目录",
+                "Write detailed diagnostics to the GQY log directory",
+                "将详细诊断信息写入 GQY 日志目录",
             ))
         })
         .mut_arg("stdout", |arg| {
@@ -679,8 +679,8 @@ fn localize_subcommands(mut command: clap::Command) -> clap::Command {
         ("zsh-init", "Integrate with zsh", "集成到 zsh"),
         (
             "remove-shell-hook",
-            "Safely remove installed Miyu shell hooks",
-            "安全删除已安装的 Miyu shell hook",
+            "Safely remove installed GQY shell hooks",
+            "安全删除已安装的 GQY shell hook",
         ),
         ("history", "Show conversation history", "显示会话历史"),
         (
@@ -691,8 +691,8 @@ fn localize_subcommands(mut command: clap::Command) -> clap::Command {
         ("kb", "Manage the knowledge base", "管理知识库"),
         (
             "update-default-kb",
-            "Update Miyu default knowledge base",
-            "更新 Miyu 默认知识库",
+            "Update GQY default knowledge base",
+            "更新 GQY 默认知识库",
         ),
         ("memory", "Manage assistant memory", "管理记忆"),
         ("skills", "Manage assistant skills", "管理助手 skills"),
@@ -711,11 +711,11 @@ fn localize_subcommands(mut command: clap::Command) -> clap::Command {
             "Erase all conversation history, memory, group contexts and their artifacts",
             "抹掉所有会话历史、记忆、群聊上下文和其产物",
         ),
-                                                ("web", "Open the local Miyu WebUI", "访问本地 Miyu WebUI"),
+                                                ("web", "Open the local GQY WebUI", "访问本地 GQY WebUI"),
         (
             "daemon",
-            "Manage the unified Miyu background service",
-            "管理 Miyu 统一后台服务",
+            "Manage the unified GQY background service",
+            "管理 GQY 统一后台服务",
         ),
         (
             "export",
@@ -728,7 +728,7 @@ fn localize_subcommands(mut command: clap::Command) -> clap::Command {
         command = command.mut_subcommand(name, |subcommand| subcommand.about(t(en, zh)));
     }
     // 终端无缝集成组:从 {subcommands} 里藏掉,根帮助模板里以静态段
-    // 单独成节(clap 不支持子命令分组);`miyu <cmd> -h` 不受影响。
+    // 单独成节(clap 不支持子命令分组);`gqy <cmd> -h` 不受影响。
     for name in [
         "fish-init",
         "bash-init",
@@ -802,8 +802,8 @@ fn localize_export_command(command: clap::Command) -> clap::Command {
         })
         .mut_arg("index", |arg| {
             arg.help(t(
-                "Include the knowledge-base vector index (large; rebuildable with `miyu kb embed`)",
-                "包含知识库向量索引（很大；可用 miyu kb embed 重建）",
+                "Include the knowledge-base vector index (large; rebuildable with `gqy kb embed`)",
+                "包含知识库向量索引（很大；可用 gqy kb embed 重建）",
             ))
         })
         .mut_arg("platforms", |arg| {
@@ -832,7 +832,7 @@ fn localize_export_command(command: clap::Command) -> clap::Command {
 fn localize_import_command(command: clap::Command) -> clap::Command {
     command
         .mut_arg("archive", |arg| {
-            arg.help(t("Archive produced by `miyu export`", "miyu export 生成的归档"))
+            arg.help(t("Archive produced by `gqy export`", "gqy export 生成的归档"))
         })
         .mut_arg("force", |arg| {
             arg.help(t(
@@ -919,18 +919,18 @@ fn localize_daemon_command(mut command: clap::Command) -> clap::Command {
     let descriptions = [
         (
             "start",
-            "Start all configured Miyu interfaces",
-            "启动所有已配置的 Miyu 接口",
+            "Start all configured GQY interfaces",
+            "启动所有已配置的 GQY 接口",
         ),
         (
             "stop",
-            "Stop the Miyu background service",
-            "停止 Miyu 后台服务",
+            "Stop the GQY background service",
+            "停止 GQY 后台服务",
         ),
         (
             "restart",
-            "Restart the Miyu background service",
-            "重启 Miyu 后台服务",
+            "Restart the GQY background service",
+            "重启 GQY 后台服务",
         ),
         (
             "status",
@@ -1074,8 +1074,8 @@ pub enum Command {
     AlarmWorker(AlarmWorkerArgs),
     #[command(name = "__tool", hide = true)]
     Tool(ToolArgs),
-    /// Internal: run as the Miyu daemon (spawned by the CLI via
-    /// `current_exe`, replacing the former separate `miyud` binary).
+    /// Internal: run as the GQY daemon (spawned by the CLI via
+    /// `current_exe`, replacing the former separate `gqyd` binary).
     #[command(name = "__daemon", hide = true)]
     DaemonWorker(WebArgs),
     Ask(MessageArgs),
@@ -1191,7 +1191,7 @@ pub struct AlarmWorkerArgs {
     pub id: String,
     #[arg(long)]
     pub time: String,
-    #[arg(long, default_value = "Miyu alarm")]
+    #[arg(long, default_value = "GQY alarm")]
     pub label: String,
     #[arg(long)]
     pub state_dir: PathBuf,
@@ -1430,7 +1430,7 @@ pub enum ConfigCommand {
     PromptSource,
 }
 
-pub async fn run(cli: Cli, paths: MiyuPaths) -> Result<()> {
+pub async fn run(cli: Cli, paths: GQYPaths) -> Result<()> {
     if cli.shell_classify {
         let shell_name = cli.shell.as_deref().unwrap_or("fish");
         let message = shell_message_from_input(cli.stdin, cli.message)?;
@@ -1530,8 +1530,8 @@ pub async fn run(cli: Cli, paths: MiyuPaths) -> Result<()> {
                         println!(
                             "{}",
                             t(
-                                "Tencent QQ is enabled; run `miyu daemon start` to begin listening.",
-                                "腾讯 QQ 已启用；执行 `miyu daemon start` 后开始监听。",
+                                "Tencent QQ is enabled; run `gqy daemon start` to begin listening.",
+                                "腾讯 QQ 已启用；执行 `gqy daemon start` 后开始监听。",
                             )
                         );
                     }
@@ -1605,8 +1605,8 @@ pub async fn run(cli: Cli, paths: MiyuPaths) -> Result<()> {
                         )
                     );
                 }
-                // 裸 miyu:按 default_mode 配置分流;未配置则打印模式说明,
-                // 逼一次显式选择(miyu normal / miyu dev)。
+                // 裸 gqy:按 default_mode 配置分流;未配置则打印模式说明,
+                // 逼一次显式选择(gqy normal / gqy dev)。
                 let default_mode = AppConfig::load_or_default(&paths)
                     .map(|config| config.default_mode.trim().to_ascii_lowercase())
                     .unwrap_or_default();
@@ -1634,7 +1634,7 @@ pub async fn run(cli: Cli, paths: MiyuPaths) -> Result<()> {
     }
 }
 
-fn initialize_models_cache(paths: &MiyuPaths) {
+fn initialize_models_cache(paths: &GQYPaths) {
     crate::models_cache::try_load(paths);
     crate::models_cache::spawn_background_refresh(paths.clone());
     if let Ok(config) = AppConfig::load_or_default(paths) {
@@ -1642,20 +1642,20 @@ fn initialize_models_cache(paths: &MiyuPaths) {
     }
 }
 
-async fn run_web(paths: &MiyuPaths, mut args: WebArgs) -> Result<()> {
+async fn run_web(paths: &GQYPaths, mut args: WebArgs) -> Result<()> {
     if let Some(info) = ipc::daemon_info(paths).await {
         if info.build_id == ipc::BUILD_ID {
             if args.port_explicit || args.password.is_some() || args.password_file.is_some() {
                 bail!(
                     "{}",
                     t(
-                        "the running Miyu daemon already owns Web settings; restart it to change them",
-                        "当前 Miyu daemon 已接管 Web 设置；如需修改请先重启 daemon"
+                        "the running GQY daemon already owns Web settings; restart it to change them",
+                        "当前 GQY daemon 已接管 Web 设置；如需修改请先重启 daemon"
                     )
                 );
             }
             for url in daemon_web_access_urls(&info) {
-                println!("Miyu WebUI: {url}");
+                println!("GQY WebUI: {url}");
             }
             return Ok(());
         }
@@ -1670,12 +1670,12 @@ async fn run_web(paths: &MiyuPaths, mut args: WebArgs) -> Result<()> {
     let launch = web_launch_config(paths, &args)?;
     let info = ipc::ensure_daemon(paths, launch.as_ref()).await?;
     for url in daemon_web_access_urls(&info) {
-        println!("Miyu WebUI: {url}");
+        println!("GQY WebUI: {url}");
     }
     Ok(())
 }
 
-fn web_launch_config(paths: &MiyuPaths, args: &WebArgs) -> Result<Option<ipc::DaemonLaunchConfig>> {
+fn web_launch_config(paths: &GQYPaths, args: &WebArgs) -> Result<Option<ipc::DaemonLaunchConfig>> {
     if !args.port_explicit
         && args.bind.is_none()
         && args.password.is_none()
@@ -1716,7 +1716,7 @@ fn daemon_web_access_urls(info: &ipc::DaemonInfo) -> Vec<String> {
     ipc::web_access_urls_for(bind, info.web_port)
 }
 
-async fn run_daemon_command(paths: &MiyuPaths, args: DaemonArgs) -> Result<()> {
+async fn run_daemon_command(paths: &GQYPaths, args: DaemonArgs) -> Result<()> {
     let command = args.command.unwrap_or(DaemonCommand::Start);
     if args.port.is_some() && !matches!(command, DaemonCommand::Start | DaemonCommand::Restart) {
         bail!(
@@ -1742,13 +1742,13 @@ async fn run_daemon_command(paths: &MiyuPaths, args: DaemonArgs) -> Result<()> {
                 bail!(
                     "{}",
                     t(
-                        "the running Miyu daemon already owns Web settings; use `miyu daemon restart` to change the port",
-                        "当前 Miyu daemon 已接管 Web 设置；如需修改端口请使用 `miyu daemon restart`"
+                        "the running GQY daemon already owns Web settings; use `gqy daemon restart` to change the port",
+                        "当前 GQY daemon 已接管 Web 设置；如需修改端口请使用 `gqy daemon restart`"
                     )
                 );
             }
             ipc::ensure_daemon(paths, launch.as_ref()).await?;
-            let refreshed = MiyuPaths::new()?;
+            let refreshed = GQYPaths::new()?;
             print_daemon_status(&refreshed).await
         }
         DaemonCommand::Stop => stop_daemon(paths).await,
@@ -1767,7 +1767,7 @@ async fn run_daemon_command(paths: &MiyuPaths, args: DaemonArgs) -> Result<()> {
                 }
                 return Err(error);
             };
-            let refreshed = match MiyuPaths::new() {
+            let refreshed = match GQYPaths::new() {
                 Ok(paths) => paths,
                 Err(error) => {
                     if let Some(launch) = &pending_launch {
@@ -1789,25 +1789,25 @@ async fn run_daemon_command(paths: &MiyuPaths, args: DaemonArgs) -> Result<()> {
     }
 }
 
-async fn stop_daemon(paths: &MiyuPaths) -> Result<()> {
+async fn stop_daemon(paths: &GQYPaths) -> Result<()> {
     let Some(info) = ipc::daemon_info(paths).await else {
-        println!("{}", t("Miyu daemon is not running", "Miyu daemon 未运行"));
+        println!("{}", t("GQY daemon is not running", "GQY daemon 未运行"));
         return Ok(());
     };
     ipc::shutdown_daemon(paths, &info).await?;
-    println!("{}", t("Miyu daemon stopped", "Miyu daemon 已停止"));
+    println!("{}", t("GQY daemon stopped", "GQY daemon 已停止"));
     Ok(())
 }
 
-async fn print_daemon_status(paths: &MiyuPaths) -> Result<()> {
+async fn print_daemon_status(paths: &GQYPaths) -> Result<()> {
     let Some(info) = ipc::daemon_info(paths).await else {
-        println!("{}", t("Miyu daemon: stopped", "Miyu daemon：已停止"));
+        println!("{}", t("GQY daemon: stopped", "GQY daemon：已停止"));
         return Ok(());
     };
     let (_, data) = send_ipc_admin(paths, IpcCommand::GetStatus).await?;
     println!(
         "{} {} (PID {})",
-        t("Miyu daemon:", "Miyu daemon："),
+        t("GQY daemon:", "GQY daemon："),
         t("running", "运行中"),
         info.pid,
     );
@@ -1872,16 +1872,16 @@ fn daemon_web_status_lines(label: &str, urls: &[String]) -> Vec<String> {
         .collect()
 }
 
-/// `miyu daemon logs request`:监控期间开启录制,滚动打印每个出网请求
+/// `gqy daemon logs request`:监控期间开启录制,滚动打印每个出网请求
 /// 的摘要行;完整请求体在 JSONL 文件里(整段 prompt 打终端没法看)。
 /// Ctrl+C 退出时关闭录制——开关是 daemon 进程级内存位,不落配置。
-async fn run_request_monitor(paths: &MiyuPaths) -> Result<()> {
+async fn run_request_monitor(paths: &GQYPaths) -> Result<()> {
     if ipc::daemon_info(paths).await.is_none() {
         bail!(
             "{}",
             t(
-                "the daemon is not running; start it first (miyu daemon start)",
-                "daemon 未运行;先 miyu daemon start"
+                "the daemon is not running; start it first (gqy daemon start)",
+                "daemon 未运行;先 gqy daemon start"
             )
         );
     }
@@ -1971,7 +1971,7 @@ async fn run_request_monitor(paths: &MiyuPaths) -> Result<()> {
     Ok(())
 }
 
-async fn run_daemon_logs(paths: &MiyuPaths, args: DaemonLogsArgs) -> Result<()> {
+async fn run_daemon_logs(paths: &GQYPaths, args: DaemonLogsArgs) -> Result<()> {
     match args.topic.as_deref().map(str::trim) {
         None => {}
         Some("request" | "requests") => return run_request_monitor(paths).await,
@@ -2003,7 +2003,7 @@ async fn run_daemon_logs(paths: &MiyuPaths, args: DaemonLogsArgs) -> Result<()> 
     // runs are therefore consumed by follow instead of being skipped.
     let cursor = snapshot.cursor;
     let Some(daemon) = ipc::daemon_info(paths).await else {
-        bail!("{}", t("Miyu daemon is not running", "Miyu daemon 未运行"));
+        bail!("{}", t("GQY daemon is not running", "GQY daemon 未运行"));
     };
     follow_daemon_log(paths, ansi, cursor, daemon.pid).await
 }
@@ -2031,8 +2031,8 @@ fn parse_daemon_log_line(line: &str) -> Option<ParsedDaemonLogLine<'_>> {
     let remainder = remainder[level_end..].trim_start();
     let (module, message) = remainder
         .split_once(": ")
-        .filter(|(candidate, _)| is_miyu_log_target(candidate))
-        .unwrap_or(("miyu", remainder));
+        .filter(|(candidate, _)| is_gqy_log_target(candidate))
+        .unwrap_or(("gqy", remainder));
     Some(ParsedDaemonLogLine {
         timestamp,
         level,
@@ -2041,10 +2041,10 @@ fn parse_daemon_log_line(line: &str) -> Option<ParsedDaemonLogLine<'_>> {
     })
 }
 
-fn is_miyu_log_target(value: &str) -> bool {
-    value == "miyu"
+fn is_gqy_log_target(value: &str) -> bool {
+    value == "gqy"
         || value
-            .strip_prefix("miyu::")
+            .strip_prefix("gqy::")
             .is_some_and(|suffix| !suffix.is_empty())
 }
 
@@ -2191,7 +2191,7 @@ fn write_daemon_log_line_bytes(
     )
 }
 
-fn daemon_log_files(paths: &MiyuPaths) -> Result<Vec<PathBuf>> {
+fn daemon_log_files(paths: &GQYPaths) -> Result<Vec<PathBuf>> {
     let mut files = match std::fs::read_dir(paths.logs_dir()) {
         Ok(entries) => entries
             .filter_map(|entry| entry.ok())
@@ -2199,7 +2199,7 @@ fn daemon_log_files(paths: &MiyuPaths) -> Result<Vec<PathBuf>> {
             .filter(|path| {
                 path.file_name()
                     .and_then(|name| name.to_str())
-                    .is_some_and(|name| name.starts_with("miyu.") && name.ends_with(".log"))
+                    .is_some_and(|name| name.starts_with("gqy.") && name.ends_with(".log"))
             })
             .collect::<Vec<_>>(),
         Err(error) if error.kind() == io::ErrorKind::NotFound => Vec::new(),
@@ -2271,7 +2271,7 @@ fn daemon_log_follow_cursor_for_files(
     }
 }
 
-fn recent_daemon_log_snapshot(paths: &MiyuPaths, limit: usize) -> Result<DaemonLogSnapshot> {
+fn recent_daemon_log_snapshot(paths: &GQYPaths, limit: usize) -> Result<DaemonLogSnapshot> {
     let files = daemon_log_files(paths)?;
     if limit == 0 {
         return Ok(DaemonLogSnapshot {
@@ -2311,7 +2311,7 @@ fn recent_daemon_log_snapshot(paths: &MiyuPaths, limit: usize) -> Result<DaemonL
     })
 }
 
-fn recent_daemon_log_lines(paths: &MiyuPaths, limit: usize) -> Result<Vec<String>> {
+fn recent_daemon_log_lines(paths: &GQYPaths, limit: usize) -> Result<Vec<String>> {
     Ok(recent_daemon_log_snapshot(paths, limit)?.lines)
 }
 
@@ -2422,7 +2422,7 @@ fn finish_daemon_log_formatters(
 }
 
 async fn follow_daemon_log(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     ansi: bool,
     cursor: DaemonLogFollowCursor,
     initial_pid: u32,
@@ -2581,7 +2581,7 @@ async fn follow_daemon_log(
     }
 }
 
-async fn reload_daemon_if_running(paths: &MiyuPaths) -> Result<()> {
+async fn reload_daemon_if_running(paths: &GQYPaths) -> Result<()> {
     if ipc::daemon_info(paths).await.is_some() {
         retry_config_reload(RELOAD_MAX_ATTEMPTS, RELOAD_RETRY_INTERVAL, || {
             request_config_reload(paths)
@@ -2615,7 +2615,7 @@ fn validate_config_reload_response(frame: Option<IpcFrame>) -> Result<ConfigRelo
     Ok(ConfigReloadResponse::Reloaded)
 }
 
-async fn request_config_reload(paths: &MiyuPaths) -> Result<ConfigReloadResponse> {
+async fn request_config_reload(paths: &GQYPaths) -> Result<ConfigReloadResponse> {
     request_config_reload_at(&paths.ipc_socket(), RELOAD_RESPONSE_TIMEOUT).await
 }
 
@@ -2631,15 +2631,15 @@ async fn request_config_reload_at(
     .await
     .with_context(|| {
         t(
-            "timed out waiting for Miyu daemon to reload configuration",
-            "等待 Miyu daemon 重新加载配置超时",
+            "timed out waiting for GQY daemon to reload configuration",
+            "等待 GQY daemon 重新加载配置超时",
         )
     })?
 }
 
-async fn run_reload(paths: &MiyuPaths) -> Result<()> {
+async fn run_reload(paths: &GQYPaths) -> Result<()> {
     if ipc::daemon_info(paths).await.is_none() {
-        bail!("{}", t("Miyu daemon is not running", "Miyu daemon 未运行"));
+        bail!("{}", t("GQY daemon is not running", "GQY daemon 未运行"));
     }
     retry_config_reload(RELOAD_MAX_ATTEMPTS, RELOAD_RETRY_INTERVAL, || {
         request_config_reload(paths)
@@ -2669,11 +2669,11 @@ where
                 let seconds = retry_interval.as_secs();
                 let message = if is_zh() {
                     format!(
-                        "Miyu daemon 正忙；将在 {seconds} 秒后重试配置重载（{attempt}/{max_attempts}）"
+                        "GQY daemon 正忙；将在 {seconds} 秒后重试配置重载（{attempt}/{max_attempts}）"
                     )
                 } else {
                     format!(
-                        "Miyu daemon is busy; retrying configuration reload in {seconds} seconds ({attempt}/{max_attempts})"
+                        "GQY daemon is busy; retrying configuration reload in {seconds} seconds ({attempt}/{max_attempts})"
                     )
                 };
                 eprintln!("{message}");
@@ -2681,10 +2681,10 @@ where
             }
             ConfigReloadResponse::Busy => {
                 let message = if is_zh() {
-                    format!("Miyu daemon 在 {max_attempts} 次配置重载尝试后仍然忙碌")
+                    format!("GQY daemon 在 {max_attempts} 次配置重载尝试后仍然忙碌")
                 } else {
                     format!(
-                        "Miyu daemon remained busy after {max_attempts} configuration reload attempts"
+                        "GQY daemon remained busy after {max_attempts} configuration reload attempts"
                     )
                 };
                 bail!("{message}");
@@ -2694,7 +2694,7 @@ where
     unreachable!("reload loop always returns on its final attempt")
 }
 
-async fn run_tool(paths: &MiyuPaths, mode: AgentMode, args: ToolArgs) -> Result<()> {
+async fn run_tool(paths: &GQYPaths, mode: AgentMode, args: ToolArgs) -> Result<()> {
     let config = AppConfig::load_or_default(paths)?;
     let registry = build_tool_registry(&config, paths, mode, false)?;
     let output = registry
@@ -2708,9 +2708,9 @@ async fn run_tool(paths: &MiyuPaths, mode: AgentMode, args: ToolArgs) -> Result<
 /// 工具,中间数据本地流动、不经模型上下文往返;每次内层调用都以本回合的
 /// 会话身份与来源在 daemon 侧过 guard/超时管线。daemon 不在(直连调试
 /// 形态)则本地执行,语义一致但 jobs 等 daemon 态不可见。
-async fn run_tool_call(paths: &MiyuPaths, args: ToolCallArgs) -> Result<()> {
+async fn run_tool_call(paths: &GQYPaths, args: ToolCallArgs) -> Result<()> {
     let config = AppConfig::load_or_default(paths)?;
-    let env_mode = std::env::var("MIYU_TURN_MODE").unwrap_or_default();
+    let env_mode = std::env::var("GQY_TURN_MODE").unwrap_or_default();
     let mode = if env_mode == "dev" {
         AgentMode::Dev
     } else {
@@ -2748,7 +2748,7 @@ async fn run_tool_call(paths: &MiyuPaths, args: ToolCallArgs) -> Result<()> {
         return Ok(());
     }
     let Some(name) = args.name.clone() else {
-        // 裸 `miyu tool-call` 是来问路的,给完整帮助而不是一行报错。
+        // 裸 `gqy tool-call` 是来问路的,给完整帮助而不是一行报错。
         localized_command()
             .find_subcommand_mut("tool-call")
             .expect("tool-call subcommand exists")
@@ -2765,9 +2765,9 @@ async fn run_tool_call(paths: &MiyuPaths, args: ToolCallArgs) -> Result<()> {
     } else {
         args.arguments.clone().unwrap_or_else(|| "{}".to_string())
     };
-    let session = std::env::var("MIYU_SESSION").ok().filter(|s| !s.is_empty());
-    let origin = std::env::var("MIYU_TURN_ORIGIN").ok().filter(|s| !s.is_empty());
-    let depth: u32 = std::env::var("MIYU_BRIDGE_DEPTH")
+    let session = std::env::var("GQY_SESSION").ok().filter(|s| !s.is_empty());
+    let origin = std::env::var("GQY_TURN_ORIGIN").ok().filter(|s| !s.is_empty());
+    let depth: u32 = std::env::var("GQY_BRIDGE_DEPTH")
         .ok()
         .and_then(|raw| raw.parse().ok())
         .unwrap_or(0);
@@ -2825,14 +2825,14 @@ enum InitKind {
     Explicit,
 }
 
-fn run_init(paths: &MiyuPaths, kind: InitKind) -> Result<()> {
+fn run_init(paths: &GQYPaths, kind: InitKind) -> Result<()> {
     let interactive = io::stdin().is_terminal() && io::stdout().is_terminal();
     if interactive {
         println!(
             "{}\n",
             match kind {
-                InitKind::FirstRun => t("Miyu first start", "Miyu 首次启动"),
-                InitKind::Explicit => t("Miyu initialization", "Miyu 初始化"),
+                InitKind::FirstRun => t("GQY first start", "GQY 首次启动"),
+                InitKind::Explicit => t("GQY initialization", "GQY 初始化"),
             }
         );
     }
@@ -2882,7 +2882,7 @@ fn run_init(paths: &MiyuPaths, kind: InitKind) -> Result<()> {
     } else {
         println!(
             "{} {}",
-            t("initialized Miyu at", "Miyu 已初始化于"),
+            t("initialized GQY at", "GQY 已初始化于"),
             paths.config_dir.display()
         );
     }
@@ -2898,7 +2898,7 @@ fn print_init_step(interactive: bool, label: &str, value: &str) -> Result<()> {
     Ok(())
 }
 
-fn remove_shell_hooks(paths: &MiyuPaths) -> Result<()> {
+fn remove_shell_hooks(paths: &GQYPaths) -> Result<()> {
     let removed = shell::fish::uninstall(paths)?;
     let removed = shell::bash::uninstall(paths)? || removed;
     let removed = shell::zsh::uninstall(paths)? || removed;
@@ -2906,8 +2906,8 @@ fn remove_shell_hooks(paths: &MiyuPaths) -> Result<()> {
         println!(
             "{}",
             t(
-                "no installed Miyu shell hooks found",
-                "未找到已安装的 Miyu shell hook"
+                "no installed GQY shell hooks found",
+                "未找到已安装的 GQY shell hook"
             )
         );
     }
@@ -2967,7 +2967,7 @@ fn terminal_bell_fallback() {
     }
 }
 
-fn append_alarm_log(paths: &MiyuPaths, line: &str) -> Result<()> {
+fn append_alarm_log(paths: &GQYPaths, line: &str) -> Result<()> {
     std::fs::create_dir_all(paths.logs_dir())?;
     let mut file = std::fs::OpenOptions::new()
         .create(true)
@@ -2977,8 +2977,8 @@ fn append_alarm_log(paths: &MiyuPaths, line: &str) -> Result<()> {
     Ok(())
 }
 
-fn alarm_worker_paths(state_dir: PathBuf, cache_dir: PathBuf) -> MiyuPaths {
-    MiyuPaths {
+fn alarm_worker_paths(state_dir: PathBuf, cache_dir: PathBuf) -> GQYPaths {
+    GQYPaths {
         root_dir: PathBuf::new(),
         config_dir: PathBuf::new(),
         config_file: PathBuf::new(),
@@ -3001,7 +3001,7 @@ struct PopOutcome {
     archived: bool,
 }
 
-fn run_pop(paths: &MiyuPaths, args: PopArgs) -> Result<()> {
+fn run_pop(paths: &GQYPaths, args: PopArgs) -> Result<()> {
     let config = AppConfig::load_or_default(paths)?;
     let state = StateStore::new(paths)?;
     state.recover_stale_turns()?;
@@ -3014,7 +3014,7 @@ fn run_pop(paths: &MiyuPaths, args: PopArgs) -> Result<()> {
 /// Pop while the daemon owns the core: candidates are selected locally
 /// (read-only), but the mutation goes through IPC so the daemon stays the
 /// single writer.
-async fn run_pop_via_daemon(paths: &MiyuPaths, args: PopArgs) -> Result<()> {
+async fn run_pop_via_daemon(paths: &GQYPaths, args: PopArgs) -> Result<()> {
     let state = StateStore::new(paths)?;
     let turn_ids: Vec<String> = match args.count {
         Some(count) => {
@@ -3030,8 +3030,8 @@ async fn run_pop_via_daemon(paths: &MiyuPaths, args: PopArgs) -> Result<()> {
                 bail!(
                     "{}",
                     t(
-                        "interactive pop requires a terminal; use `miyu pop <count>`",
-                        "交互 pop 需要终端；请使用 `miyu pop <数量>`",
+                        "interactive pop requires a terminal; use `gqy pop <count>`",
+                        "交互 pop 需要终端；请使用 `gqy pop <数量>`",
                     )
                 );
             }
@@ -3082,7 +3082,7 @@ async fn run_pop_via_daemon(paths: &MiyuPaths, args: PopArgs) -> Result<()> {
 }
 
 fn execute_pop(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &AppConfig,
     state: &StateStore,
     count: Option<usize>,
@@ -3097,8 +3097,8 @@ fn execute_pop(
                 bail!(
                     "{}",
                     t(
-                        "interactive pop requires a terminal; use `miyu pop <count>`",
-                        "交互 pop 需要终端；请使用 `miyu pop <数量>`",
+                        "interactive pop requires a terminal; use `gqy pop <count>`",
+                        "交互 pop 需要终端；请使用 `gqy pop <数量>`",
                     )
                 );
             }
@@ -3481,15 +3481,15 @@ fn inline_pop_lines(item_count: usize) -> u16 {
     (visible_items as u16).saturating_mul(3).saturating_add(2)
 }
 
-async fn run_models(paths: &MiyuPaths, args: ModelsArgs) -> Result<()> {
+async fn run_models(paths: &GQYPaths, args: ModelsArgs) -> Result<()> {
     run_models_for_session(paths, args, None).await
 }
 
 /// Switches the model pool of one session (the current session when
 /// `session_id` is None). The override persists on the session, so reopening
-/// it restores the model; the global pool is managed in `miyu config`.
+/// it restores the model; the global pool is managed in `gqy config`.
 async fn run_models_for_session(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     args: ModelsArgs,
     session_id: Option<&str>,
 ) -> Result<()> {
@@ -3586,10 +3586,10 @@ async fn run_models_for_session(
     Ok(())
 }
 
-const DEFAULT_PERSONA_LABEL_ZH: &str = "Miyu（内置默认）";
-const DEFAULT_PERSONA_LABEL_EN: &str = "Miyu (built-in default)";
+const DEFAULT_PERSONA_LABEL_ZH: &str = "GQY（内置默认）";
+const DEFAULT_PERSONA_LABEL_EN: &str = "GQY (built-in default)";
 
-fn list_persona_files(paths: &MiyuPaths, config: &AppConfig) -> Result<Vec<String>> {
+fn list_persona_files(paths: &GQYPaths, config: &AppConfig) -> Result<Vec<String>> {
     let dir = config.prompts_dir_path(paths);
     let mut names = Vec::new();
     if dir.exists() {
@@ -3609,14 +3609,14 @@ fn list_persona_files(paths: &MiyuPaths, config: &AppConfig) -> Result<Vec<Strin
 
 /// Interactive persona picker (single-select). Returns true when the active
 /// persona changed and the config was saved.
-fn run_persona_picker(paths: &MiyuPaths, argument: &str) -> Result<bool> {
+fn run_persona_picker(paths: &GQYPaths, argument: &str) -> Result<bool> {
     let mut config = AppConfig::load(paths)?;
     let personas = list_persona_files(paths, &config)?;
     let current = config.prompt.active_persona.trim().to_string();
     let argument = argument.trim();
     let chosen: Option<String> = if !argument.is_empty() {
         if argument.eq_ignore_ascii_case("default")
-            || argument.eq_ignore_ascii_case("miyu")
+            || argument.eq_ignore_ascii_case("gqy")
             || argument == "内置"
         {
             Some(String::new())
@@ -3823,9 +3823,9 @@ fn default_export_name() -> String {
         .ok()
         .map(|value| value.trim().to_string())
         .filter(|value| !value.is_empty())
-        .unwrap_or_else(|| "miyu".to_string());
+        .unwrap_or_else(|| "gqy".to_string());
     let stamp = chrono::Local::now().format("%Y%m%d-%H%M%S");
-    format!("miyu-export-{host}-{stamp}.tar.gz")
+    format!("gqy-export-{host}-{stamp}.tar.gz")
 }
 
 fn readable_bytes(bytes: u64) -> String {
@@ -3852,7 +3852,7 @@ fn owned(en: String, zh: String) -> String {
     }
 }
 
-fn run_export(paths: &MiyuPaths, args: ExportArgs) -> Result<()> {
+fn run_export(paths: &GQYPaths, args: ExportArgs) -> Result<()> {
     let output = args
         .output
         .unwrap_or_else(|| PathBuf::from(default_export_name()));
@@ -3906,23 +3906,23 @@ fn run_export(paths: &MiyuPaths, args: ExportArgs) -> Result<()> {
         println!(
             "{}",
             t(
-                "The knowledge-base vector index was left out; run `miyu kb embed` after importing (or re-export with --index).",
-                "未包含知识库向量索引；导入后请运行 miyu kb embed（或改用 --index 重新导出）。",
+                "The knowledge-base vector index was left out; run `gqy kb embed` after importing (or re-export with --index).",
+                "未包含知识库向量索引；导入后请运行 gqy kb embed（或改用 --index 重新导出）。",
             )
         );
     }
     Ok(())
 }
 
-async fn run_import(paths: &MiyuPaths, args: ImportArgs) -> Result<()> {
+async fn run_import(paths: &GQYPaths, args: ImportArgs) -> Result<()> {
     // The daemon holds conversation.db's WAL open; replacing the file under it
     // would leave both the old process and the new database inconsistent.
     if crate::ipc::daemon_info(paths).await.is_some() {
         anyhow::bail!(
             "{}",
             t(
-                "the Miyu daemon is running and holds the database open; stop it first with `miyu daemon stop`",
-                "Miyu daemon 正在运行并占用数据库；请先执行 miyu daemon stop",
+                "the GQY daemon is running and holds the database open; stop it first with `gqy daemon stop`",
+                "GQY daemon 正在运行并占用数据库；请先执行 gqy daemon stop",
             )
         );
     }
@@ -3949,7 +3949,7 @@ async fn run_import(paths: &MiyuPaths, args: ImportArgs) -> Result<()> {
         )
     );
     if !report.unknown_units.is_empty() {
-        // A newer Miyu wrote data this build has no name for. It is on disk;
+        // A newer GQY wrote data this build has no name for. It is on disk;
         // say so rather than let it look like it vanished.
         let units = report
             .unknown_units
@@ -3962,9 +3962,9 @@ async fn run_import(paths: &MiyuPaths, args: ImportArgs) -> Result<()> {
             owned(
                 format!(
                     "Restored data this version does not recognise \
-                     (written by a newer Miyu): {units}"
+                     (written by a newer GQY): {units}"
                 ),
-                format!("恢复了本版本不认识的数据（由更新版本的 Miyu 写入）：{units}"),
+                format!("恢复了本版本不认识的数据（由更新版本的 GQY 写入）：{units}"),
             )
         );
     }
@@ -3986,23 +3986,23 @@ async fn run_import(paths: &MiyuPaths, args: ImportArgs) -> Result<()> {
     println!(
         "  {}",
         t(
-            "reinstall the shell integration: `miyu fish-init` / `bash-init` / `zsh-init`",
-            "重装 shell 集成：miyu fish-init / bash-init / zsh-init",
+            "reinstall the shell integration: `gqy fish-init` / `bash-init` / `zsh-init`",
+            "重装 shell 集成：gqy fish-init / bash-init / zsh-init",
         )
     );
     println!(
         "  {}",
         t(
-            "`miyu kb reindex` — the knowledge base records absolute paths from the old machine",
-            "miyu kb reindex —— 知识库记录的是旧机器上的绝对路径",
+            "`gqy kb reindex` — the knowledge base records absolute paths from the old machine",
+            "gqy kb reindex —— 知识库记录的是旧机器上的绝对路径",
         )
     );
     if !report.index_included {
         println!(
             "  {}",
             t(
-                "`miyu kb embed` — the vector index was not in the archive",
-                "miyu kb embed —— 归档中不含向量索引",
+                "`gqy kb embed` — the vector index was not in the archive",
+                "gqy kb embed —— 归档中不含向量索引",
             )
         );
     }
@@ -4010,15 +4010,15 @@ async fn run_import(paths: &MiyuPaths, args: ImportArgs) -> Result<()> {
         println!(
             "  {}",
             t(
-                "refill API keys and access tokens: `miyu config`",
-                "补填 API key 与访问令牌：miyu config",
+                "refill API keys and access tokens: `gqy config`",
+                "补填 API key 与访问令牌：gqy config",
             )
         );
     }
     Ok(())
 }
 
-fn run_list_models(paths: &MiyuPaths) -> Result<()> {
+fn run_list_models(paths: &GQYPaths) -> Result<()> {
     let config = AppConfig::load(paths)?;
     let choices = config.text_provider_model_choices();
     if choices.is_empty() {
@@ -4035,8 +4035,8 @@ fn run_list_models(paths: &MiyuPaths) -> Result<()> {
     println!(
         "{}",
         t(
-            "switch with: miyu models <index|provider/model>; 'miyu models default' follows the global pool",
-            "切换：miyu models <序号|供应商/模型>；miyu models default 恢复跟随全局模型池"
+            "switch with: gqy models <index|provider/model>; 'gqy models default' follows the global pool",
+            "切换：gqy models <序号|供应商/模型>；gqy models default 恢复跟随全局模型池"
         )
     );
     Ok(())
@@ -4078,7 +4078,7 @@ fn print_model_choices(
 /// Reads a session's model override straight from the shared state database;
 /// works whether or not the daemon is running.
 fn session_model_override_snapshot(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     session_id: Option<&str>,
 ) -> Result<Option<Vec<ActiveProviderModelConfig>>> {
     let store = StateStore::new(paths)?;
@@ -4090,7 +4090,7 @@ fn session_model_override_snapshot(
 }
 
 async fn set_session_models(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     session_id: Option<&str>,
     models: Vec<ActiveProviderModelConfig>,
 ) -> Result<()> {
@@ -4775,7 +4775,7 @@ impl Drop for InlineRawMode {
     }
 }
 
-async fn run_config(paths: &MiyuPaths, args: ConfigArgs) -> Result<bool> {
+async fn run_config(paths: &GQYPaths, args: ConfigArgs) -> Result<bool> {
     match args.command {
         Some(ConfigCommand::Validate) => {
             AppConfig::load(paths)?;
@@ -4842,7 +4842,7 @@ async fn run_config(paths: &MiyuPaths, args: ConfigArgs) -> Result<bool> {
     }
 }
 
-fn run_clipboard_paste(paths: &MiyuPaths) -> Result<()> {
+fn run_clipboard_paste(paths: &GQYPaths) -> Result<()> {
     match crate::clipboard::read_clipboard() {
         Ok(crate::clipboard::ClipboardContent::Image(img)) => {
             let path = img.write_temp_file(&paths.cache_dir, 0)?;
@@ -4931,7 +4931,7 @@ fn run_shell_classify(shell_name: &str, message: &str) -> Result<()> {
     std::process::exit(1);
 }
 
-async fn run_shell_intercept(paths: &MiyuPaths, shell_name: &str, message: String) -> Result<()> {
+async fn run_shell_intercept(paths: &GQYPaths, shell_name: &str, message: String) -> Result<()> {
     if !matches!(shell_name, "fish" | "bash" | "zsh") {
         bail!("{}: {shell_name}", t("unsupported shell", "不支持的 shell"));
     }
@@ -4967,7 +4967,7 @@ async fn run_shell_intercept(paths: &MiyuPaths, shell_name: &str, message: Strin
     result
 }
 
-fn expand_shell_pasted_text_placeholders(paths: &MiyuPaths, message: &str) -> Result<String> {
+fn expand_shell_pasted_text_placeholders(paths: &GQYPaths, message: &str) -> Result<String> {
     let placeholders = find_pasted_text_placeholders(message);
     if placeholders.is_empty() {
         return Ok(message.to_string());
@@ -4998,7 +4998,7 @@ fn extract_image_placeholders(
         return (message.to_string(), Vec::new());
     }
 
-    let cache_images_dir = MiyuPaths::new()
+    let cache_images_dir = GQYPaths::new()
         .map(|p| p.cache_dir.join("clipboard_images"))
         .ok();
 
@@ -5042,7 +5042,7 @@ fn extract_image_placeholders(
 }
 
 async fn run_chat_with_images(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     message: String,
     pasted_images: Vec<Option<crate::clipboard::PastedImage>>,
 ) -> Result<()> {
@@ -5245,7 +5245,7 @@ async fn append_stdin_if_piped(message: String) -> String {
 /// Which session a one-shot CLI turn lands in.
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum TurnSession {
-    /// The terminal session — what shell-hook and `miyu new`/`session` drive.
+    /// The terminal session — what shell-hook and `gqy new`/`session` drive.
     Current,
     /// An explicit `--session` target, resolved to a session id.
     Explicit(String),
@@ -5254,11 +5254,11 @@ enum TurnSession {
     Ephemeral,
 }
 
-/// Picks the session for `miyu ask` / a bare `miyu '<message>'`. Both default
+/// Picks the session for `gqy ask` / a bare `gqy '<message>'`. Both default
 /// to a throwaway session; `--session` and `--continue` opt back into a real
 /// one (clap already rejects passing both).
 async fn one_shot_session(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     session_arg: Option<&str>,
     continue_session: bool,
 ) -> Result<TurnSession> {
@@ -5280,7 +5280,7 @@ fn ephemeral_session_name() -> String {
     t("One-shot", "一次性对话").to_string()
 }
 
-async fn create_ephemeral_session(paths: &MiyuPaths) -> Result<String> {
+async fn create_ephemeral_session(paths: &GQYPaths) -> Result<String> {
     let (_, data) = session_admin(
         paths,
         IpcCommand::CreateSession {
@@ -5295,13 +5295,13 @@ async fn create_ephemeral_session(paths: &MiyuPaths) -> Result<String> {
         .and_then(|session| session.get("session_id"))
         .and_then(serde_json::Value::as_str)
         .map(str::to_string)
-        .ok_or_else(|| anyhow::anyhow!("Miyu core returned an invalid response"))
+        .ok_or_else(|| anyhow::anyhow!("GQY core returned an invalid response"))
 }
 
 /// Tears a throwaway session down. Background jobs go first so nothing is left
 /// pointing at a session that is about to disappear. Best effort: a daemon
 /// that has gone away leaves a row the startup sweep collects.
-async fn discard_ephemeral_session(paths: &MiyuPaths, session_id: &str) {
+async fn discard_ephemeral_session(paths: &GQYPaths, session_id: &str) {
     let _ = send_ipc_admin(
         paths,
         IpcCommand::StopSessionJobs {
@@ -5334,7 +5334,7 @@ impl Drop for EphemeralSessionGuard {
 }
 
 async fn run_chat_with_options(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     message: String,
     show_reasoning: Option<bool>,
     plain: bool,
@@ -5533,7 +5533,7 @@ fn detect_origin_tty() -> Option<crate::ipc::OriginTty> {
 }
 
 async fn try_run_remote_chat(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     mut live: Option<&mut LiveReplTail>,
     message: &str,
     show_reasoning: Option<bool>,
@@ -5549,7 +5549,7 @@ async fn try_run_remote_chat(
         // ensure_daemon also restarts a daemon left over from an older build.
         // Re-resolve paths because that shutdown may complete legacy layout migration.
         ipc::ensure_daemon(paths, None).await?;
-        Some(MiyuPaths::new()?)
+        Some(GQYPaths::new()?)
     };
     let paths = refreshed_paths.as_ref().unwrap_or(paths);
     let mut stream = if direct_mode_requested() {
@@ -5586,12 +5586,12 @@ async fn try_run_remote_chat(
     )
     .await?;
     let Some(first) = ipc::receive::<IpcFrame>(&mut stream).await? else {
-        bail!("Miyu core closed the connection before accepting the turn");
+        bail!("GQY core closed the connection before accepting the turn");
     };
     let run_id = match first {
         IpcFrame::Accepted { run_id, .. } => run_id,
         IpcFrame::Error { message, .. } => bail!("{message}"),
-        _ => bail!("Miyu core returned an invalid response"),
+        _ => bail!("GQY core returned an invalid response"),
     };
     let mut turn_id: Option<String> = None;
 
@@ -5801,7 +5801,7 @@ async fn try_run_remote_chat(
             if let Some(live) = live.as_deref_mut() {
                 live.apply_renderer_frame(&mut renderer)?;
             }
-            bail!("Miyu core disconnected during the turn");
+            bail!("GQY core disconnected during the turn");
         };
         let IpcFrame::Event { kind, data, .. } = frame else {
             if let IpcFrame::Error { message, .. } = frame {
@@ -5964,7 +5964,7 @@ async fn try_run_remote_chat(
                 notify_if_unfocused(
                     &config,
                     live.as_deref().map(|live| live.editor.focused),
-                    t("Miyu is waiting on you", "Miyu 在等你回答"),
+                    t("GQY is waiting on you", "GQY 在等你回答"),
                     request
                         .questions
                         .first()
@@ -6146,7 +6146,7 @@ async fn try_run_remote_chat(
         notify_if_unfocused(
             &config,
             focused,
-            t("Miyu finished replying", "Miyu 回复完成"),
+            t("GQY finished replying", "GQY 回复完成"),
             &result.content,
         );
     }
@@ -6185,7 +6185,7 @@ async fn try_run_remote_chat(
     }))
 }
 
-async fn send_ipc_command(paths: &MiyuPaths, command: IpcCommand) -> Result<()> {
+async fn send_ipc_command(paths: &GQYPaths, command: IpcCommand) -> Result<()> {
     let mut stream = ipc::connect(&paths.ipc_socket()).await?;
     ipc::send(&mut stream, &IpcRequest::new(command)).await?;
     validate_ipc_command_response(ipc::receive::<IpcFrame>(&mut stream).await?)
@@ -6197,8 +6197,8 @@ fn validate_ipc_command_response(frame: Option<IpcFrame>) -> Result<()> {
             Ok(())
         }
         Some(IpcFrame::Error { message, .. }) => bail!("{message}"),
-        Some(other) => bail!("Miyu core returned an unexpected response: {other:?}"),
-        None => bail!("Miyu core closed the connection without a response"),
+        Some(other) => bail!("GQY core returned an unexpected response: {other:?}"),
+        None => bail!("GQY core closed the connection without a response"),
     }
 }
 
@@ -6211,7 +6211,7 @@ fn repl_note(live: &mut LiveReplTail, text: &str) -> Result<()> {
 }
 
 /// Remote-REPL text equivalent of `print_pop_outcome` (which stays
-/// println-based for the direct REPL and one-shot `miyu pop`).
+/// println-based for the direct REPL and one-shot `gqy pop`).
 fn repl_pop_outcome_text(outcome: PopOutcome) -> String {
     let message = if is_zh() {
         if outcome.archived {
@@ -6257,7 +6257,7 @@ fn display_session_name(name: &str) -> &str {
 }
 
 async fn apply_repl_session_switch(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &AppConfig,
     state: &ipc::SessionState,
     active_session_id: &mut String,
@@ -6495,7 +6495,7 @@ fn repl_list_mode(mode: AgentMode) -> Option<String> {
 }
 
 async fn resolve_repl_session_target(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     live: &mut LiveReplTail,
     mode: AgentMode,
     arg: &str,
@@ -6543,7 +6543,7 @@ async fn resolve_repl_session_target(
     }
 }
 
-fn reload_repl_queue(live: &mut LiveReplTail, paths: &MiyuPaths, session_id: &str) -> Result<()> {
+fn reload_repl_queue(live: &mut LiveReplTail, paths: &GQYPaths, session_id: &str) -> Result<()> {
     let store = StateStore::new(paths)?.pinned(session_id);
     synchronized_terminal_update(CursorAfterUpdate::Shown, || live.reload_queue(&store))
 }
@@ -6567,7 +6567,7 @@ fn confirm_stdin(prompt: &str) -> Result<bool> {
 /// busy, core restarting, …) through the live tail instead of propagating
 /// them so the REPL survives.
 async fn repl_ipc_admin(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     live: &mut LiveReplTail,
     command: IpcCommand,
 ) -> Result<Option<(ipc::SessionState, serde_json::Value)>> {
@@ -6584,7 +6584,7 @@ async fn repl_ipc_admin(
 }
 
 async fn repl_get_session_state(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     live: &mut LiveReplTail,
     target: crate::ipc::SessionRef,
 ) -> Result<Option<ipc::SessionState>> {
@@ -6596,7 +6596,7 @@ async fn repl_get_session_state(
 }
 
 async fn repl_fallback_session_state(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     live: &mut LiveReplTail,
     mode: AgentMode,
 ) -> Result<Option<ipc::SessionState>> {
@@ -6647,7 +6647,7 @@ async fn repl_fallback_session_state(
 /// session when the REPL's own session was one of the ones deleted, so backing
 /// out never strands the REPL on a session that no longer exists.
 async fn repl_pick_session(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     live: &mut LiveReplTail,
     mode: AgentMode,
     active_session_id: &str,
@@ -6717,7 +6717,7 @@ async fn repl_pick_session(
 }
 
 async fn repl_active_or_default_state(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     active_session_id: &str,
 ) -> Result<(ipc::SessionState, bool)> {
     match send_ipc_admin(
@@ -6740,21 +6740,21 @@ async fn repl_active_or_default_state(
 }
 
 /// Ensures the daemon is running, then sends one admin command; used by the
-/// one-shot session subcommands (`miyu new/session/rename/...`).
+/// one-shot session subcommands (`gqy new/session/rename/...`).
 async fn session_admin(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     command: IpcCommand,
 ) -> Result<(ipc::SessionState, serde_json::Value)> {
     ipc::ensure_daemon(paths, None).await?;
-    let refreshed = MiyuPaths::new()?;
+    let refreshed = GQYPaths::new()?;
     send_ipc_admin(&refreshed, command).await
 }
 
-/// Resolves a `miyu session/delete` target argument outside the REPL:
+/// Resolves a `gqy session/delete` target argument outside the REPL:
 /// numbers index into the visible session list, anything else is a name.
 /// Resolves a `--session` argument (name or list index) to a concrete
 /// session id, without moving the global current pointer.
-async fn resolve_session_id_for_turn(paths: &MiyuPaths, arg: &str) -> Result<String> {
+async fn resolve_session_id_for_turn(paths: &GQYPaths, arg: &str) -> Result<String> {
     let (_, data) = session_admin(
         paths,
         IpcCommand::ListSessions {
@@ -6793,7 +6793,7 @@ fn expand_tilde(path: &str) -> PathBuf {
 }
 
 async fn send_ipc_admin(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     command: IpcCommand,
 ) -> Result<(ipc::SessionState, serde_json::Value)> {
     let mut stream = ipc::connect(&paths.ipc_socket()).await?;
@@ -6801,7 +6801,7 @@ async fn send_ipc_admin(
     match ipc::receive::<IpcFrame>(&mut stream).await? {
         Some(IpcFrame::AdminResult { state, data }) => Ok((state, data)),
         Some(IpcFrame::Error { message, .. }) => bail!("{message}"),
-        _ => bail!("Miyu core returned an invalid admin response"),
+        _ => bail!("GQY core returned an invalid admin response"),
     }
 }
 
@@ -7011,7 +7011,7 @@ enum VariantOutcome {
     Rejected(String),
 }
 
-fn run_variant(paths: &MiyuPaths, args: VariantArgs) -> Result<()> {
+fn run_variant(paths: &GQYPaths, args: VariantArgs) -> Result<()> {
     let selected = args
         .name
         .as_deref()
@@ -7021,8 +7021,8 @@ fn run_variant(paths: &MiyuPaths, args: VariantArgs) -> Result<()> {
         bail!(
             "{}",
             t(
-                "interactive variant selection requires a terminal; use `miyu variant <name>`",
-                "交互 variant 选择需要终端；请使用 `miyu variant <名称>`",
+                "interactive variant selection requires a terminal; use `gqy variant <name>`",
+                "交互 variant 选择需要终端；请使用 `gqy variant <名称>`",
             )
         );
     }
@@ -7037,7 +7037,7 @@ fn run_variant(paths: &MiyuPaths, args: VariantArgs) -> Result<()> {
 
     let config = AppConfig::load_or_default(paths)?;
     let mut client = OpenAiCompatibleClient::from_config(&config, paths)?;
-    match execute_variant(paths, &mut client, selected, "miyu variant")? {
+    match execute_variant(paths, &mut client, selected, "gqy variant")? {
         VariantOutcome::Updated => print_variant_updated(),
         VariantOutcome::Cancelled => {}
         VariantOutcome::Rejected(message) => bail!("{message}"),
@@ -7046,7 +7046,7 @@ fn run_variant(paths: &MiyuPaths, args: VariantArgs) -> Result<()> {
 }
 
 fn execute_variant(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     client: &mut OpenAiCompatibleClient,
     selected: Option<&str>,
     selector_command: &str,
@@ -7108,19 +7108,19 @@ fn print_variant_updated() {
 
 fn print_mode_help() {
     if crate::i18n::is_zh() {
-        println!("请选择模式。想让裸 miyu 命令直接进某个模式,可以在设置中修改(config.jsonc 的 default_mode)。\n");
-        println!("  miyu normal   普通模式。可使用全部工具,适合日常使用。支持角色扮演、娱乐聊天、记忆、技能等全部能力。");
-        println!("  miyu dev      开发模式。与普通模式明确区分,用于开发工作;移除与开发无关的角色扮演与娱乐工具,提示词极简可编辑,记忆独立。");
-        println!("  miyu '<your_prompts>'   使用普通模式进行一次性对话");
+        println!("请选择模式。想让裸 gqy 命令直接进某个模式,可以在设置中修改(config.jsonc 的 default_mode)。\n");
+        println!("  gqy normal   普通模式。可使用全部工具,适合日常使用。支持角色扮演、娱乐聊天、记忆、技能等全部能力。");
+        println!("  gqy dev      开发模式。与普通模式明确区分,用于开发工作;移除与开发无关的角色扮演与娱乐工具,提示词极简可编辑,记忆独立。");
+        println!("  gqy '<your_prompts>'   使用普通模式进行一次性对话");
     } else {
-        println!("Pick a mode. To make bare `miyu` enter one directly, set default_mode in config.jsonc.\n");
-        println!("  miyu normal   full-capability mode: persona, memory, every tool.");
-        println!("  miyu dev      development mode: minimal editable prompt, coding tools only, separate memory.");
-        println!("  miyu '<your_prompts>'   one-shot ask in normal mode");
+        println!("Pick a mode. To make bare `gqy` enter one directly, set default_mode in config.jsonc.\n");
+        println!("  gqy normal   full-capability mode: persona, memory, every tool.");
+        println!("  gqy dev      development mode: minimal editable prompt, coding tools only, separate memory.");
+        println!("  gqy '<your_prompts>'   one-shot ask in normal mode");
     }
 }
 
-async fn run_repl(paths: &MiyuPaths, initial_mode: AgentMode) -> Result<()> {
+async fn run_repl(paths: &GQYPaths, initial_mode: AgentMode) -> Result<()> {
     if direct_mode_requested() {
         run_direct_repl(paths, initial_mode).await
     } else {
@@ -7128,10 +7128,10 @@ async fn run_repl(paths: &MiyuPaths, initial_mode: AgentMode) -> Result<()> {
     }
 }
 
-async fn run_remote_repl(paths: &MiyuPaths, mut mode: AgentMode) -> Result<()> {
+async fn run_remote_repl(paths: &GQYPaths, mut mode: AgentMode) -> Result<()> {
     let _cursor_restore = ReplCursorRestore;
     ipc::ensure_daemon(paths, None).await?;
-    let refreshed = MiyuPaths::new()?;
+    let refreshed = GQYPaths::new()?;
     let paths = &refreshed;
     initialize_models_cache(paths);
     let mut config = AppConfig::load_or_default(paths)?;
@@ -8104,8 +8104,8 @@ async fn run_remote_repl(paths: &MiyuPaths, mut mode: AgentMode) -> Result<()> {
             Ok(None) => bail!(
                 "{}",
                 t(
-                    "the Miyu Web core stopped; start the REPL again to use direct mode",
-                    "Miyu Web 核心已停止；请重新启动 REPL 以使用直连模式"
+                    "the GQY Web core stopped; start the REPL again to use direct mode",
+                    "GQY Web 核心已停止；请重新启动 REPL 以使用直连模式"
                 )
             ),
             Err(err) if is_remote_turn_detached(&err) => {
@@ -8161,10 +8161,10 @@ async fn run_remote_repl(paths: &MiyuPaths, mut mode: AgentMode) -> Result<()> {
 }
 
 fn direct_mode_requested() -> bool {
-    std::env::var_os("MIYU_DIRECT").is_some_and(|value| value != "0")
+    std::env::var_os("GQY_DIRECT").is_some_and(|value| value != "0")
 }
 
-async fn run_direct_repl(paths: &MiyuPaths, initial_mode: AgentMode) -> Result<()> {
+async fn run_direct_repl(paths: &GQYPaths, initial_mode: AgentMode) -> Result<()> {
     let _core_lease = ipc::acquire_direct_core(paths)?;
     initialize_models_cache(paths);
     let _cursor_restore = ReplCursorRestore;
@@ -8563,8 +8563,8 @@ async fn run_direct_repl(paths: &MiyuPaths, initial_mode: AgentMode) -> Result<(
                 println!(
                     "{}",
                     t(
-                        "this command needs the full (daemon) REPL; start without MIYU_DIRECT to use it",
-                        "该命令需要完整(daemon)REPL;不带 MIYU_DIRECT 启动即可使用"
+                        "this command needs the full (daemon) REPL; start without GQY_DIRECT to use it",
+                        "该命令需要完整(daemon)REPL;不带 GQY_DIRECT 启动即可使用"
                     )
                 );
             } else {
@@ -8750,7 +8750,7 @@ async fn run_direct_repl(paths: &MiyuPaths, initial_mode: AgentMode) -> Result<(
 }
 
 fn reload_repl_config(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     state: &StateStore,
     config: &mut AppConfig,
     client: &mut OpenAiCompatibleClient,
@@ -8763,7 +8763,7 @@ fn reload_repl_config(
 
 /// The footer/status display must reflect the session's pinned model pool,
 /// not just the global config.
-fn footer_config_for_session(paths: &MiyuPaths, config: &AppConfig, session_id: &str) -> AppConfig {
+fn footer_config_for_session(paths: &GQYPaths, config: &AppConfig, session_id: &str) -> AppConfig {
     let mut config = config.clone();
     if let Ok(Some(models)) =
         StateStore::new(paths).and_then(|store| store.session_model_override(session_id))
@@ -9250,7 +9250,7 @@ fn split_repl_command(input: &str) -> (&str, &str) {
 
 const REPL_HISTORY_CAP: usize = 200;
 
-fn repl_history_file(paths: &MiyuPaths) -> PathBuf {
+fn repl_history_file(paths: &GQYPaths) -> PathBuf {
     paths.state_dir.join("repl-history.jsonl")
 }
 
@@ -9258,7 +9258,7 @@ fn repl_history_file(paths: &MiyuPaths) -> PathBuf {
 /// file, capped on load. Conversation resets delete turns, so the file is
 /// the durable source; the turns-derived list only seeds sessions that
 /// predate it.
-fn load_persistent_repl_history(paths: &MiyuPaths) -> Vec<String> {
+fn load_persistent_repl_history(paths: &GQYPaths) -> Vec<String> {
     let Ok(content) = std::fs::read_to_string(repl_history_file(paths)) else {
         return Vec::new();
     };
@@ -9280,7 +9280,7 @@ fn load_persistent_repl_history(paths: &MiyuPaths) -> Vec<String> {
     entries
 }
 
-fn persist_repl_history_entry(paths: &MiyuPaths, entry: &str) {
+fn persist_repl_history_entry(paths: &GQYPaths, entry: &str) {
     let entry = entry.trim();
     if entry.is_empty() {
         return;
@@ -9302,7 +9302,7 @@ fn persist_repl_history_entry(paths: &MiyuPaths, entry: &str) {
         });
 }
 
-fn load_repl_input_history(state: &StateStore, paths: &MiyuPaths) -> Result<Vec<String>> {
+fn load_repl_input_history(state: &StateStore, paths: &GQYPaths) -> Result<Vec<String>> {
     let mut merged: Vec<String> = state
         .load_conversation()?
         .into_iter()
@@ -9479,7 +9479,7 @@ impl LiveReplEditor {
     fn handle_event(
         &mut self,
         event: Event,
-        paths: &MiyuPaths,
+        paths: &GQYPaths,
         allow_interrupt: bool,
     ) -> Result<LiveEditorAction> {
         let is_escape = matches!(
@@ -9737,7 +9737,7 @@ impl LiveReplEditor {
         Ok(LiveEditorAction::Redraw)
     }
 
-    fn paste_clipboard(&mut self, paths: &MiyuPaths) -> Result<()> {
+    fn paste_clipboard(&mut self, paths: &GQYPaths) -> Result<()> {
         match crate::clipboard::read_clipboard() {
             Ok(crate::clipboard::ClipboardContent::Image(image)) => {
                 let index = self.pasted_images.len() + 1;
@@ -10806,7 +10806,7 @@ fn job_wake_headline(headline: &str) -> &str {
 
 /// Fires a desktop notification unless the REPL window has focus.
 ///
-/// `focused` is `None` when there is no live tail — a one-shot `miyu ask` has
+/// `focused` is `None` when there is no live tail — a one-shot `gqy ask` has
 /// no window to be away from, so it stays quiet.
 fn notify_if_unfocused(config: &AppConfig, focused: Option<bool>, title: &str, body: &str) {
     if !config.notifications.enabled || focused != Some(false) {
@@ -10925,7 +10925,7 @@ fn persist_queued_submission(
 /// Queues a submission for the turn currently running in the daemon, using
 /// the cross-process queue target so the daemon consumes it mid-turn.
 async fn persist_remote_queued_submission(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     run_id: &str,
     turn_id: &str,
     submission: &LiveSubmission,
@@ -10959,8 +10959,8 @@ async fn persist_remote_queued_submission(
             submitted_at,
         }),
         Some(IpcFrame::Error { message, .. }) => bail!("{message}"),
-        Some(_) => bail!("Miyu core returned an invalid queue response"),
-        None => bail!("Miyu core closed the queue connection"),
+        Some(_) => bail!("GQY core returned an invalid queue response"),
+        None => bail!("GQY core closed the queue connection"),
     }
 }
 
@@ -11180,7 +11180,7 @@ impl JobsFeed {
 /// Poll the daemon for background commands while the remote REPL idles:
 /// 1s when commands are live, 3s when quiet — a unix-socket roundtrip
 /// costs microseconds either way.
-fn spawn_jobs_poll_thread(paths: MiyuPaths) -> std::sync::Arc<SharedJobsFeed> {
+fn spawn_jobs_poll_thread(paths: GQYPaths) -> std::sync::Arc<SharedJobsFeed> {
     let shared = std::sync::Arc::new(SharedJobsFeed::default());
     let feed = shared.clone();
     std::thread::spawn(move || {
@@ -11254,7 +11254,7 @@ type JobsOverviewSnapshot = (
     Vec<(String, String, String)>,
 );
 
-async fn fetch_jobs_overview(paths: &MiyuPaths) -> Result<JobsOverviewSnapshot> {
+async fn fetch_jobs_overview(paths: &GQYPaths) -> Result<JobsOverviewSnapshot> {
     let mut stream = ipc::connect(&paths.ipc_socket()).await?;
     ipc::send(&mut stream, &IpcRequest::new(IpcCommand::JobsOverview)).await?;
     match ipc::receive::<IpcFrame>(&mut stream).await? {
@@ -11338,7 +11338,7 @@ enum LiveReplOutcome {
 
 fn read_live_repl_input(
     live: &mut LiveReplTail,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     jobs_feed: &JobsFeed,
     wake_session: Option<&str>,
 ) -> Result<LiveReplOutcome> {
@@ -11450,7 +11450,7 @@ fn read_live_repl_input(
 /// the turn was already rendered here). Typed submissions queue into the
 /// wake turn as follow-ups.
 async fn follow_wake_run(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     live: &mut LiveReplTail,
     run_id: &str,
     label: &str,
@@ -11822,7 +11822,7 @@ fn handle_live_agent_event(
 
 async fn run_live_agent_turn(
     live: &mut LiveReplTail,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     state: &StateStore,
     agent: &mut Agent,
     input: LiveAgentInput<'_>,
@@ -11943,7 +11943,7 @@ async fn run_live_agent_turn(
 }
 
 fn read_repl_input(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     mode: AgentMode,
     prefill: Option<String>,
     history: &[String],
@@ -13634,8 +13634,8 @@ mod repl_input_tests {
         }
     }
 
-    fn pop_test_paths(root: &std::path::Path) -> MiyuPaths {
-        MiyuPaths {
+    fn pop_test_paths(root: &std::path::Path) -> GQYPaths {
+        GQYPaths {
             root_dir: root.to_path_buf(),
             config_dir: root.join("config"),
             config_file: root.join("config/config.jsonc"),
@@ -13644,7 +13644,7 @@ mod repl_input_tests {
             cache_dir: root.join("cache"),
             state_dir: root.join("state"),
             pictures_dir: root.join("pictures"),
-            fish_hook_file: root.join("fish/miyu.fish"),
+            fish_hook_file: root.join("fish/gqy.fish"),
             bash_hook_file: root.join("shell/bash-hook.sh"),
             zsh_hook_file: root.join("shell/zsh-hook.zsh"),
             scripts_dir: root.join("config/scripts"),
@@ -13704,7 +13704,7 @@ mod repl_input_tests {
     #[test]
     fn models_is_the_cli_model_selector() {
         let matches = localized_command()
-            .try_get_matches_from(["miyu", "models", "1"])
+            .try_get_matches_from(["gqy", "models", "1"])
             .unwrap();
         let cli = Cli::from_arg_matches(&matches).unwrap();
 
@@ -13713,7 +13713,7 @@ mod repl_input_tests {
             Some(Command::Models(ModelsArgs { target: Some(ref target) })) if target == "1"
         ));
         let old_matches = localized_command()
-            .try_get_matches_from(["miyu", "providers"])
+            .try_get_matches_from(["gqy", "providers"])
             .unwrap();
         let old_cli = Cli::from_arg_matches(&old_matches).unwrap();
         assert!(old_cli.command.is_none());
@@ -13722,20 +13722,20 @@ mod repl_input_tests {
 
     #[test]
     fn variant_is_a_cli_subcommand_with_an_optional_name() {
-        let cli = parse_args(["miyu", "variant"].map(OsString::from).to_vec()).unwrap();
+        let cli = parse_args(["gqy", "variant"].map(OsString::from).to_vec()).unwrap();
         assert!(matches!(
             cli.command,
             Some(Command::Variant(VariantArgs { name: None }))
         ));
 
-        let cli = parse_args(["miyu", "variant", "high"].map(OsString::from).to_vec()).unwrap();
+        let cli = parse_args(["gqy", "variant", "high"].map(OsString::from).to_vec()).unwrap();
         assert!(matches!(
             cli.command,
             Some(Command::Variant(VariantArgs { name })) if name.as_deref() == Some("high")
         ));
 
         assert!(parse_args(
-            ["miyu", "variant", "high", "extra"]
+            ["gqy", "variant", "high", "extra"]
                 .map(OsString::from)
                 .to_vec()
         )
@@ -13746,7 +13746,7 @@ mod repl_input_tests {
     async fn one_shot_turns_default_to_a_throwaway_session() {
         let temp = tempfile::tempdir().unwrap();
         let root = temp.path();
-        let paths = MiyuPaths {
+        let paths = GQYPaths {
             root_dir: root.to_path_buf(),
             config_dir: root.join("config"),
             config_file: root.join("config/config.jsonc"),
@@ -13762,7 +13762,7 @@ mod repl_input_tests {
             system_scripts_dir: root.join("system-scripts"),
         };
 
-        // Neither flag: `miyu ask` / `miyu '<message>'` must not touch a real
+        // Neither flag: `gqy ask` / `gqy '<message>'` must not touch a real
         // conversation. `--continue` opts back into the terminal session.
         // Both resolve without contacting the daemon.
         assert_eq!(
@@ -13777,12 +13777,12 @@ mod repl_input_tests {
 
     #[test]
     fn continue_and_session_flags_are_mutually_exclusive() {
-        let cli = parse_args(["miyu", "-c", "hello"].map(OsString::from).to_vec()).unwrap();
+        let cli = parse_args(["gqy", "-c", "hello"].map(OsString::from).to_vec()).unwrap();
         assert!(cli.continue_session);
         assert_eq!(cli.message, vec!["hello".to_string()]);
 
         let cli = parse_args(
-            ["miyu", "--session", "2", "hello"]
+            ["gqy", "--session", "2", "hello"]
                 .map(OsString::from)
                 .to_vec(),
         )
@@ -13791,7 +13791,7 @@ mod repl_input_tests {
         assert_eq!(cli.session.as_deref(), Some("2"));
 
         assert!(parse_args(
-            ["miyu", "-c", "--session", "2", "hello"]
+            ["gqy", "-c", "--session", "2", "hello"]
                 .map(OsString::from)
                 .to_vec()
         )
@@ -13884,7 +13884,7 @@ mod repl_input_tests {
     #[test]
     fn web_is_a_cli_subcommand_with_local_server_options() {
         let cli = parse_args(
-            ["miyu", "web", "--port", "4100"]
+            ["gqy", "web", "--port", "4100"]
                 .map(OsString::from)
                 .to_vec(),
         )
@@ -13901,10 +13901,10 @@ mod repl_input_tests {
         ));
 
         for arg in ["stop", "status", "restart", "--status", "--stop"] {
-            assert!(parse_args(["miyu", "web", arg].map(OsString::from).to_vec()).is_err());
+            assert!(parse_args(["gqy", "web", arg].map(OsString::from).to_vec()).is_err());
         }
 
-        let cli = parse_args(["miyu", "web"].map(OsString::from).to_vec()).unwrap();
+        let cli = parse_args(["gqy", "web"].map(OsString::from).to_vec()).unwrap();
         assert!(matches!(
             cli.command,
             Some(Command::Web(WebArgs {
@@ -13916,7 +13916,7 @@ mod repl_input_tests {
             }))
         ));
 
-        let cli = parse_args(["miyu", "web", "-p"].map(OsString::from).to_vec()).unwrap();
+        let cli = parse_args(["gqy", "web", "-p"].map(OsString::from).to_vec()).unwrap();
         assert!(matches!(
             cli.command,
             Some(Command::Web(WebArgs {
@@ -13925,15 +13925,15 @@ mod repl_input_tests {
             })) if password.is_empty()
         ));
         for args in [
-            vec!["miyu", "web", "-p", "secret"],
-            vec!["miyu", "web", "--password=secret"],
-            vec!["miyu", "web", "-psecret"],
+            vec!["gqy", "web", "-p", "secret"],
+            vec!["gqy", "web", "--password=secret"],
+            vec!["gqy", "web", "-psecret"],
         ] {
             assert!(parse_args(args.into_iter().map(OsString::from).collect()).is_err());
         }
 
         let cli = parse_args(
-            ["miyu", "web", "--password-file", "/tmp/miyu-password"]
+            ["gqy", "web", "--password-file", "/tmp/gqy-password"]
                 .map(OsString::from)
                 .to_vec(),
         )
@@ -13944,10 +13944,10 @@ mod repl_input_tests {
                 password: None,
                 password_file: Some(path),
                 ..
-            })) if path == PathBuf::from("/tmp/miyu-password")
+            })) if path == PathBuf::from("/tmp/gqy-password")
         ));
 
-        assert!(parse_args(["miyu", "web", "--public"].map(OsString::from).to_vec(),).is_err());
+        assert!(parse_args(["gqy", "web", "--public"].map(OsString::from).to_vec(),).is_err());
     }
 
     #[test]
@@ -13998,7 +13998,7 @@ mod repl_input_tests {
     }
 
     #[test]
-    fn explicit_password_file_is_copied_into_private_miyu_state() {
+    fn explicit_password_file_is_copied_into_private_gqy_state() {
         let temp = tempfile::tempdir().unwrap();
         let paths = pop_test_paths(temp.path());
         let external = temp.path().join("external-password");
@@ -14027,7 +14027,7 @@ mod repl_input_tests {
             ("restart", "restart"),
             ("status", "status"),
         ] {
-            let cli = parse_args(["miyu", "daemon", arg].map(OsString::from).to_vec()).unwrap();
+            let cli = parse_args(["gqy", "daemon", arg].map(OsString::from).to_vec()).unwrap();
             let actual = match cli.command {
                 Some(Command::Daemon(DaemonArgs {
                     command: Some(DaemonCommand::Start),
@@ -14050,7 +14050,7 @@ mod repl_input_tests {
             assert_eq!(actual, expected);
         }
 
-        let cli = parse_args(["miyu", "daemon", "logs"].map(OsString::from).to_vec()).unwrap();
+        let cli = parse_args(["gqy", "daemon", "logs"].map(OsString::from).to_vec()).unwrap();
         assert!(matches!(
             cli.command,
             Some(Command::Daemon(DaemonArgs {
@@ -14060,7 +14060,7 @@ mod repl_input_tests {
         ));
 
         let cli = parse_args(
-            ["miyu", "daemon", "logs", "-n", "25"]
+            ["gqy", "daemon", "logs", "-n", "25"]
                 .map(OsString::from)
                 .to_vec(),
         )
@@ -14076,9 +14076,9 @@ mod repl_input_tests {
 
     #[test]
     fn reload_is_a_top_level_command() {
-        let cli = parse_args(["miyu", "reload"].map(OsString::from).to_vec()).unwrap();
+        let cli = parse_args(["gqy", "reload"].map(OsString::from).to_vec()).unwrap();
         assert!(matches!(cli.command, Some(Command::Reload)));
-        assert!(parse_args(["miyu", "reload", "extra"].map(OsString::from).to_vec()).is_err());
+        assert!(parse_args(["gqy", "reload", "extra"].map(OsString::from).to_vec()).is_err());
     }
 
     #[test]
@@ -14201,7 +14201,7 @@ mod repl_input_tests {
     #[test]
     fn daemon_accepts_a_port_and_defaults_to_start() {
         let cli = parse_args(
-            ["miyu", "daemon", "--port", "9412"]
+            ["gqy", "daemon", "--port", "9412"]
                 .map(OsString::from)
                 .to_vec(),
         )
@@ -14215,7 +14215,7 @@ mod repl_input_tests {
         ));
 
         let cli = parse_args(
-            ["miyu", "daemon", "--port", "9412", "restart"]
+            ["gqy", "daemon", "--port", "9412", "restart"]
                 .map(OsString::from)
                 .to_vec(),
         )
@@ -14229,7 +14229,7 @@ mod repl_input_tests {
         ));
 
         let cli = parse_args(
-            ["miyu", "daemon", "start", "--port", "9412"]
+            ["gqy", "daemon", "start", "--port", "9412"]
                 .map(OsString::from)
                 .to_vec(),
         )
@@ -14243,7 +14243,7 @@ mod repl_input_tests {
         ));
 
         assert!(parse_args(
-            ["miyu", "daemon", "--password"]
+            ["gqy", "daemon", "--password"]
                 .map(OsString::from)
                 .to_vec(),
         )
@@ -14275,19 +14275,19 @@ mod repl_input_tests {
     #[test]
     fn daemon_log_formatter_parses_targets_and_preserves_multiline_content() {
         let parsed = parse_daemon_log_line(
-            "2026-07-29T12:34:56.789Z  INFO miyu::qq: listener ready port=8090",
+            "2026-07-29T12:34:56.789Z  INFO gqy::qq: listener ready port=8090",
         )
         .unwrap();
         assert_eq!(parsed.level, "INFO");
-        assert_eq!(parsed.module, "miyu::qq");
+        assert_eq!(parsed.module, "gqy::qq");
         assert_eq!(parsed.message, "listener ready port=8090");
 
         let rendered = format_daemon_log_line(
-            "2026-07-29T12:34:56.789Z  INFO miyu::qq: listener ready port=8090",
+            "2026-07-29T12:34:56.789Z  INFO gqy::qq: listener ready port=8090",
             false,
         );
         assert!(!rendered.contains('\x1b'));
-        assert!(rendered.ends_with("[INFO] [miyu::qq] listener ready port=8090"));
+        assert!(rendered.ends_with("[INFO] [gqy::qq] listener ready port=8090"));
         assert_eq!(
             format_daemon_log_line("判断原因：保留这一行原有的内容", true),
             "判断原因：保留这一行原有的内容"
@@ -14298,7 +14298,7 @@ mod repl_input_tests {
     fn daemon_log_formatter_supports_legacy_lines_and_tty_colors() {
         let legacy = "2026-07-29T12:34:56.789Z  WARN OneBot connection closed reason=timeout";
         let parsed = parse_daemon_log_line(legacy).unwrap();
-        assert_eq!(parsed.module, "miyu");
+        assert_eq!(parsed.module, "gqy");
         assert_eq!(parsed.message, "OneBot connection closed reason=timeout");
 
         let rendered = format_daemon_log_line(legacy, true);
@@ -14313,7 +14313,7 @@ mod repl_input_tests {
         let mut reply = Vec::new();
         formatter
             .push(
-                b"2026-07-29T12:34:56.789Z  INFO miyu::qq: \xe3\x80\x90\xe7\xbb\xad\xe8\x81\x8a\xe7\xaa\x97\xe5\x8f\xa3\xe5\x88\xa4\xe6\x96\xad\xef\xbc\x9a\xe5\x9b\x9e\xe5\xa4\x8d\xe3\x80\x91\n\xe7\xbb\x93\xe6\x9e\x9c\xef\xbc\x9a\xe5\x9b\x9e\xe5\xa4\x8d\n",
+                b"2026-07-29T12:34:56.789Z  INFO gqy::qq: \xe3\x80\x90\xe7\xbb\xad\xe8\x81\x8a\xe7\xaa\x97\xe5\x8f\xa3\xe5\x88\xa4\xe6\x96\xad\xef\xbc\x9a\xe5\x9b\x9e\xe5\xa4\x8d\xe3\x80\x91\n\xe7\xbb\x93\xe6\x9e\x9c\xef\xbc\x9a\xe5\x9b\x9e\xe5\xa4\x8d\n",
                 true,
                 &mut reply,
             )
@@ -14324,7 +14324,7 @@ mod repl_input_tests {
         let mut no_reply = Vec::new();
         formatter
             .push(
-                b"2026-07-29T12:34:57.789Z  INFO miyu::qq: \xe3\x80\x90\xe4\xb8\xbb\xe5\x8a\xa8\xe5\x9b\x9e\xe5\xa4\x8d\xe5\x88\xa4\xe6\x96\xad\xef\xbc\x9a\xe4\xb8\x8d\xe5\x9b\x9e\xe5\xa4\x8d\xe3\x80\x91\n\xe7\xbb\x93\xe6\x9e\x9c\xef\xbc\x9a\xe4\xb8\x8d\xe5\x9b\x9e\xe5\xa4\x8d\n",
+                b"2026-07-29T12:34:57.789Z  INFO gqy::qq: \xe3\x80\x90\xe4\xb8\xbb\xe5\x8a\xa8\xe5\x9b\x9e\xe5\xa4\x8d\xe5\x88\xa4\xe6\x96\xad\xef\xbc\x9a\xe4\xb8\x8d\xe5\x9b\x9e\xe5\xa4\x8d\xe3\x80\x91\n\xe7\xbb\x93\xe6\x9e\x9c\xef\xbc\x9a\xe4\xb8\x8d\xe5\x9b\x9e\xe5\xa4\x8d\n",
                 true,
                 &mut no_reply,
             )
@@ -14336,13 +14336,13 @@ mod repl_input_tests {
         let mut reset = Vec::new();
         formatter
             .push(
-                b"2026-07-29T12:34:58.789Z  INFO miyu::qq: listener ready\nplain continuation\n",
+                b"2026-07-29T12:34:58.789Z  INFO gqy::qq: listener ready\nplain continuation\n",
                 false,
                 &mut reset,
             )
             .unwrap();
         let reset = String::from_utf8(reset).unwrap();
-        assert!(reset.ends_with("[INFO] [miyu::qq] listener ready\nplain continuation\n"));
+        assert!(reset.ends_with("[INFO] [gqy::qq] listener ready\nplain continuation\n"));
     }
 
     #[test]
@@ -14358,7 +14358,7 @@ mod repl_input_tests {
 
         let mut color = None;
         let timestamp = format_daemon_log_line_with_state(
-            "2026-07-29T12:34:56.789Z  INFO miyu::qq: ",
+            "2026-07-29T12:34:56.789Z  INFO gqy::qq: ",
             true,
             &mut color,
         );
@@ -14379,7 +14379,7 @@ mod repl_input_tests {
         let mut output = Vec::new();
         formatter
             .push(
-                b"2026-07-29T12:34:56.789Z  INFO miyu::qq: part",
+                b"2026-07-29T12:34:56.789Z  INFO gqy::qq: part",
                 false,
                 &mut output,
             )
@@ -14390,7 +14390,7 @@ mod repl_input_tests {
             .push(b"ial\n  continuation\nlast", false, &mut output)
             .unwrap();
         let rendered = String::from_utf8(output).unwrap();
-        assert!(rendered.contains("[INFO] [miyu::qq] partial\n"));
+        assert!(rendered.contains("[INFO] [gqy::qq] partial\n"));
         assert!(rendered.ends_with("  continuation\n"));
 
         let mut tail = Vec::new();
@@ -14405,13 +14405,13 @@ mod repl_input_tests {
         let logs_dir = paths.logs_dir();
         std::fs::create_dir_all(&logs_dir).unwrap();
         std::fs::write(
-            logs_dir.join("miyu.2026-07-28.log"),
-            "2026-07-28T12:00:00Z  INFO miyu::qq: old event\n  old continuation\n",
+            logs_dir.join("gqy.2026-07-28.log"),
+            "2026-07-28T12:00:00Z  INFO gqy::qq: old event\n  old continuation\n",
         )
         .unwrap();
         std::fs::write(
-            logs_dir.join("miyu.2026-07-29.log"),
-            "2026-07-29T12:00:00Z  WARN miyu::qq: new event\n  new continuation\n判断原因：保持多行\n",
+            logs_dir.join("gqy.2026-07-29.log"),
+            "2026-07-29T12:00:00Z  WARN gqy::qq: new event\n  new continuation\n判断原因：保持多行\n",
         )
         .unwrap();
 
@@ -14420,7 +14420,7 @@ mod repl_input_tests {
             lines,
             [
                 "  old continuation",
-                "2026-07-29T12:00:00Z  WARN miyu::qq: new event",
+                "2026-07-29T12:00:00Z  WARN gqy::qq: new event",
                 "  new continuation",
                 "判断原因：保持多行",
             ]
@@ -14431,7 +14431,7 @@ mod repl_input_tests {
             .collect::<Vec<_>>()
             .join("\n");
         assert!(!rendered.contains('\x1b'));
-        assert!(rendered.contains("[WARN] [miyu::qq] new event"));
+        assert!(rendered.contains("[WARN] [gqy::qq] new event"));
         assert!(rendered.ends_with("  new continuation\n判断原因：保持多行"));
     }
 
@@ -14443,8 +14443,8 @@ mod repl_input_tests {
         std::fs::create_dir_all(&logs_dir).unwrap();
         std::fs::write(logs_dir.join("daemon.log"), "startup banner\npanic: boom\n").unwrap();
         std::fs::write(
-            logs_dir.join("miyu.2026-07-29.log"),
-            "2026-07-29T12:00:00Z  INFO miyu::qq: listener ready\n",
+            logs_dir.join("gqy.2026-07-29.log"),
+            "2026-07-29T12:00:00Z  INFO gqy::qq: listener ready\n",
         )
         .unwrap();
 
@@ -14454,7 +14454,7 @@ mod repl_input_tests {
             [
                 "startup banner",
                 "panic: boom",
-                "2026-07-29T12:00:00Z  INFO miyu::qq: listener ready",
+                "2026-07-29T12:00:00Z  INFO gqy::qq: listener ready",
             ]
         );
     }
@@ -14466,7 +14466,7 @@ mod repl_input_tests {
         let logs_dir = paths.logs_dir();
         std::fs::create_dir_all(&logs_dir).unwrap();
         let fallback = logs_dir.join("daemon.log");
-        let rotating = logs_dir.join("miyu.2026-07-29.log");
+        let rotating = logs_dir.join("gqy.2026-07-29.log");
         std::fs::write(&fallback, b"before fallback\n").unwrap();
         std::fs::write(&rotating, b"before rotating\n").unwrap();
 
@@ -14503,8 +14503,8 @@ mod repl_input_tests {
         }
 
         let temp = tempfile::tempdir().unwrap();
-        let old = temp.path().join("miyu.2026-07-28.log");
-        let current = temp.path().join("miyu.2026-07-29.log");
+        let old = temp.path().join("gqy.2026-07-28.log");
+        let current = temp.path().join("gqy.2026-07-29.log");
         std::fs::write(&old, b"old partial").unwrap();
 
         let mut formatter = DaemonLogStreamFormatter::default();
@@ -14524,7 +14524,7 @@ mod repl_input_tests {
 
         std::fs::write(
             &current,
-            b"2026-07-29T12:00:00Z  INFO miyu::qq: first\n  continuation\n",
+            b"2026-07-29T12:00:00Z  INFO gqy::qq: first\n  continuation\n",
         )
         .unwrap();
         let mut offset = 0;
@@ -14537,7 +14537,7 @@ mod repl_input_tests {
                 .unwrap()
         );
 
-        append(&current, b"2026-07-29T12:00:01Z  INFO miyu::qq: \xe7\xbe");
+        append(&current, b"2026-07-29T12:00:01Z  INFO gqy::qq: \xe7\xbe");
         assert!(
             write_daemon_log_delta(&current, &mut offset, &mut formatter, false, &mut output,)
                 .unwrap()
@@ -14564,28 +14564,28 @@ mod repl_input_tests {
         assert!(!rendered.contains('\x1b'));
         assert_eq!(rendered.matches("old partial completed").count(), 1);
         assert_eq!(rendered.matches("old tail").count(), 1);
-        assert_eq!(rendered.matches("[INFO] [miyu::qq] first").count(), 1);
+        assert_eq!(rendered.matches("[INFO] [gqy::qq] first").count(), 1);
         assert_eq!(rendered.matches("  continuation").count(), 1);
-        assert_eq!(rendered.matches("[INFO] [miyu::qq] 群聊").count(), 1);
+        assert_eq!(rendered.matches("[INFO] [gqy::qq] 群聊").count(), 1);
         assert_eq!(rendered.matches("dangling").count(), 1);
         assert_eq!(rendered.matches("reset").count(), 1);
     }
 
     #[test]
     fn pop_is_a_cli_subcommand_with_an_optional_count() {
-        let cli = parse_args(["miyu", "pop"].map(OsString::from).to_vec()).unwrap();
+        let cli = parse_args(["gqy", "pop"].map(OsString::from).to_vec()).unwrap();
         assert!(matches!(
             cli.command,
             Some(Command::Pop(PopArgs { count: None }))
         ));
 
-        let cli = parse_args(["miyu", "pop", "3"].map(OsString::from).to_vec()).unwrap();
+        let cli = parse_args(["gqy", "pop", "3"].map(OsString::from).to_vec()).unwrap();
         assert!(matches!(
             cli.command,
             Some(Command::Pop(PopArgs { count: Some(3) }))
         ));
-        assert!(parse_args(["miyu", "pop", "0"].map(OsString::from).to_vec()).is_err());
-        assert!(parse_args(["miyu", "pop", "nope"].map(OsString::from).to_vec()).is_err());
+        assert!(parse_args(["gqy", "pop", "0"].map(OsString::from).to_vec()).is_err());
+        assert!(parse_args(["gqy", "pop", "nope"].map(OsString::from).to_vec()).is_err());
     }
 
     #[test]
@@ -14683,19 +14683,19 @@ mod repl_input_tests {
     #[test]
     fn debug_is_a_global_cli_option() {
         for args in [
-            &["miyu", "--debug", "models", "1"][..],
-            &["miyu", "models", "--debug", "1"][..],
-            &["miyu", "hello", "--debug"][..],
-            &["miyu", "ask", "hello", "--debug"][..],
+            &["gqy", "--debug", "models", "1"][..],
+            &["gqy", "models", "--debug", "1"][..],
+            &["gqy", "hello", "--debug"][..],
+            &["gqy", "ask", "hello", "--debug"][..],
         ] {
             let cli = parse_args(args.iter().map(OsString::from).collect()).unwrap();
             assert!(cli.debug);
         }
 
-        let cli = parse_args(["miyu", "hello", "--debug"].map(OsString::from).to_vec()).unwrap();
+        let cli = parse_args(["gqy", "hello", "--debug"].map(OsString::from).to_vec()).unwrap();
         assert_eq!(cli.message, ["hello"]);
 
-        let cli = parse_args(["miyu", "--", "--debug"].map(OsString::from).to_vec()).unwrap();
+        let cli = parse_args(["gqy", "--", "--debug"].map(OsString::from).to_vec()).unwrap();
         assert!(!cli.debug);
         assert_eq!(cli.message, ["--debug"]);
     }
@@ -15770,7 +15770,7 @@ mod repl_input_tests {
     #[test]
     fn repl_history_loads_user_messages_from_state() {
         let temp = tempfile::tempdir().unwrap();
-        let paths = MiyuPaths {
+        let paths = GQYPaths {
             root_dir: PathBuf::new(),
             config_dir: PathBuf::new(),
             config_file: PathBuf::new(),
@@ -15797,7 +15797,7 @@ mod repl_input_tests {
     }
 }
 
-fn run_history(paths: &MiyuPaths, args: HistoryArgs) -> Result<()> {
+fn run_history(paths: &GQYPaths, args: HistoryArgs) -> Result<()> {
     let state = StateStore::new(paths)?;
     run_history_with_state(&state, args)
 }
@@ -15841,7 +15841,7 @@ fn run_history_with_state(state: &StateStore, args: HistoryArgs) -> Result<()> {
     Ok(())
 }
 
-async fn run_kb(paths: &MiyuPaths, args: KbArgs) -> Result<()> {
+async fn run_kb(paths: &GQYPaths, args: KbArgs) -> Result<()> {
     let config = AppConfig::load(paths)?;
     let kb = tools::knowledge_base::KnowledgeBase::new(config, paths.clone())?;
     match args.command {
@@ -15903,7 +15903,7 @@ async fn run_kb(paths: &MiyuPaths, args: KbArgs) -> Result<()> {
     Ok(())
 }
 
-async fn run_update_default_kb(paths: &MiyuPaths) -> Result<()> {
+async fn run_update_default_kb(paths: &GQYPaths) -> Result<()> {
     let config = AppConfig::load_or_default(paths)?;
     let state = crate::default_kb::update(paths, &config, |stage| {
         let mut stderr = io::stderr().lock();
@@ -15943,7 +15943,7 @@ mod default_kb_progress_tests {
     }
 }
 
-fn run_memory(paths: &MiyuPaths, args: MemoryArgs) -> Result<()> {
+fn run_memory(paths: &GQYPaths, args: MemoryArgs) -> Result<()> {
     let config = AppConfig::load_or_default(paths)?;
     let store = MemoryStore::new(&config, paths);
     match args.command {
@@ -15966,7 +15966,7 @@ fn run_memory(paths: &MiyuPaths, args: MemoryArgs) -> Result<()> {
     Ok(())
 }
 
-fn run_skills(paths: &MiyuPaths, args: SkillsArgs) -> Result<()> {
+fn run_skills(paths: &GQYPaths, args: SkillsArgs) -> Result<()> {
     std::fs::create_dir_all(&paths.skills_dir)?;
     match args.command {
         SkillsCommand::List => {
@@ -16037,7 +16037,7 @@ fn run_skills(paths: &MiyuPaths, args: SkillsArgs) -> Result<()> {
     Ok(())
 }
 
-fn skill_names(paths: &MiyuPaths) -> Result<Vec<String>> {
+fn skill_names(paths: &GQYPaths) -> Result<Vec<String>> {
     let mut names = Vec::new();
     if !paths.skills_dir.exists() {
         return Ok(names);
@@ -16052,7 +16052,7 @@ fn skill_names(paths: &MiyuPaths) -> Result<Vec<String>> {
     Ok(names)
 }
 
-fn skill_dir(paths: &MiyuPaths, name: &str) -> Result<PathBuf> {
+fn skill_dir(paths: &GQYPaths, name: &str) -> Result<PathBuf> {
     let clean = name.trim();
     if clean.is_empty()
         || clean.contains('/')
@@ -16069,20 +16069,20 @@ fn skill_dir(paths: &MiyuPaths, name: &str) -> Result<PathBuf> {
     Ok(dir)
 }
 
-async fn run_reset(paths: &MiyuPaths) -> Result<()> {
+async fn run_reset(paths: &GQYPaths) -> Result<()> {
     let config = AppConfig::load_or_default(paths)?;
     let state = StateStore::new(paths)?;
     let memory = MemoryStore::new(&config, paths);
     state.reset_conversation()?;
     memory.clear_evicted_context()?;
     memory.clear_pending_events()?;
-    tools::clear_aur_review_state(paths)?;
+    tools::clear_brew_review_state(paths)?;
     Ok(())
 }
 
-/// `miyu reset-memory`:清空当前人格的长期记忆。daemon 在跑走 IPC,
+/// `gqy reset-memory`:清空当前人格的长期记忆。daemon 在跑走 IPC,
 /// 否则本地直清;终端确认后执行。
-async fn run_reset_memory_command(paths: &MiyuPaths) -> Result<()> {
+async fn run_reset_memory_command(paths: &GQYPaths) -> Result<()> {
     if !io::stdin().is_terminal() {
         bail!(
             "{}",
@@ -16111,12 +16111,12 @@ async fn run_reset_memory_command(paths: &MiyuPaths) -> Result<()> {
 
 fn wipe_summary() -> &'static str {
     t(
-        "This erases everything Miyu has accumulated: memory, every conversation's contents, group-chat contexts, and auto-generated skills. It cannot be undone.",
-        "这会抹掉 Miyu 积累的一切：记忆、所有会话的内容、群聊上下文、自动生成的技能。不可撤销。",
+        "This erases everything GQY has accumulated: memory, every conversation's contents, group-chat contexts, and auto-generated skills. It cannot be undone.",
+        "这会抹掉 GQY 积累的一切：记忆、所有会话的内容、群聊上下文、自动生成的技能。不可撤销。",
     )
 }
 
-async fn run_wipe(paths: &MiyuPaths, assume_yes: bool) -> Result<()> {
+async fn run_wipe(paths: &GQYPaths, assume_yes: bool) -> Result<()> {
     if !assume_yes {
         if !io::stdin().is_terminal() {
             bail!(
@@ -16151,7 +16151,7 @@ async fn run_wipe(paths: &MiyuPaths, assume_yes: bool) -> Result<()> {
         state.reset_persona_contexts(&persona, "onebot")?;
         state.reset_conversation_usage()?;
         MemoryStore::new(&config, paths).reset_all(true)?;
-        tools::clear_aur_review_state(paths)?;
+        tools::clear_brew_review_state(paths)?;
     }
     println!("{}", print_wipe_message());
     Ok(())
@@ -16175,7 +16175,7 @@ fn join_message(parts: Vec<String>) -> String {
 
 pub(crate) fn build_tool_registry(
     config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     mode: AgentMode,
     interactive_questions: bool,
 ) -> Result<tools::ToolRegistry> {
@@ -16314,7 +16314,7 @@ mod remote_tool_image_tests {
         assert!(validate_ipc_command_response(Some(IpcFrame::Ack)).is_ok());
         let rejected = validate_ipc_command_response(Some(IpcFrame::Error {
             code: None,
-            message: "Miyu is busy with another operation".to_string(),
+            message: "GQY is busy with another operation".to_string(),
         }))
         .unwrap_err();
         assert!(rejected.to_string().contains("busy with another operation"));

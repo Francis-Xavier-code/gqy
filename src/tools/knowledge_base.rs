@@ -1,6 +1,6 @@
 use super::{ToolRegistry, ToolSpec};
 use crate::config::{AppConfig, KnowledgeBasePluginConfig, ProviderConfig};
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use anyhow::{bail, Context, Result};
 use chrono::Local;
 use reqwest::Client;
@@ -13,7 +13,7 @@ use std::process::Stdio;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tokio::process::Command;
 
-pub fn register(registry: &mut ToolRegistry, config: AppConfig, paths: MiyuPaths) {
+pub fn register(registry: &mut ToolRegistry, config: AppConfig, paths: GQYPaths) {
     register_readonly(registry, config.clone(), paths.clone());
     if config.plugins.knowledge_base.upload_tool_enabled {
         let upload_config = config.clone();
@@ -81,7 +81,7 @@ pub fn register(registry: &mut ToolRegistry, config: AppConfig, paths: MiyuPaths
     }
 }
 
-pub fn register_readonly(registry: &mut ToolRegistry, config: AppConfig, paths: MiyuPaths) {
+pub fn register_readonly(registry: &mut ToolRegistry, config: AppConfig, paths: GQYPaths) {
     registry.register(ToolSpec::new(
         "search_knowledge_base",
         "Search the local knowledge base content. Returns file paths and original text snippets. Use read_knowledge_base_file if snippets are insufficient. Mention paths only when useful or when the user asks.",
@@ -160,7 +160,7 @@ pub struct KnowledgeBase {
 }
 
 impl KnowledgeBase {
-    pub fn new(config: AppConfig, paths: MiyuPaths) -> Result<Self> {
+    pub fn new(config: AppConfig, paths: GQYPaths) -> Result<Self> {
         let root = kb_root(&config.plugins.knowledge_base, &paths);
         let files_dir = root.join("files");
         let meta_db = root.join("kb_meta.db");
@@ -592,7 +592,7 @@ impl KnowledgeBase {
                         lock_path.display()
                     );
                     println!(
-                        "if no miyu reindex process is running, remove the stale lock file and retry"
+                        "if no gqy reindex process is running, remove the stale lock file and retry"
                     );
                 }
                 return Ok(0);
@@ -992,7 +992,7 @@ struct Chunk {
     text: String,
 }
 
-async fn tool_search_readonly(args: Value, config: AppConfig, paths: MiyuPaths) -> Result<String> {
+async fn tool_search_readonly(args: Value, config: AppConfig, paths: GQYPaths) -> Result<String> {
     ensure_enabled(&config)?;
     let query = args
         .get("query")
@@ -1012,7 +1012,7 @@ async fn tool_search_readonly(args: Value, config: AppConfig, paths: MiyuPaths) 
         .to_string())
 }
 
-async fn tool_find_readonly(args: Value, config: AppConfig, paths: MiyuPaths) -> Result<String> {
+async fn tool_find_readonly(args: Value, config: AppConfig, paths: GQYPaths) -> Result<String> {
     ensure_enabled(&config)?;
     let query = args
         .get("file_name_query")
@@ -1031,7 +1031,7 @@ async fn tool_find_readonly(args: Value, config: AppConfig, paths: MiyuPaths) ->
         .to_string())
 }
 
-async fn tool_read_readonly(args: Value, config: AppConfig, paths: MiyuPaths) -> Result<String> {
+async fn tool_read_readonly(args: Value, config: AppConfig, paths: GQYPaths) -> Result<String> {
     ensure_enabled(&config)?;
     let name = args
         .get("file_name")
@@ -1049,7 +1049,7 @@ async fn tool_read_readonly(args: Value, config: AppConfig, paths: MiyuPaths) ->
     KnowledgeBase::new(config, paths)?.read_file_readonly(name, start_line, max_lines)
 }
 
-async fn tool_upload(args: Value, config: AppConfig, paths: MiyuPaths) -> Result<String> {
+async fn tool_upload(args: Value, config: AppConfig, paths: GQYPaths) -> Result<String> {
     ensure_enabled(&config)?;
     if !config.plugins.knowledge_base.upload_tool_enabled {
         bail!("knowledge base upload tool is disabled")
@@ -1108,7 +1108,7 @@ async fn tool_upload(args: Value, config: AppConfig, paths: MiyuPaths) -> Result
     .to_string())
 }
 
-async fn tool_edit(args: Value, config: AppConfig, paths: MiyuPaths) -> Result<String> {
+async fn tool_edit(args: Value, config: AppConfig, paths: GQYPaths) -> Result<String> {
     ensure_enabled(&config)?;
     let name = args
         .get("file_name")
@@ -1138,12 +1138,12 @@ async fn tool_edit(args: Value, config: AppConfig, paths: MiyuPaths) -> Result<S
         "old_line_count": result.old_line_count,
         "new_line_count": result.new_line_count,
         "semantic_refreshed": result.semantic_refreshed,
-        "warning": if name.starts_with("default-kb/") { Some("default-kb files may be overwritten by miyu update-default-kb") } else { None::<&str> },
+        "warning": if name.starts_with("default-kb/") { Some("default-kb files may be overwritten by gqy update-default-kb") } else { None::<&str> },
     })
     .to_string())
 }
 
-async fn tool_remove(args: Value, config: AppConfig, paths: MiyuPaths) -> Result<String> {
+async fn tool_remove(args: Value, config: AppConfig, paths: GQYPaths) -> Result<String> {
     ensure_enabled(&config)?;
     let name = args
         .get("file_name")
@@ -1158,7 +1158,7 @@ async fn tool_remove(args: Value, config: AppConfig, paths: MiyuPaths) -> Result
     Ok(json!({
         "ok": true,
         "path": rel,
-        "warning": if name.starts_with("default-kb/") { Some("default-kb files may be restored by miyu update-default-kb") } else { None::<&str> },
+        "warning": if name.starts_with("default-kb/") { Some("default-kb files may be restored by gqy update-default-kb") } else { None::<&str> },
     })
     .to_string())
 }
@@ -1242,7 +1242,7 @@ fn init_semantic_db(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
-fn kb_root(config: &KnowledgeBasePluginConfig, paths: &MiyuPaths) -> PathBuf {
+fn kb_root(config: &KnowledgeBasePluginConfig, paths: &GQYPaths) -> PathBuf {
     let configured = config.data_dir.trim();
     if configured.is_empty() {
         paths.data_dir.join("kb")
@@ -1584,10 +1584,10 @@ fn slug(value: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::paths::MiyuPaths;
+    use crate::paths::GQYPaths;
 
-    fn test_paths(root: &Path) -> MiyuPaths {
-        MiyuPaths {
+    fn test_paths(root: &Path) -> GQYPaths {
+        GQYPaths {
             root_dir: root.to_path_buf(),
             config_dir: root.join("config"),
             config_file: root.join("config/config.jsonc"),
@@ -1596,7 +1596,7 @@ mod tests {
             cache_dir: root.join("cache"),
             state_dir: root.join("state"),
             pictures_dir: root.join("pictures"),
-            fish_hook_file: root.join("fish/conf.d/miyu.fish"),
+            fish_hook_file: root.join("fish/conf.d/gqy.fish"),
             bash_hook_file: root.join("config/shell/bash-hook.sh"),
             zsh_hook_file: root.join("config/shell/zsh-hook.zsh"),
             scripts_dir: root.join("config/scripts"),

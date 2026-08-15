@@ -118,7 +118,7 @@ fn clip(value: &str) -> String {
 fn client() -> reqwest::Client {
     reqwest::Client::builder()
         .timeout(Duration::from_secs(10))
-        .user_agent("miyu/0.1")
+        .user_agent("gqy/0.1")
         .build()
         .expect("valid reqwest client")
 }

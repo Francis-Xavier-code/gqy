@@ -48,7 +48,7 @@ impl PlatformPlugin for AccessManagerPlugin {
         registry.register(
             ToolSpec::new(
                 "manage_platform_access",
-                "Directly manage Miyu's QQ administrators, private-chat whitelist, and group-chat whitelist. Call this when the current Miyu administrator asks to grant, revoke, or list access. Grant and revoke take effect immediately. The Rust host sends the final QQ result, so do not call send_message_to_user and do not add another acknowledgement.",
+                "Directly manage GQY's QQ administrators, private-chat whitelist, and group-chat whitelist. Call this when the current GQY administrator asks to grant, revoke, or list access. Grant and revoke take effect immediately. The Rust host sends the final QQ result, so do not call send_message_to_user and do not add another acknowledgement.",
                 json!({
                     "type": "object",
                     "properties": {
@@ -89,7 +89,7 @@ async fn manage_access(arguments: Value, context: Arc<PlatformTurnContext>) -> R
         Ok(response) => response,
         Err(error) => {
             tracing::warn!(
-                target: "miyu::qq",
+                target: "gqy::qq",
                 error = %error,
                 sender_id = %context.sender_id,
                 "platform access tool request failed"
@@ -108,7 +108,7 @@ async fn manage_access(arguments: Value, context: Arc<PlatformTurnContext>) -> R
 
 fn execute_access(arguments: &Value, context: &PlatformTurnContext) -> Result<String> {
     if context.conversation.platform != ONEBOT_PLATFORM || !effective_admin(context) {
-        bail!("platform access management requires a current Miyu administrator");
+        bail!("platform access management requires a current GQY administrator");
     }
     let operation = required_string(arguments, "operation")?;
     if operation == "list" {
@@ -185,7 +185,7 @@ fn apply_change(
             )?;
         match result {
             PlatformAccessMutationResult::Unauthorized => {
-                bail!("the requesting user is no longer a Miyu administrator")
+                bail!("the requesting user is no longer a GQY administrator")
             }
             PlatformAccessMutationResult::Unchanged => Ok(match operation {
                 PlatformAccessMutation::Grant => existing_message(permission, target_id),
@@ -193,7 +193,7 @@ fn apply_change(
             }),
             PlatformAccessMutationResult::Changed => {
                 tracing::info!(
-                    target: "miyu::qq",
+                    target: "gqy::qq",
                     operation = ?operation,
                     permission = permission.as_str(),
                     target_id,
@@ -377,7 +377,7 @@ fn format_access_list(
                     &context.sender_id,
                 ),
             )?
-            .context("the requesting user is no longer a Miyu administrator")?;
+            .context("the requesting user is no longer a GQY administrator")?;
         Ok((qq.clone(), grants))
     })?;
     let permissions = selected.map_or_else(
@@ -474,7 +474,7 @@ fn join_ids(ids: &[i64]) -> String {
 mod tests {
     use super::*;
     use crate::config::AppConfig;
-    use crate::paths::MiyuPaths;
+    use crate::paths::GQYPaths;
     use crate::platforms::plugins::PlatformPluginRegistry;
     use crate::platforms::{
         OutboundBody, OutboundMessage, OutboundSegment, PlatformAdapter, PlatformConversation,
@@ -503,12 +503,12 @@ mod tests {
         }
 
         fn bot_display_name<'a>(&'a self) -> BoxFuture<'a, Result<String>> {
-            Box::pin(async { Ok("Miyu".to_string()) })
+            Box::pin(async { Ok("GQY".to_string()) })
         }
     }
 
-    fn test_paths(root: &std::path::Path) -> MiyuPaths {
-        MiyuPaths {
+    fn test_paths(root: &std::path::Path) -> GQYPaths {
+        GQYPaths {
             root_dir: root.to_path_buf(),
             config_dir: root.join("config"),
             config_file: root.join("config/config.jsonc"),
@@ -517,7 +517,7 @@ mod tests {
             cache_dir: root.join("cache"),
             state_dir: root.join("state"),
             pictures_dir: root.join("pictures"),
-            fish_hook_file: root.join("fish/miyu.fish"),
+            fish_hook_file: root.join("fish/gqy.fish"),
             bash_hook_file: root.join("shell/bash-hook.sh"),
             zsh_hook_file: root.join("shell/zsh-hook.zsh"),
             scripts_dir: root.join("config/scripts"),
@@ -526,7 +526,7 @@ mod tests {
     }
 
     fn test_context(
-        paths: &MiyuPaths,
+        paths: &GQYPaths,
         state: StateStore,
         adapter: Arc<RecordingAdapter>,
         static_admin: bool,

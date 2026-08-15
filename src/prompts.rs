@@ -1,6 +1,6 @@
 use base64::Engine;
 
-include!(concat!(env!("OUT_DIR"), "/default_miyu_prompt.rs"));
+include!(concat!(env!("OUT_DIR"), "/default_gqy_prompt.rs"));
 
 pub const MEME_DESCRIPTION_PROMPT: &str = include_str!("prompts/meme-description.md");
 pub const COMPACT_SYSTEM_PROMPT: &str = include_str!("prompts/compact.md");
@@ -21,14 +21,14 @@ pub fn default_system_prompt() -> String {
     decode_embedded_prompt(OBFUSCATED_DEFAULT_SYSTEM_PROMPT)
 }
 
-/// 默认 Miyu 人格的内置防失忆提示(A/B 实测定稿文本)。用户在
+/// 默认 GQY 人格的内置防失忆提示(A/B 实测定稿文本)。用户在
 /// hints/default.md 写了自己的内容时被覆盖。
-pub fn default_miyu_hint() -> String {
-    decode_embedded_prompt(OBFUSCATED_DEFAULT_MIYU_HINT)
+pub fn default_gqy_hint() -> String {
+    decode_embedded_prompt(OBFUSCATED_DEFAULT_GQY_HINT)
 }
 
-/// 默认 Miyu 人格的内置预设对话(begin_dialogs)。用户在
+/// 默认 GQY 人格的内置预设对话(begin_dialogs)。用户在
 /// dialogs/default.md 写了自己的内容时被覆盖。
-pub fn default_miyu_dialogs() -> String {
-    decode_embedded_prompt(OBFUSCATED_DEFAULT_MIYU_DIALOGS)
+pub fn default_gqy_dialogs() -> String {
+    decode_embedded_prompt(OBFUSCATED_DEFAULT_GQY_DIALOGS)
 }

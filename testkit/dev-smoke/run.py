@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """dev REPL daemon 形态冒烟(验收问题二复验)。
 
-复验路径:隔离 home + 隔离 XDG_RUNTIME_DIR + 独立端口起 debug daemon →
-PTY 进 `miyu dev` → 你好一轮 → 断言:无「找不到该会话」、会话挂 dev 人格、
+复验路径:隔离 home + 隔离 runtime 目录 + 独立端口起 debug daemon →
+PTY 进 `gqy dev` → 你好一轮 → 断言:无「找不到该会话」、会话挂 dev 人格、
 /new 可用、重进复用指针不泄漏新会话、dev 记忆目录落盘。
 真实供应商真实一轮(照 persona-ab 先例);绝不触碰线上 8300 daemon。
 """
@@ -18,10 +18,10 @@ import time
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-MIYU = REPO / "target" / "debug" / "miyu"
+GQY = REPO / "target" / "debug" / "gqy"
 BASE = Path(__file__).resolve().parent
 HOME = BASE / "home"
-RUN = BASE / "xdg-run"
+RUN = BASE / "runtime"
 LOGS = BASE / "results"
 PORT = 18390
 
@@ -52,9 +52,9 @@ def build_home() -> None:
 
 def env() -> dict:
     e = dict(os.environ)
-    e["MIYU_HOME"] = str(HOME)
+    e["GQY_HOME"] = str(HOME)
     e["XDG_RUNTIME_DIR"] = str(RUN)
-    e.pop("MIYU_DIRECT", None)
+    e.pop("GQY_DIRECT", None)
     e["TERM"] = "xterm-256color"
     e.setdefault("LANG", "zh_CN.UTF-8")
     return e
@@ -64,7 +64,7 @@ def daemon(*args: str) -> subprocess.CompletedProcess:
     # --port 只有 start/restart 认;stop 传了直接报错。
     port = ("--port", str(PORT)) if args[:1] != ("stop",) else ()
     return subprocess.run(
-        [str(MIYU), "daemon", *port, *args],
+        [str(GQY), "daemon", *port, *args],
         env=env(),
         capture_output=True,
         text=True,
@@ -82,7 +82,7 @@ def db_query(sql: str, args=()):  # daemon 形态下 DB 仍在 home/state 下
 
 
 class DevRepl(persona_ab.Repl):
-    """persona-ab 的 PTY 驱动,换成 daemon 形态 `miyu dev`。"""
+    """persona-ab 的 PTY 驱动,换成 daemon 形态 `gqy dev`。"""
 
     def __init__(self, home: Path, log: Path):
         import fcntl
@@ -98,7 +98,7 @@ class DevRepl(persona_ab.Repl):
         self.master, slave = pty.openpty()
         fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack("HHHH", 40, 140, 0, 0))
         self.proc = subprocess.Popen(
-            [str(MIYU), "dev"],
+            [str(GQY), "dev"],
             stdin=slave,
             stdout=slave,
             stderr=slave,
@@ -120,7 +120,7 @@ def dev_sessions():
 
 
 def main() -> int:
-    assert MIYU.exists(), f"先 cargo build:缺 {MIYU}"
+    assert GQY.exists(), f"先 cargo build:缺 {GQY}"
     build_home()
     LOGS.mkdir(exist_ok=True)
     failures = []

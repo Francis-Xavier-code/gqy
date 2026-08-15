@@ -7,6 +7,6 @@ pub fn register(registry: &mut ToolRegistry) {
         "ask_question",
         "Ask the user a structured question during the current response.",
         json!({"type":"object","properties":{},"additionalProperties":false}),
-        |_| async move { bail!("ask_question requires an active interactive Miyu session") },
+        |_| async move { bail!("ask_question requires an active interactive GQY session") },
     ));
 }

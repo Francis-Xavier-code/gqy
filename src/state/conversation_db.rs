@@ -48,7 +48,7 @@ pub enum ReplayEntry {
 }
 
 /// `app_state` key prefixes for the two persona-scoped session pointers. The
-/// terminal lane (shell-hook, `miyu new`/`session`) and the REPL lane move
+/// terminal lane (shell-hook, `gqy new`/`session`) and the REPL lane move
 /// independently; one-shot `ask` turns use neither.
 const CURRENT_SESSION_POINTER: &str = "current_session_persona";
 const REPL_SESSION_POINTER: &str = "repl_session_persona";
@@ -1780,7 +1780,7 @@ impl ConversationDb {
     }
 
     /// Deletes abandoned one-shot sessions older than the retention window. A
-    /// `miyu ask` turn deletes its own session; anything still here was
+    /// `gqy ask` turn deletes its own session; anything still here was
     /// orphaned by a client that died mid-turn (Ctrl+C, SIGKILL).
     pub fn delete_ask_sessions_older_than(&self, hours: i64) -> Result<usize> {
         let mut conn = self.conn.lock().unwrap();

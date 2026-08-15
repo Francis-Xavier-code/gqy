@@ -2,7 +2,7 @@ use crate::default_models::{
     OPENCODE_DEFAULT_CHAT_MODEL, OPENCODE_DEFAULT_VISION_MODEL, OPENCODE_PROVIDER_ID,
     OPENCODE_ZEN_BASE_URL,
 };
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use crate::prompts::default_system_prompt;
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Deserializer, Serialize};
@@ -55,8 +55,8 @@ pub struct AppConfig {
     pub memory: MemoryConfig,
     #[serde(default)]
     pub system_prompt_file: Option<String>,
-    /// 裸 `miyu` 的默认模式:"normal" | "dev";空(默认)=打印带模式说明的
-    /// 帮助,逼一次显式选择。`miyu normal` / `miyu dev` 子命令始终可用。
+    /// 裸 `gqy` 的默认模式:"normal" | "dev";空(默认)=打印带模式说明的
+    /// 帮助,逼一次显式选择。`gqy normal` / `gqy dev` 子命令始终可用。
     #[serde(default)]
     pub default_mode: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1493,7 +1493,7 @@ fn normalize_unique_strings(values: &mut Vec<String>) {
 
 fn default_real_context_moderation_keywords() -> Vec<String> {
     // Deduplicated from the user's deployed AstrBot real-context configuration.
-    // Keep this self-contained so Miyu never reads another application's files.
+    // Keep this self-contained so GQY never reads another application's files.
     const KEYWORDS: &[&str] = &[
         "3p",
         "4p",
@@ -1785,7 +1785,7 @@ impl Default for PlatformMemoryConfig {
 pub enum PlatformPersonaOverride {
     #[default]
     Inherit,
-    Miyu,
+    GQY,
     Custom {
         name: String,
     },
@@ -2289,7 +2289,7 @@ pub struct DisplayConfig {
 pub struct NotificationsConfig {
     #[serde(default = "default_true")]
     pub enabled: bool,
-    /// Notify when a reply finishes and Miyu is waiting on you again.
+    /// Notify when a reply finishes and GQY is waiting on you again.
     #[serde(default = "default_true")]
     pub on_turn_complete: bool,
     /// shellhook/单次 CLI 触发的后台任务完成后,把跟进回复写回触发它的那个
@@ -2774,8 +2774,8 @@ pub struct PluginsConfig {
     pub memes: MemesPluginConfig,
     #[serde(default)]
     pub knowledge_base: KnowledgeBasePluginConfig,
-    #[serde(default)]
-    pub archlinux: PluginEnabledConfig,
+    #[serde(default, alias = "archlinux")]
+    pub brew: PluginEnabledConfig,
     #[serde(default)]
     pub man: PluginEnabledConfig,
     #[serde(default)]
@@ -3209,7 +3209,7 @@ impl Default for PluginsConfig {
             print_image: PrintImagePluginConfig::default(),
             memes: MemesPluginConfig::default(),
             knowledge_base: KnowledgeBasePluginConfig::default(),
-            archlinux: PluginEnabledConfig::default(),
+            brew: PluginEnabledConfig::default(),
             man: PluginEnabledConfig::default(),
             moegirl: PluginEnabledConfig::default(),
             hash_codec: PluginEnabledConfig::default(),
@@ -3383,7 +3383,7 @@ impl MemesPluginConfig {
                 .persona_libraries
                 .get("default")
                 .cloned()
-                .unwrap_or_else(|| "miyu".to_string());
+                .unwrap_or_else(|| "gqy".to_string());
         }
         let persona = persona_scope_name(persona);
         self.persona_libraries
@@ -3637,7 +3637,7 @@ impl ProviderConfig {
         crate::models_cache::input_modalities(&self.id, model)
     }
 
-    pub fn resolved_api_keys(&self, _paths: &MiyuPaths) -> Result<Vec<ResolvedProviderKey>> {
+    pub fn resolved_api_keys(&self, _paths: &GQYPaths) -> Result<Vec<ResolvedProviderKey>> {
         let mut keys = Vec::new();
         if let Some(api_key) = self.api_key.as_deref() {
             append_resolved_api_keys(&mut keys, api_key)?;
@@ -3769,7 +3769,7 @@ fn is_positive_decimal_id(value: &str) -> bool {
 }
 
 impl AppConfig {
-    pub fn display_language_hint(paths: &MiyuPaths) -> Option<String> {
+    pub fn display_language_hint(paths: &GQYPaths) -> Option<String> {
         let raw = std::fs::read_to_string(&paths.config_file).ok()?;
         let stripped = json_comments::StripComments::new(raw.as_bytes());
         let value: serde_json::Value = serde_json::from_reader(stripped).ok()?;
@@ -3788,7 +3788,7 @@ impl AppConfig {
         }
     }
 
-    pub fn load(paths: &MiyuPaths) -> Result<Self> {
+    pub fn load(paths: &GQYPaths) -> Result<Self> {
         // Platform multimodal routes may rely on cached models.dev
         // capabilities. Load the full cache before validation; callers can
         // compact it to their active configuration afterwards.
@@ -3808,7 +3808,7 @@ impl AppConfig {
         Ok(config)
     }
 
-    pub fn load_or_default(paths: &MiyuPaths) -> Result<Self> {
+    pub fn load_or_default(paths: &GQYPaths) -> Result<Self> {
         if paths.config_file.exists() {
             Self::load(paths)
         } else {
@@ -3816,12 +3816,12 @@ impl AppConfig {
         }
     }
 
-    pub fn init_files(paths: &MiyuPaths) -> Result<()> {
+    pub fn init_files(paths: &GQYPaths) -> Result<()> {
         paths.create_dirs()?;
         if !paths.config_file.exists() {
             Self::default().save(paths)?;
         }
-        // Dev 模式提示词:一行、可编辑、不混淆(与 Miyu 人格提示词的内嵌
+        // Dev 模式提示词:一行、可编辑、不混淆(与 GQY 人格提示词的内嵌
         // 不可编辑形成对照)。缺失时写默认;用户改成什么都以文件为准。
         let dev_prompt = paths.config_dir.join(DEV_PROMPT_FILE);
         if !dev_prompt.exists() {
@@ -3832,7 +3832,7 @@ impl AppConfig {
 
     /// Dev 模式系统提示词:读 `config/dev-prompt.md`,缺失或清空回退内置
     /// 默认一行(极简原则 + 贴近训练分布的措辞,见 08-15 实验记录)。
-    pub fn dev_system_prompt(&self, paths: &MiyuPaths) -> Result<String> {
+    pub fn dev_system_prompt(&self, paths: &GQYPaths) -> Result<String> {
         let path = paths.config_dir.join(DEV_PROMPT_FILE);
         match std::fs::read_to_string(&path) {
             Ok(content) if !content.trim().is_empty() => Ok(content.trim().to_string()),
@@ -3840,7 +3840,7 @@ impl AppConfig {
         }
     }
 
-    pub fn save(&self, paths: &MiyuPaths) -> Result<()> {
+    pub fn save(&self, paths: &GQYPaths) -> Result<()> {
         let mut config = self.clone();
         config.migrate()?;
         config.normalize_api_quota_accounts();
@@ -3978,7 +3978,7 @@ impl AppConfig {
         normalize_api_quota_provider(&mut self.plugins.api_quota.openrouter);
     }
 
-    fn normalize_managed_output_paths(&mut self, paths: &MiyuPaths) {
+    fn normalize_managed_output_paths(&mut self, paths: &GQYPaths) {
         let Some(base) = directories::BaseDirs::new() else {
             return;
         };
@@ -3992,15 +3992,15 @@ impl AppConfig {
             })
             .unwrap_or_else(|| base.home_dir().join("Pictures"));
         // The XDG data root is a legacy root too: an upgrade that ran while
-        // `data_dir` still pointed at `~/.local/share/miyu` remapped these
+        // `data_dir` still pointed at `~/.local/share/gqy` remapped these
         // fields onto it and persisted the result, so the value we now have to
         // heal is one this function itself wrote.
-        let legacy_data = base.data_dir().join("miyu");
+        let legacy_data = base.data_dir().join("gqy");
         if let Some((from, to)) = remap_managed_output_dir(
             &mut self.plugins.deep_research.output_dir,
             &[
-                documents.join("Miyu"),
-                documents.join("miyu"),
+                documents.join("GQY"),
+                documents.join("gqy"),
                 legacy_data.join("documents"),
             ],
             &paths.data_dir.join("documents"),
@@ -4011,8 +4011,8 @@ impl AppConfig {
         if let Some((from, to)) = remap_managed_output_dir(
             &mut self.plugins.image_generation.output_dir,
             &[
-                pictures.join("miyu"),
-                pictures.join("Miyu"),
+                pictures.join("gqy"),
+                pictures.join("GQY"),
                 legacy_data.join("pictures"),
             ],
             &paths.data_dir.join("pictures"),
@@ -4547,7 +4547,7 @@ impl AppConfig {
             .unwrap_or_default();
         match persona {
             PlatformPersonaOverride::Inherit => {}
-            PlatformPersonaOverride::Miyu => self.prompt.active_persona.clear(),
+            PlatformPersonaOverride::GQY => self.prompt.active_persona.clear(),
             PlatformPersonaOverride::Custom { name } => self.prompt.active_persona = name,
         }
     }
@@ -5159,11 +5159,11 @@ impl AppConfig {
             }))
     }
 
-    pub fn system_prompt(&self, paths: &MiyuPaths) -> Result<String> {
+    pub fn system_prompt(&self, paths: &GQYPaths) -> Result<String> {
         self.system_prompt_for(paths, PromptAudience::Owner)
     }
 
-    pub fn system_prompt_for(&self, paths: &MiyuPaths, audience: PromptAudience) -> Result<String> {
+    pub fn system_prompt_for(&self, paths: &GQYPaths, audience: PromptAudience) -> Result<String> {
         let mut prompt = self.base_system_prompt(paths)?;
         if audience.includes_user_identity() {
             let user_identity = self.user_identity_prompt(paths)?;
@@ -5179,7 +5179,7 @@ impl AppConfig {
         Ok(prompt)
     }
 
-    pub fn base_system_prompt(&self, paths: &MiyuPaths) -> Result<String> {
+    pub fn base_system_prompt(&self, paths: &GQYPaths) -> Result<String> {
         let persona = self.active_persona_prompt(paths)?;
         if persona.trim().is_empty() {
             Ok(default_system_prompt())
@@ -5188,7 +5188,7 @@ impl AppConfig {
         }
     }
 
-    pub fn custom_system_prompt(&self, paths: &MiyuPaths) -> Result<String> {
+    pub fn custom_system_prompt(&self, paths: &GQYPaths) -> Result<String> {
         if let Some(prompt) = self
             .system_prompt
             .as_deref()
@@ -5203,12 +5203,12 @@ impl AppConfig {
         Ok(String::new())
     }
 
-    pub fn prompts_dir_path(&self, paths: &MiyuPaths) -> PathBuf {
+    pub fn prompts_dir_path(&self, paths: &GQYPaths) -> PathBuf {
         migrated_resource_path(paths, &self.prompt.prompts_dir)
             .unwrap_or_else(|| config_relative_path(paths, &self.prompt.prompts_dir))
     }
 
-    pub fn user_identity_path(&self, paths: &MiyuPaths) -> PathBuf {
+    pub fn user_identity_path(&self, paths: &GQYPaths) -> PathBuf {
         if relative_path_equals(&self.prompt.user_identity_file, "user-identity.md") {
             fallback_resource_file(paths, "identities", "user-identity.md")
         } else if let Some(path) = migrated_fallback_file(
@@ -5225,16 +5225,16 @@ impl AppConfig {
         }
     }
 
-    pub fn identities_dir_path(&self, paths: &MiyuPaths) -> PathBuf {
+    pub fn identities_dir_path(&self, paths: &GQYPaths) -> PathBuf {
         migrated_resource_path(paths, &self.prompt.identities_dir)
             .unwrap_or_else(|| config_relative_path(paths, &self.prompt.identities_dir))
     }
 
-    pub fn persona_path(&self, paths: &MiyuPaths, name: &str) -> PathBuf {
+    pub fn persona_path(&self, paths: &GQYPaths, name: &str) -> PathBuf {
         self.prompts_dir_path(paths).join(name)
     }
 
-    pub fn validate_persona_files(&self, paths: &MiyuPaths) -> Result<()> {
+    pub fn validate_persona_files(&self, paths: &GQYPaths) -> Result<()> {
         if self
             .prompt
             .active_persona
@@ -5270,25 +5270,25 @@ impl AppConfig {
         Ok(())
     }
 
-    pub fn identity_path(&self, paths: &MiyuPaths, name: &str) -> PathBuf {
+    pub fn identity_path(&self, paths: &GQYPaths, name: &str) -> PathBuf {
         self.identities_dir_path(paths).join(name)
     }
 
-    pub fn persona_memory_data_dir(&self, paths: &MiyuPaths, persona: &str) -> PathBuf {
+    pub fn persona_memory_data_dir(&self, paths: &GQYPaths, persona: &str) -> PathBuf {
         paths
             .data_dir
             .join("personas")
             .join(persona_scope_name(persona))
     }
 
-    pub fn persona_memory_state_dir(&self, paths: &MiyuPaths, persona: &str) -> PathBuf {
+    pub fn persona_memory_state_dir(&self, paths: &GQYPaths, persona: &str) -> PathBuf {
         paths
             .state_dir
             .join("personas")
             .join(persona_scope_name(persona))
     }
 
-    pub fn persona_skills_dir(&self, paths: &MiyuPaths, persona: &str) -> PathBuf {
+    pub fn persona_skills_dir(&self, paths: &GQYPaths, persona: &str) -> PathBuf {
         paths
             .skills_dir
             .join("personas")
@@ -5310,19 +5310,19 @@ impl AppConfig {
         config
     }
 
-    pub fn active_persona_memory_data_dir(&self, paths: &MiyuPaths) -> PathBuf {
+    pub fn active_persona_memory_data_dir(&self, paths: &GQYPaths) -> PathBuf {
         self.persona_memory_data_dir(paths, self.prompt.active_persona.trim())
     }
 
-    pub fn active_persona_memory_state_dir(&self, paths: &MiyuPaths) -> PathBuf {
+    pub fn active_persona_memory_state_dir(&self, paths: &GQYPaths) -> PathBuf {
         self.persona_memory_state_dir(paths, self.prompt.active_persona.trim())
     }
 
-    pub fn active_persona_skills_dir(&self, paths: &MiyuPaths) -> PathBuf {
+    pub fn active_persona_skills_dir(&self, paths: &GQYPaths) -> PathBuf {
         self.persona_skills_dir(paths, self.prompt.active_persona.trim())
     }
 
-    pub fn active_persona_prompt(&self, paths: &MiyuPaths) -> Result<String> {
+    pub fn active_persona_prompt(&self, paths: &GQYPaths) -> Result<String> {
         if !self.prompt.active_persona.trim().is_empty() {
             let path = self.persona_path(paths, self.prompt.active_persona.trim());
             if path.exists() {
@@ -5345,7 +5345,7 @@ impl AppConfig {
         }
     }
 
-    pub fn user_identity_prompt(&self, paths: &MiyuPaths) -> Result<String> {
+    pub fn user_identity_prompt(&self, paths: &GQYPaths) -> Result<String> {
         if !self.prompt.active_identity.trim().is_empty() {
             let path = self.identity_path(paths, self.prompt.active_identity.trim());
             if path.exists() {
@@ -5361,7 +5361,7 @@ impl AppConfig {
         Ok(String::new())
     }
 
-    pub fn system_prompt_path(&self, paths: &MiyuPaths) -> PathBuf {
+    pub fn system_prompt_path(&self, paths: &GQYPaths) -> PathBuf {
         let value = self
             .system_prompt_file
             .as_deref()
@@ -5498,11 +5498,11 @@ fn relative_path_equals(value: &str, expected: &str) -> bool {
     normalized_relative_path(value).as_deref() == Some(Path::new(expected))
 }
 
-fn migrated_resource_path(paths: &MiyuPaths, value: &str) -> Option<PathBuf> {
+fn migrated_resource_path(paths: &GQYPaths, value: &str) -> Option<PathBuf> {
     paths.migrated_resource_path(Path::new(value.trim()))
 }
 
-fn fallback_resource_file(paths: &MiyuPaths, namespace: &str, file_name: &str) -> PathBuf {
+fn fallback_resource_file(paths: &GQYPaths, namespace: &str, file_name: &str) -> PathBuf {
     if paths.resources_use_config_dir() {
         paths.config_dir.join(file_name)
     } else {
@@ -5511,7 +5511,7 @@ fn fallback_resource_file(paths: &MiyuPaths, namespace: &str, file_name: &str) -
 }
 
 fn migrated_fallback_file(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     value: &str,
     namespace: &str,
     file_name: &str,
@@ -5525,7 +5525,7 @@ fn migrated_fallback_file(
         .then(|| fallback_resource_file(paths, namespace, file_name))
 }
 
-fn config_relative_path(paths: &MiyuPaths, value: &str) -> PathBuf {
+fn config_relative_path(paths: &GQYPaths, value: &str) -> PathBuf {
     let path = PathBuf::from(value.trim());
     if path.is_absolute() {
         path
@@ -5754,7 +5754,7 @@ fn default_web_images_timeout() -> u64 {
 }
 
 fn default_deep_research_dir() -> String {
-    default_miyu_home()
+    default_gqy_home()
         .join("data/documents/deep-thinking")
         .display()
         .to_string()
@@ -5801,17 +5801,17 @@ fn default_image_generation_resolution() -> String {
 }
 
 fn default_image_generation_output_dir() -> String {
-    default_miyu_home()
+    default_gqy_home()
         .join("data/pictures/generated-images")
         .display()
         .to_string()
 }
 
-fn default_miyu_home() -> PathBuf {
-    std::env::var_os("MIYU_HOME")
+fn default_gqy_home() -> PathBuf {
+    std::env::var_os("GQY_HOME")
         .map(PathBuf::from)
-        .or_else(|| directories::BaseDirs::new().map(|dirs| dirs.home_dir().join(".miyu")))
-        .unwrap_or_else(|| PathBuf::from("~/.miyu"))
+        .or_else(|| directories::BaseDirs::new().map(|dirs| dirs.home_dir().join(".gqy")))
+        .unwrap_or_else(|| PathBuf::from("~/.gqy"))
 }
 
 /// Returns the old absolute directory when the value was rewritten, so the
@@ -6007,16 +6007,16 @@ mod tests {
         // XDG root, so the old root has to be a legacy root too.
         let temp = tempfile::tempdir().unwrap();
         let home = temp.path();
-        let legacy = home.join(".local/share/miyu/pictures/generated-images");
+        let legacy = home.join(".local/share/gqy/pictures/generated-images");
         std::fs::create_dir_all(&legacy).unwrap();
         std::fs::write(legacy.join("one.png"), "a").unwrap();
         std::fs::write(legacy.join("two.png"), "b").unwrap();
 
-        let destination_root = home.join(".miyu/data/pictures");
+        let destination_root = home.join(".gqy/data/pictures");
         let mut value = legacy.display().to_string();
         let moved = remap_managed_output_dir(
             &mut value,
-            &[home.join(".local/share/miyu/pictures")],
+            &[home.join(".local/share/gqy/pictures")],
             &destination_root,
             home,
         );
@@ -6041,8 +6041,8 @@ mod tests {
         let before = value.clone();
         let moved = remap_managed_output_dir(
             &mut value,
-            &[home.join(".local/share/miyu/pictures")],
-            &home.join(".miyu/data/pictures"),
+            &[home.join(".local/share/gqy/pictures")],
+            &home.join(".gqy/data/pictures"),
             home,
         );
         assert!(moved.is_none());
@@ -6532,7 +6532,7 @@ mod tests {
                         },
                         "group_chats": {
                             "whitelist": [54321],
-                            "trigger_keywords": ["Miyu"],
+                            "trigger_keywords": ["GQY"],
                             "whitelist_rate_per_minute": 30,
                             "allow_non_whitelist": true,
                             "non_whitelist_rate_per_minute": 10
@@ -6570,7 +6570,7 @@ mod tests {
             }
         );
         assert_eq!(qq.group_chats.whitelist, vec![54321]);
-        assert_eq!(qq.group_chats.trigger_keywords, vec!["Miyu"]);
+        assert_eq!(qq.group_chats.trigger_keywords, vec!["GQY"]);
         assert_eq!(qq.group_chats.whitelist_rate_limit.max_messages, 30);
         assert_eq!(qq.group_chats.non_whitelist_rate_limit.max_messages, 10);
         assert_eq!(qq.max_reply_chars, 3000);
@@ -6993,7 +6993,7 @@ mod tests {
         );
         assert!(config.validate().is_ok());
 
-        config.platforms.qq.conversations[0].persona = PlatformPersonaOverride::Miyu;
+        config.platforms.qq.conversations[0].persona = PlatformPersonaOverride::GQY;
         config.apply_qq_conversation_persona(PlatformConversationKind::Group, "20002");
         assert!(config.prompt.active_persona.is_empty());
     }
@@ -7821,8 +7821,8 @@ mod tests {
         let provider = &mut config.providers[0];
         let provider_id = provider.id.clone();
         provider.models = vec![
-            "miyu-known-window-model".to_string(),
-            "miyu-unknown-window-model".to_string(),
+            "gqy-known-window-model".to_string(),
+            "gqy-unknown-window-model".to_string(),
         ];
         provider.default_model = provider.models[0].clone();
         provider
@@ -7842,7 +7842,7 @@ mod tests {
         assert_eq!(config.active_context_window().unwrap(), Some(168_000));
         config.providers[0]
             .model_context_window
-            .insert("miyu-unknown-window-model".to_string(), 128_000);
+            .insert("gqy-unknown-window-model".to_string(), 128_000);
         assert_eq!(config.active_context_window().unwrap(), Some(128_000));
     }
 
@@ -7984,7 +7984,7 @@ mod tests {
             "{\n  // UI preference\n  \"display\": { \"language\": \"en\" }\n}\n",
         )
         .unwrap();
-        let paths = MiyuPaths {
+        let paths = GQYPaths {
             root_dir: temp.path().to_path_buf(),
             config_dir: temp.path().to_path_buf(),
             config_file,
@@ -7993,9 +7993,9 @@ mod tests {
             cache_dir: temp.path().join("cache"),
             state_dir: temp.path().join("state"),
             pictures_dir: temp.path().join("pictures"),
-            fish_hook_file: temp.path().join("miyu.fish"),
-            bash_hook_file: temp.path().join("miyu.bash"),
-            zsh_hook_file: temp.path().join("miyu.zsh"),
+            fish_hook_file: temp.path().join("gqy.fish"),
+            bash_hook_file: temp.path().join("gqy.bash"),
+            zsh_hook_file: temp.path().join("gqy.zsh"),
             scripts_dir: temp.path().join("scripts"),
             system_scripts_dir: temp.path().join("system-scripts"),
         };
@@ -8009,7 +8009,7 @@ mod tests {
     #[test]
     fn meme_library_defaults_follow_persona() {
         let memes = MemesPluginConfig::default();
-        assert_eq!(memes.library_for_persona(""), "miyu");
+        assert_eq!(memes.library_for_persona(""), "gqy");
         assert_eq!(
             memes.library_for_persona("Custom Persona"),
             "custom-persona"
@@ -8097,7 +8097,7 @@ mod tests {
     #[test]
     fn default_prompt_resources_follow_the_data_resource_layout() {
         let temp = tempfile::tempdir().unwrap();
-        let paths = MiyuPaths {
+        let paths = GQYPaths {
             root_dir: temp.path().to_path_buf(),
             config_dir: temp.path().join("config"),
             config_file: temp.path().join("config/config.jsonc"),
@@ -8106,7 +8106,7 @@ mod tests {
             cache_dir: temp.path().join("cache"),
             state_dir: temp.path().join("state"),
             pictures_dir: temp.path().join("data/pictures"),
-            fish_hook_file: temp.path().join("fish/miyu.fish"),
+            fish_hook_file: temp.path().join("fish/gqy.fish"),
             bash_hook_file: temp.path().join("config/shell/bash-hook.sh"),
             zsh_hook_file: temp.path().join("config/shell/zsh-hook.zsh"),
             scripts_dir: temp.path().join("data/scripts"),
@@ -8233,7 +8233,7 @@ mod tests {
         );
 
         let base = directories::BaseDirs::new().unwrap();
-        let root = base.home_dir().join(".miyu");
+        let root = base.home_dir().join(".gqy");
         let mut legacy_paths = paths.clone();
         legacy_paths.config_dir = root.join("config");
         legacy_paths.config_file = root.join("config/config.jsonc");
@@ -8243,12 +8243,12 @@ mod tests {
         let mut legacy_absolute = AppConfig::default();
         legacy_absolute.prompt.user_identity_file = base
             .config_dir()
-            .join("miyu/user-identity.md")
+            .join("gqy/user-identity.md")
             .display()
             .to_string();
         legacy_absolute.system_prompt_file = Some(
             base.config_dir()
-                .join("miyu/system-prompt.md")
+                .join("gqy/system-prompt.md")
                 .display()
                 .to_string(),
         );
@@ -8265,7 +8265,7 @@ mod tests {
     #[test]
     fn reserved_system_prompt_file_is_not_a_persona() {
         let temp = tempfile::tempdir().unwrap();
-        let paths = MiyuPaths {
+        let paths = GQYPaths {
             root_dir: temp.path().to_path_buf(),
             config_dir: temp.path().join("config"),
             config_file: temp.path().join("config/config.jsonc"),
@@ -8274,7 +8274,7 @@ mod tests {
             cache_dir: temp.path().join("cache"),
             state_dir: temp.path().join("state"),
             pictures_dir: temp.path().join("data/pictures"),
-            fish_hook_file: temp.path().join("fish/miyu.fish"),
+            fish_hook_file: temp.path().join("fish/gqy.fish"),
             bash_hook_file: temp.path().join("config/shell/bash-hook.sh"),
             zsh_hook_file: temp.path().join("config/shell/zsh-hook.zsh"),
             scripts_dir: temp.path().join("data/scripts"),

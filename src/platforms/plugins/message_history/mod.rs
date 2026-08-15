@@ -3,7 +3,7 @@ pub(super) mod tools;
 
 use super::{PlatformPlugin, PluginDescriptor, PreparedSend};
 use crate::config::{QqMessageHistoryPluginSettings, QQ_MESSAGE_HISTORY_PLUGIN_ID};
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use crate::platforms::{
     ConversationKind, OutboundBody, OutboundMessage, OutboundSegment, PlatformInboundEvent,
     PlatformInboundEventKind, PlatformMediaKind, PlatformTurnContext, SendReceipt,
@@ -31,7 +31,7 @@ fn stores() -> &'static Mutex<HashMap<PathBuf, HistoryStore>> {
     STORES.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
-pub(super) fn store_for_paths(paths: &MiyuPaths) -> HistoryStore {
+pub(super) fn store_for_paths(paths: &GQYPaths) -> HistoryStore {
     let path = history_db_path(paths);
     let mut stores = stores().lock().unwrap();
     stores
@@ -40,7 +40,7 @@ pub(super) fn store_for_paths(paths: &MiyuPaths) -> HistoryStore {
         .clone()
 }
 
-fn history_db_path(paths: &MiyuPaths) -> PathBuf {
+fn history_db_path(paths: &GQYPaths) -> PathBuf {
     let path = paths.data_dir.join(HISTORY_DB);
     if path.exists() {
         return path;
@@ -125,7 +125,7 @@ impl MessageHistoryPlugin {
         ))
     }
 
-    async fn record_inbound(paths: &MiyuPaths, event: &PlatformInboundEvent) -> Result<()> {
+    async fn record_inbound(paths: &GQYPaths, event: &PlatformInboundEvent) -> Result<()> {
         let key = ConversationKey::for_kind(
             event.conversation.platform.clone(),
             event.conversation.account_id.clone(),
@@ -198,11 +198,11 @@ impl MessageHistoryPlugin {
             .message_ids
             .first()
             .cloned()
-            .unwrap_or_else(|| format!("miyu-{timestamp}-{:08x}", rand::random::<u32>()));
+            .unwrap_or_else(|| format!("gqy-{timestamp}-{:08x}", rand::random::<u32>()));
         let sender_name = context
             .bot_display_name()
             .await
-            .unwrap_or_else(|_| "Miyu".to_string());
+            .unwrap_or_else(|_| "GQY".to_string());
         store_for_paths(&context.paths)
             .record_message(NewHistoryMessage {
                 group: conversation_key(context)?,
@@ -237,7 +237,7 @@ impl PlatformPlugin for MessageHistoryPlugin {
 
     fn observe_ingress<'a>(
         &'a self,
-        paths: &'a MiyuPaths,
+        paths: &'a GQYPaths,
         _config: &'a crate::config::AppConfig,
         event: &'a PlatformInboundEvent,
     ) -> BoxFuture<'a, Result<()>> {
@@ -303,12 +303,12 @@ impl PlatformPlugin for MessageHistoryPlugin {
             let sender_name = context
                 .bot_display_name()
                 .await
-                .unwrap_or_else(|_| "Miyu".to_string());
+                .unwrap_or_else(|_| "GQY".to_string());
             store_for_paths(&context.paths)
                 .record_message(NewHistoryMessage {
                     group: conversation_key(context)?,
                     message_id: if message_id.trim().is_empty() {
-                        format!("miyu-{timestamp}-{:08x}", rand::random::<u32>())
+                        format!("gqy-{timestamp}-{:08x}", rand::random::<u32>())
                     } else {
                         message_id.to_string()
                     },
@@ -444,8 +444,8 @@ mod tests {
     };
     use std::time::Instant;
 
-    fn test_paths(root: &std::path::Path) -> MiyuPaths {
-        MiyuPaths {
+    fn test_paths(root: &std::path::Path) -> GQYPaths {
+        GQYPaths {
             root_dir: root.to_path_buf(),
             config_dir: root.join("config"),
             config_file: root.join("config/config.jsonc"),

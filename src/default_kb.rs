@@ -1,6 +1,6 @@
 use crate::config::AppConfig;
 use crate::i18n::text as t;
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use crate::tools::knowledge_base::KnowledgeBase;
 use anyhow::{bail, Context, Result};
 use chrono::Utc;
@@ -75,7 +75,7 @@ impl UpdateStage {
     }
 }
 
-pub fn ensure_initialized(paths: &MiyuPaths, config: &AppConfig) -> Result<()> {
+pub fn ensure_initialized(paths: &GQYPaths, config: &AppConfig) -> Result<()> {
     let source = default_kb_source_dir();
     if !source.is_dir() {
         return Ok(());
@@ -92,7 +92,7 @@ pub fn bundled_available() -> bool {
     default_kb_source_dir().is_dir()
 }
 
-pub fn status(paths: &MiyuPaths) -> Result<DefaultKbStatus> {
+pub fn status(paths: &GQYPaths) -> Result<DefaultKbStatus> {
     let state = load_state(paths)?;
     Ok(DefaultKbStatus {
         has_update_notice: state.update_available
@@ -101,7 +101,7 @@ pub fn status(paths: &MiyuPaths) -> Result<DefaultKbStatus> {
     })
 }
 
-pub fn notice_if_update_available(paths: &MiyuPaths) -> Result<Option<String>> {
+pub fn notice_if_update_available(paths: &GQYPaths) -> Result<Option<String>> {
     let mut state = load_state(paths)?;
     if !state.update_available || state.remote_commit.is_empty() {
         return Ok(None);
@@ -110,8 +110,8 @@ pub fn notice_if_update_available(paths: &MiyuPaths) -> Result<Option<String>> {
         return Ok(None);
     }
     let message = t(
-        "The default knowledge base needs an update; run miyu update-default-kb",
-        "默认知识库需要更新，运行 miyu update-default-kb",
+        "The default knowledge base needs an update; run gqy update-default-kb",
+        "默认知识库需要更新，运行 gqy update-default-kb",
     )
     .to_string();
     state.last_notice_commit = state.remote_commit.clone();
@@ -119,7 +119,7 @@ pub fn notice_if_update_available(paths: &MiyuPaths) -> Result<Option<String>> {
     Ok(Some(message))
 }
 
-pub fn check_update_if_due(paths: &MiyuPaths) -> Result<()> {
+pub fn check_update_if_due(paths: &GQYPaths) -> Result<()> {
     let mut state = load_state(paths)?;
     if !should_check(&state) {
         return Ok(());
@@ -134,7 +134,7 @@ pub fn check_update_if_due(paths: &MiyuPaths) -> Result<()> {
 }
 
 pub fn update<F>(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &AppConfig,
     mut on_progress: F,
 ) -> Result<DefaultKbState>
@@ -201,7 +201,7 @@ where
 }
 
 fn import_snapshot(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &AppConfig,
     source: &Path,
     release_hash: &str,
@@ -216,30 +216,30 @@ fn import_snapshot(
 }
 
 fn default_kb_source_dir() -> PathBuf {
-    std::env::var_os("MIYU_DEFAULT_KB_DIR")
+    std::env::var_os("GQY_DEFAULT_KB_DIR")
         .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from("/usr/share/miyu/default-kb"))
+        .unwrap_or_else(|| PathBuf::from("/usr/share/gqy/default-kb"))
 }
 
-fn state_file(paths: &MiyuPaths) -> PathBuf {
+fn state_file(paths: &GQYPaths) -> PathBuf {
     paths.data_dir.join("default-kb/state.json")
 }
 
-fn update_repo_dir(paths: &MiyuPaths) -> PathBuf {
+fn update_repo_dir(paths: &GQYPaths) -> PathBuf {
     paths
         .cache_dir
         .join("default-kb/shorin-archlinux-guide.git")
 }
 
-fn legacy_update_repo_dir(paths: &MiyuPaths) -> PathBuf {
+fn legacy_update_repo_dir(paths: &GQYPaths) -> PathBuf {
     paths.cache_dir.join("default-kb/shorinwiki.git")
 }
 
-fn update_source_dir(paths: &MiyuPaths) -> PathBuf {
+fn update_source_dir(paths: &GQYPaths) -> PathBuf {
     paths.cache_dir.join("default-kb/update-source")
 }
 
-fn cleanup_legacy_update_repo(paths: &MiyuPaths, repo: &Path) -> Result<()> {
+fn cleanup_legacy_update_repo(paths: &GQYPaths, repo: &Path) -> Result<()> {
     let legacy = legacy_update_repo_dir(paths);
     if legacy == repo || !legacy.exists() {
         return Ok(());
@@ -353,7 +353,7 @@ fn validate_update_repo(repo: &Path) -> Result<()> {
     Ok(())
 }
 
-fn load_state(paths: &MiyuPaths) -> Result<DefaultKbState> {
+fn load_state(paths: &GQYPaths) -> Result<DefaultKbState> {
     let path = state_file(paths);
     if !path.is_file() {
         return Ok(DefaultKbState::default());
@@ -361,7 +361,7 @@ fn load_state(paths: &MiyuPaths) -> Result<DefaultKbState> {
     Ok(serde_json::from_str(&std::fs::read_to_string(path)?)?)
 }
 
-fn save_state(paths: &MiyuPaths, state: &DefaultKbState) -> Result<()> {
+fn save_state(paths: &GQYPaths, state: &DefaultKbState) -> Result<()> {
     let path = state_file(paths);
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
@@ -433,7 +433,7 @@ fn git_output(git: &str, cwd: &Path, args: &[&str]) -> Result<String> {
     Ok(String::from_utf8(output.stdout)?.trim().to_string())
 }
 
-fn build_update_source(paths: &MiyuPaths, repo: &Path) -> Result<PathBuf> {
+fn build_update_source(paths: &GQYPaths, repo: &Path) -> Result<PathBuf> {
     let dest = update_source_dir(paths);
     if dest.exists() {
         std::fs::remove_dir_all(&dest)?;

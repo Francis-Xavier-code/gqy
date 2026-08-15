@@ -681,7 +681,7 @@ mod tests {
 
     #[test]
     fn judge_prompts_are_role_agnostic_and_target_aware() {
-        assert!(!JUDGE_SYSTEM_PROMPT.contains("Miyu"));
+        assert!(!JUDGE_SYSTEM_PROMPT.contains("GQY"));
         assert!(JUDGE_SYSTEM_PROMPT.contains("不得假定固定名称或人格"));
         assert!(NORMAL_JUDGE_MODE.contains("交流目标和预期回应者"));
         assert!(REPLY_DECISION_GUIDANCE.contains("其他群成员"));

@@ -259,7 +259,7 @@ impl ReplyProcessorPlugin {
         let display_name = context
             .bot_display_name()
             .await
-            .unwrap_or_else(|_| "Miyu".to_string());
+            .unwrap_or_else(|_| "GQY".to_string());
         let mut transformed = OutboundMessage {
             body: OutboundBody::Forward(vec![ForwardNode {
                 user_id: context.conversation.account_id.clone(),
@@ -441,7 +441,7 @@ impl PlatformPlugin for ReplyProcessorPlugin {
                         Ok(prepared) => Ok(prepared),
                         Err(error) => {
                             tracing::warn!(
-                                target: "miyu::qq",
+                                target: "gqy::qq",
                                 error = %error,
                                 "{}",
                                 crate::i18n::text(
@@ -813,7 +813,7 @@ fn unix_timestamp() -> i64 {
 mod tests {
     use super::*;
     use crate::config::AppConfig;
-    use crate::paths::MiyuPaths;
+    use crate::paths::GQYPaths;
     use crate::platforms::{PlatformAdapter, PlatformConversation, ResponseTarget};
     use crate::state::StateStore;
     use futures_util::future::BoxFuture;
@@ -827,14 +827,14 @@ mod tests {
         }
 
         fn bot_display_name<'a>(&'a self) -> BoxFuture<'a, Result<String>> {
-            Box::pin(async { Ok("Miyu".to_string()) })
+            Box::pin(async { Ok("GQY".to_string()) })
         }
     }
 
     fn test_context(is_admin: bool) -> (tempfile::TempDir, PlatformTurnContext) {
         let temp = tempfile::tempdir().unwrap();
         let root = temp.path();
-        let paths = MiyuPaths {
+        let paths = GQYPaths {
             root_dir: root.to_path_buf(),
             config_dir: root.join("config"),
             config_file: root.join("config/config.jsonc"),
@@ -843,7 +843,7 @@ mod tests {
             cache_dir: root.join("cache"),
             state_dir: root.join("state"),
             pictures_dir: root.join("pictures"),
-            fish_hook_file: root.join("fish/miyu.fish"),
+            fish_hook_file: root.join("fish/gqy.fish"),
             bash_hook_file: root.join("shell/bash-hook.sh"),
             zsh_hook_file: root.join("shell/zsh-hook.zsh"),
             scripts_dir: root.join("config/scripts"),

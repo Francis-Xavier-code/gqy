@@ -10,7 +10,7 @@ use crate::llm::{
     ImageUrlContent, OpenAiCompatibleClient, ToolCall, ToolCallFunction, TurnTokens, Usage,
 };
 use crate::memory::{EvictedTurn, MemoryAccess, MemoryOrganizerHandle, MemoryOrigin, MemoryStore};
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use crate::persona_hint;
 use crate::platforms::{PlatformContextImageRef, PlatformTurnContext};
 use crate::question::{
@@ -918,7 +918,7 @@ pub struct Agent {
     mode: AgentMode,
     prompt_audience: PromptAudience,
     config: AppConfig,
-    paths: MiyuPaths,
+    paths: GQYPaths,
     on_overflow: String,
     turn_display_content: Option<String>,
     attachment_run_id: Option<String>,
@@ -980,7 +980,7 @@ struct GroupTaskOutput {
 impl Agent {
     pub fn new(
         config: AppConfig,
-        paths: &MiyuPaths,
+        paths: &GQYPaths,
         state: StateStore,
         client: OpenAiCompatibleClient,
         tools: ToolRegistry,
@@ -999,7 +999,7 @@ impl Agent {
 
     pub(crate) fn new_for_audience(
         config: AppConfig,
-        paths: &MiyuPaths,
+        paths: &GQYPaths,
         state: StateStore,
         client: OpenAiCompatibleClient,
         tools: ToolRegistry,
@@ -2920,10 +2920,10 @@ impl Agent {
                         }
                         Ok(Ok((None, _, _))) => {}
                         Ok(Err(error)) => {
-                            tracing::warn!(error = %error, "failed to refresh Miyu skill catalog")
+                            tracing::warn!(error = %error, "failed to refresh GQY skill catalog")
                         }
                         Err(error) => {
-                            tracing::warn!(error = %error, "Miyu skill catalog worker stopped")
+                            tracing::warn!(error = %error, "GQY skill catalog worker stopped")
                         }
                     }
                 }
@@ -3519,7 +3519,7 @@ impl Agent {
                 let (progress_tx, mut progress_rx) = mpsc::unbounded_channel();
                 let tool_future = {
                     let tools = self.tools.lock().unwrap();
-                    // AUR 互斥等回合级规则已迁入 guard 层,凭 used_tools 上下文判定。
+                    // Homebrew review/install 互斥等回合级规则已迁入 guard 层,凭 used_tools 上下文判定。
                     tools.call_with_progress_future(
                         &call.function.name,
                         &call.function.arguments,
@@ -4611,7 +4611,10 @@ fn extract_persistable_tool_report(tool_name: &str, output: &str) -> Option<Stri
             return compact_remembered_fact_report(output)
                 .map(|report| wrap_previous_tool_report(tool_name, &report))
         }
-        "deep_research_linux_game_compatibility" => "final_report",
+        // 历史工具 id 兼容旧会话回放;新工具走下面两个主 id。
+        "deep_research_linux_game_compatibility" | "deep_research_game_compatibility" => {
+            "final_report"
+        }
         "linux_input_method_diagnose" | "deep_diagnose" | "deep_research" => "final_answer",
         "task" => "result",
         _ => return None,
@@ -5640,7 +5643,7 @@ fn clipboard_binary_image_from_tool_result(
 
 fn resolve_pasted_image_paths(
     images: &[Option<PastedImage>],
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     image_platform: Option<&str>,
 ) -> Vec<Option<String>> {
     images
@@ -5750,7 +5753,7 @@ fn with_runtime_system_context(mut system_prompt: String, context: &[String]) ->
 /// 极简原则);Normal=人格提示词(按 audience 附用户档案)。
 fn mode_system_prompt(
     config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     mode: AgentMode,
     audience: PromptAudience,
 ) -> Result<String> {
@@ -5763,7 +5766,7 @@ fn mode_system_prompt(
 fn with_host_environment(
     mut system_prompt: String,
     audience: PromptAudience,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     mode: AgentMode,
 ) -> String {
     if audience != PromptAudience::Owner {
@@ -6163,7 +6166,7 @@ fn strip_tagged_sections(mut text: String, tag: &str) -> String {
 mod tests {
     use super::*;
     use crate::config::{ActiveProviderModelConfig, AppConfig, ProviderConfig};
-    use crate::paths::MiyuPaths;
+    use crate::paths::GQYPaths;
     use crate::platforms::{
         ConversationKind, OutboundMessage, PlatformAdapter, PlatformConversation, SendReceipt,
     };
@@ -6179,7 +6182,7 @@ mod tests {
     fn artifact_delivery_detection_is_conservative() {
         assert!(artifact_delivery_requested(&[ChatMessage::plain(
             "user",
-            "生成一个 Linux 游玩报告，保存为 Markdown 文件",
+            "生成一个 macOS 游戏兼容性报告，保存为 Markdown 文件",
         )]));
         assert!(artifact_delivery_requested(&[ChatMessage::plain(
             "user",
@@ -6279,7 +6282,7 @@ mod tests {
         }
 
         fn bot_display_name<'a>(&'a self) -> BoxFuture<'a, Result<String>> {
-            Box::pin(async { Ok("Miyu".to_string()) })
+            Box::pin(async { Ok("GQY".to_string()) })
         }
     }
 
@@ -6718,7 +6721,7 @@ mod tests {
         assert!(owner.starts_with("base\n\n<host-environment os=\""));
         assert!(owner.contains("/>"));
         assert!(owner.contains("LaTeX"), "渲染能力说明应跟随 owner 提示词");
-        assert!(owner.contains(&format!(" miyu_home=\"{}\"", paths.root_dir.display())));
+        assert!(owner.contains(&format!(" gqy_home=\"{}\"", paths.root_dir.display())));
         // The static block must not be mistaken for the per-turn stamp, and
         // `mode_reminder_does_not_inject_a_reasoning_title_protocol` asserts the
         // system prompt never carries a `<runtime` tag.
@@ -7006,7 +7009,7 @@ mod tests {
 
     #[test]
     fn visible_association_lines_collects_only_replayed_memory_blocks() {
-        let block = "<associative-memory>\n以下是根据当前输入联想到的完整人格记忆。\n\n曾经记住的相关知识点：\n- [2026-08-10] [公共知识] AUR 镜像只读\n</associative-memory>";
+        let block = "<associative-memory>\n以下是根据当前输入联想到的完整人格记忆。\n\n曾经记住的相关知识点：\n- [2026-08-10] [公共知识] Homebrew 镜像只读\n</associative-memory>";
         let messages = vec![
             ChatMessage::system("prompt"),
             // 回放的化石块：user 角色、正文以标签开头 → 计入
@@ -7014,11 +7017,11 @@ mod tests {
             // 用户正文中途引用同样文本 → 不以标签开头，不计入
             ChatMessage::plain("user", format!("用户引用了 {block}")),
             // 非 user 角色 → 不计入
-            ChatMessage::plain("assistant", "- [2026-08-10] [公共知识] AUR 镜像只读"),
+            ChatMessage::plain("assistant", "- [2026-08-10] [公共知识] Homebrew 镜像只读"),
         ];
         let seen = visible_association_lines(&messages);
         assert_eq!(seen.len(), 1);
-        assert!(seen.contains("- [2026-08-10] [公共知识] AUR 镜像只读"));
+        assert!(seen.contains("- [2026-08-10] [公共知识] Homebrew 镜像只读"));
     }
 
     #[test]
@@ -9285,7 +9288,7 @@ model_temperature: HashMap::new(),
         config.context.compact_cache_reuse = false;
         config.context.prune_stale_tool_reports = false;
         // Pin the persona. This test is about compaction's effect on the byte
-        // prefix, not about whatever `prompts/miyu.md` currently weighs —
+        // prefix, not about whatever `prompts/gqy.md` currently weighs —
         // editing the persona used to move the overflow point and flip the
         // outcome.
         config.system_prompt = Some("prefix cache guard fixture persona".to_string());
@@ -9457,8 +9460,8 @@ model_temperature: HashMap::new(),
         assert_ne!(platform_path, clipboard_path);
     }
 
-    fn test_paths(root: &std::path::Path) -> MiyuPaths {
-        MiyuPaths {
+    fn test_paths(root: &std::path::Path) -> GQYPaths {
+        GQYPaths {
             root_dir: root.to_path_buf(),
             config_dir: root.join("config"),
             config_file: root.join("config/config.jsonc"),
@@ -9467,7 +9470,7 @@ model_temperature: HashMap::new(),
             cache_dir: root.join("cache"),
             state_dir: root.join("state"),
             pictures_dir: root.join("pictures"),
-            fish_hook_file: root.join("fish/miyu.fish"),
+            fish_hook_file: root.join("fish/gqy.fish"),
             bash_hook_file: root.join("shell/bash-hook.sh"),
             zsh_hook_file: root.join("shell/zsh-hook.zsh"),
             scripts_dir: root.join("config/scripts"),

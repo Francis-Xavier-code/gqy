@@ -85,8 +85,8 @@ fn register_mention(registry: &mut ToolRegistry, context: Arc<PlatformTurnContex
         ToolSpec::new(
             "qq_mention_users",
             t(
-                "Make Miyu's next outgoing message in the current QQ group natively @ one or more members. Provide exact QQ IDs; use get_group_members_info first when only names are known. These explicit targets replace the automatic reply mention but preserve its message-quote behavior. This tool does not send a separate message.",
-                "让 Miyu 在当前 QQ 群的下一条消息中原生艾特一名或多名成员。请提供准确 QQ 号；只知道名字时先调用 get_group_members_info。显式目标会覆盖自动回复艾特，但保留消息引用策略。此工具不会单独发送消息。",
+                "Make GQY's next outgoing message in the current QQ group natively @ one or more members. Provide exact QQ IDs; use get_group_members_info first when only names are known. These explicit targets replace the automatic reply mention but preserve its message-quote behavior. This tool does not send a separate message.",
+                "让 GQY 在当前 QQ 群的下一条消息中原生艾特一名或多名成员。请提供准确 QQ 号；只知道名字时先调用 get_group_members_info。显式目标会覆盖自动回复艾特，但保留消息引用策略。此工具不会单独发送消息。",
             ),
             json!({
                 "type": "object",
@@ -283,8 +283,8 @@ fn register_usage_query(registry: &mut ToolRegistry, context: Arc<PlatformTurnCo
         ToolSpec::new(
             "query_token_usage",
             t(
-                "Query Miyu's token usage statistics: totals, request count, cache hit rate, and the per-source (agent / messaging platforms) model breakdown. range: 1d (rolling 24h, default) / 7d / 30d / all.",
-                "查询 Miyu 的 token 消耗统计:总量、请求数、缓存命中率,以及按来源(智能体/通讯平台)的模型构成。range 可选 1d(近 24 小时,默认)/ 7d / 30d / all。",
+                "Query GQY's token usage statistics: totals, request count, cache hit rate, and the per-source (agent / messaging platforms) model breakdown. range: 1d (rolling 24h, default) / 7d / 30d / all.",
+                "查询 GQY 的 token 消耗统计:总量、请求数、缓存命中率,以及按来源(智能体/通讯平台)的模型构成。range 可选 1d(近 24 小时,默认)/ 7d / 30d / all。",
             ),
             json!({
                 "type": "object",

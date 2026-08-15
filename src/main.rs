@@ -47,7 +47,7 @@ async fn run() -> Result<()> {
     if platforms::plugins::renderer_worker_requested() {
         return platforms::plugins::run_renderer_worker().await;
     }
-    let paths = paths::MiyuPaths::new()?;
+    let paths = paths::GQYPaths::new()?;
     let language = config::AppConfig::display_language_hint(&paths);
     i18n::init(language.as_deref().unwrap_or("auto"));
     let cli = cli::parse();

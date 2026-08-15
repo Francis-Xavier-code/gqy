@@ -133,7 +133,7 @@ impl RealContextPlugin {
             &high,
         ) {
             tracing::warn!(
-                target: "miyu::qq",
+                target: "gqy::qq",
                 error = %error,
                 "{}",
                 crate::i18n::text(
@@ -202,7 +202,7 @@ impl RealContextPlugin {
                 Ok(skip) => skip,
                 Err(error) => {
                     tracing::warn!(
-                        target: "miyu::qq",
+                        target: "gqy::qq",
                         error = %error,
                         sender_id = %event.sender_id,
                         "{}",
@@ -435,7 +435,7 @@ impl RealContextPlugin {
                     "读取真实群聊历史失败",
                 );
                 tracing::warn!(
-                    target: "miyu::qq",
+                    target: "gqy::qq",
                     error = %error,
                     group_id = %event.conversation.conversation_id,
                     sender_id = %event.sender_id,
@@ -473,7 +473,7 @@ impl RealContextPlugin {
             Ok(value) => value,
             Err(error) => {
                 tracing::warn!(
-                    target: "miyu::qq",
+                    target: "gqy::qq",
                     error = %error,
                     sender_id = %event.sender_id,
                     "{}",
@@ -546,7 +546,7 @@ impl RealContextPlugin {
                     "主动回复判断模型调用失败",
                 );
                 tracing::warn!(
-                    target: "miyu::qq",
+                    target: "gqy::qq",
                     error = %error,
                     group_id = %event.conversation.conversation_id,
                     sender_id = %event.sender_id,
@@ -586,7 +586,7 @@ impl RealContextPlugin {
                 moderation: &judged.moderation,
                 reason: &judged.reasoning,
             });
-            tracing::info!(target: "miyu::qq", "\n{readable}");
+            tracing::info!(target: "gqy::qq", "\n{readable}");
         }
         if system_triggered && !active_judgement_allowed {
             if judged.moderation.violation {
@@ -881,7 +881,7 @@ impl RealContextPlugin {
             trigger,
             reason,
         );
-        tracing::info!(target: "miyu::qq", "\n{readable}");
+        tracing::info!(target: "gqy::qq", "\n{readable}");
     }
 
     async fn inject_context(
@@ -923,7 +923,7 @@ impl RealContextPlugin {
         // More arrived since the last turn than one block carries, and the
         // watermark is about to move past the remainder. Skipping them is the
         // intended behaviour — nobody scrolling a busy group reads every line —
-        // but the replayed history reads as continuous, so Miyu is told it
+        // but the replayed history reads as continuous, so GQY is told it
         // skimmed rather than left to assume it saw everything.
         let truncated_backlog = watermark.is_some() && page.next_cursor.is_some();
         let mut history = page.messages;
@@ -941,7 +941,7 @@ impl RealContextPlugin {
         );
         let injected_messages = formatted.message_count;
         tracing::debug!(
-            target: "miyu::qq",
+            target: "gqy::qq",
             conversation_id = %context.conversation.conversation_id,
             sender_id = %context.sender_id,
             requested_messages = count,
@@ -1130,7 +1130,7 @@ impl PlatformPlugin for RealContextPlugin {
             Ok(false) => {}
             Err(error) => {
                 tracing::warn!(
-                    target: "miyu::qq",
+                    target: "gqy::qq",
                     error = %error,
                     sender_id = %event.sender_id,
                     "{}",
@@ -2823,7 +2823,7 @@ fn now_unix() -> i64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::paths::MiyuPaths;
+    use crate::paths::GQYPaths;
     use crate::platforms::PlatformAdapter;
     use crate::state::StateStore;
 
@@ -2839,7 +2839,7 @@ mod tests {
         }
 
         fn bot_display_name<'a>(&'a self) -> BoxFuture<'a, Result<String>> {
-            Box::pin(async { Ok("Miyu".to_string()) })
+            Box::pin(async { Ok("GQY".to_string()) })
         }
 
         fn bot_send_availability<'a>(&'a self) -> BoxFuture<'a, Result<BotSendAvailability>> {
@@ -2854,7 +2854,7 @@ mod tests {
         }
 
         fn bot_display_name<'a>(&'a self) -> BoxFuture<'a, Result<String>> {
-            Box::pin(async { Ok("Miyu".to_string()) })
+            Box::pin(async { Ok("GQY".to_string()) })
         }
 
         fn bot_send_availability<'a>(&'a self) -> BoxFuture<'a, Result<BotSendAvailability>> {
@@ -2881,7 +2881,7 @@ mod tests {
     fn test_context(adapter: Arc<dyn PlatformAdapter>) -> (tempfile::TempDir, PlatformTurnContext) {
         let temp = tempfile::tempdir().unwrap();
         let root = temp.path();
-        let paths = MiyuPaths {
+        let paths = GQYPaths {
             root_dir: root.to_path_buf(),
             config_dir: root.join("config"),
             config_file: root.join("config/config.jsonc"),

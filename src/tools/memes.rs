@@ -1,7 +1,7 @@
 use super::{vision, ToolRegistry, ToolSpec};
 use crate::config::{AppConfig, MemesPluginConfig};
 use crate::i18n::agent_text as t;
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use crate::prompts::MEME_DESCRIPTION_PROMPT;
 use anyhow::{bail, Context, Result};
 use image::AnimationDecoder;
@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock, RwLock};
 use std::time::SystemTime;
 
-const BUILTIN_MEMES_DIR: &str = "/usr/share/miyu/memes";
+const BUILTIN_MEMES_DIR: &str = "/usr/share/gqy/memes";
 const MIN_SHORT_MEME_ID_LEN: usize = 7;
 
 static MEME_LIBRARY_CACHE: OnceLock<RwLock<Option<MemeLibraryCache>>> = OnceLock::new();
@@ -228,7 +228,7 @@ struct MemeLibraryCache {
     memes: Vec<LoadedMeme>,
 }
 
-pub fn register(registry: &mut ToolRegistry, config: AppConfig, paths: MiyuPaths) {
+pub fn register(registry: &mut ToolRegistry, config: AppConfig, paths: GQYPaths) {
     if !config.plugins.memes.enabled {
         return;
     }
@@ -333,14 +333,14 @@ pub fn register(registry: &mut ToolRegistry, config: AppConfig, paths: MiyuPaths
     );
 }
 
-pub fn register_chat(registry: &mut ToolRegistry, config: AppConfig, paths: MiyuPaths) {
+pub fn register_chat(registry: &mut ToolRegistry, config: AppConfig, paths: GQYPaths) {
     if !config.plugins.memes.enabled {
         return;
     }
     register_search_and_show(registry, config, paths);
 }
 
-fn register_search_and_show(registry: &mut ToolRegistry, config: AppConfig, paths: MiyuPaths) {
+fn register_search_and_show(registry: &mut ToolRegistry, config: AppConfig, paths: GQYPaths) {
     registry.register(ToolSpec::new(
         "search_meme",
         t(
@@ -397,7 +397,7 @@ fn register_search_and_show(registry: &mut ToolRegistry, config: AppConfig, path
     ));
 }
 
-async fn search_meme(args: Value, config: &AppConfig, paths: &MiyuPaths) -> Result<String> {
+async fn search_meme(args: Value, config: &AppConfig, paths: &GQYPaths) -> Result<String> {
     let library = selected_library(&args, config);
     let query = args
         .get("query")
@@ -451,7 +451,7 @@ async fn search_meme(args: Value, config: &AppConfig, paths: &MiyuPaths) -> Resu
 async fn show_meme(
     args: Value,
     config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     progress: crate::tools::ToolProgress,
 ) -> Result<String> {
     let library = selected_library(&args, config);
@@ -478,7 +478,7 @@ async fn show_meme(
     .to_string())
 }
 
-async fn add_meme(args: Value, config: &AppConfig, paths: &MiyuPaths) -> Result<String> {
+async fn add_meme(args: Value, config: &AppConfig, paths: &GQYPaths) -> Result<String> {
     let library = selected_library(&args, config);
     let library_lock = library_lock(&library);
     let _guard = library_lock.lock().await;
@@ -607,7 +607,7 @@ async fn add_meme(args: Value, config: &AppConfig, paths: &MiyuPaths) -> Result<
     .to_string())
 }
 
-async fn update_meme(args: Value, config: &AppConfig, paths: &MiyuPaths) -> Result<String> {
+async fn update_meme(args: Value, config: &AppConfig, paths: &GQYPaths) -> Result<String> {
     let library = selected_library(&args, config);
     let library_lock = library_lock(&library);
     let _guard = library_lock.lock().await;
@@ -647,7 +647,7 @@ async fn update_meme(args: Value, config: &AppConfig, paths: &MiyuPaths) -> Resu
     Ok(json!({ "success": true, "library": library, "id": id, "metadata": item }).to_string())
 }
 
-async fn delete_meme(args: Value, config: &AppConfig, paths: &MiyuPaths) -> Result<String> {
+async fn delete_meme(args: Value, config: &AppConfig, paths: &GQYPaths) -> Result<String> {
     let library = selected_library(&args, config);
     let library_lock = library_lock(&library);
     let _guard = library_lock.lock().await;
@@ -701,7 +701,7 @@ async fn delete_meme(args: Value, config: &AppConfig, paths: &MiyuPaths) -> Resu
 
 async fn classify_meme_image(
     config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     image: &Path,
 ) -> Result<MemeClassification> {
     let persona = config.active_persona_prompt(paths).unwrap_or_default();
@@ -723,7 +723,7 @@ async fn classify_meme_image(
 pub(crate) async fn collect_meme_from_local_image(
     image: &Path,
     config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     origin: Option<MemeOrigin>,
 ) -> Result<MemeCollectionOutcome> {
     let library = current_persona_library(config);
@@ -854,7 +854,7 @@ fn prepare_image(source: &Path, max_bytes: u64) -> Result<PreparedImage> {
     })
 }
 
-fn load_library(paths: &MiyuPaths, library: &str) -> Result<Vec<LoadedMeme>> {
+fn load_library(paths: &GQYPaths, library: &str) -> Result<Vec<LoadedMeme>> {
     let builtin_dir = builtin_library_dir(library);
     let user_dir = user_library_dir(paths, library);
     let builtin_index = builtin_dir.join("index.json");
@@ -913,7 +913,7 @@ fn index_mtime(path: &Path) -> Option<SystemTime> {
         .ok()
 }
 
-fn find_meme(paths: &MiyuPaths, library: &str, id: &str) -> Result<Option<LoadedMeme>> {
+fn find_meme(paths: &GQYPaths, library: &str, id: &str) -> Result<Option<LoadedMeme>> {
     find_meme_in(load_library(paths, library)?, id)
 }
 
@@ -1015,14 +1015,14 @@ pub(crate) fn current_persona_library(config: &AppConfig) -> String {
     )
 }
 
-pub(crate) fn meme_ref_exists(paths: &MiyuPaths, meme: &MemeRef) -> Result<bool> {
+pub(crate) fn meme_ref_exists(paths: &GQYPaths, meme: &MemeRef) -> Result<bool> {
     Ok(find_meme(paths, &meme.library, &meme.id)?.is_some())
 }
 
 pub(crate) async fn delete_meme_reference(
     meme: &MemeRef,
     config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
 ) -> Result<()> {
     let result = delete_meme(
         json!({
@@ -1075,7 +1075,7 @@ fn sanitize_library(value: &str) -> String {
 }
 
 fn builtin_library_dir(library: &str) -> PathBuf {
-    if let Some(path) = std::env::var_os("MIYU_MEMES_DIR") {
+    if let Some(path) = std::env::var_os("GQY_MEMES_DIR") {
         return PathBuf::from(path).join(library);
     }
     let dev = PathBuf::from("src/memes").join(library);
@@ -1085,7 +1085,7 @@ fn builtin_library_dir(library: &str) -> PathBuf {
     PathBuf::from(BUILTIN_MEMES_DIR).join(library)
 }
 
-fn user_library_dir(paths: &MiyuPaths, library: &str) -> PathBuf {
+fn user_library_dir(paths: &GQYPaths, library: &str) -> PathBuf {
     paths.data_dir.join("memes").join(sanitize_library(library))
 }
 
@@ -1556,7 +1556,7 @@ mod tests {
 
     #[test]
     fn sanitize_library_keeps_simple_names() {
-        assert_eq!(sanitize_library("Miyu"), "miyu");
+        assert_eq!(sanitize_library("GQY"), "gqy");
         assert_eq!(sanitize_library("默认 表情"), "default");
     }
 
@@ -1599,7 +1599,7 @@ mod tests {
     #[test]
     fn current_library_follows_persona_mapping() {
         let mut config = AppConfig::default();
-        assert_eq!(current_persona_library(&config), "miyu");
+        assert_eq!(current_persona_library(&config), "gqy");
         config.prompt.active_persona = "Custom Persona.md".to_string();
         config.plugins.memes.persona_libraries.insert(
             config.active_persona_scope(),
@@ -1667,16 +1667,16 @@ mod tests {
         assert_eq!(origin.sent_at, "2026-08-10T12:00:00+00:00");
     }
 
-    /// 真实链路实测：cargo test --bin miyu -- --ignored collect_meme_records_origin
-    /// 需要 MIYU_E2E_CONFIG_DIR 指向含识图模型配置的真实 config 目录，
-    /// MIYU_E2E_IMAGE 指向一张能通过表情判定的图片；数据写入临时目录。
+    /// 真实链路实测：cargo test --bin gqy -- --ignored collect_meme_records_origin
+    /// 需要 GQY_E2E_CONFIG_DIR 指向含识图模型配置的真实 config 目录，
+    /// GQY_E2E_IMAGE 指向一张能通过表情判定的图片；数据写入临时目录。
     #[tokio::test]
-    #[ignore = "hits the real vision model; needs MIYU_E2E_CONFIG_DIR + MIYU_E2E_IMAGE"]
+    #[ignore = "hits the real vision model; needs GQY_E2E_CONFIG_DIR + GQY_E2E_IMAGE"]
     async fn collect_meme_records_origin_end_to_end() {
-        let config_dir = PathBuf::from(std::env::var("MIYU_E2E_CONFIG_DIR").unwrap());
-        let image = PathBuf::from(std::env::var("MIYU_E2E_IMAGE").unwrap());
+        let config_dir = PathBuf::from(std::env::var("GQY_E2E_CONFIG_DIR").unwrap());
+        let image = PathBuf::from(std::env::var("GQY_E2E_IMAGE").unwrap());
         let temp = tempfile::tempdir().unwrap();
-        let paths = MiyuPaths {
+        let paths = GQYPaths {
             root_dir: config_dir.clone(),
             config_dir: config_dir.clone(),
             config_file: config_dir.join("config.jsonc"),
@@ -1685,7 +1685,7 @@ mod tests {
             cache_dir: temp.path().join("cache"),
             state_dir: temp.path().join("state"),
             pictures_dir: temp.path().join("pictures"),
-            fish_hook_file: temp.path().join("fish/miyu.fish"),
+            fish_hook_file: temp.path().join("fish/gqy.fish"),
             bash_hook_file: temp.path().join("shell/bash-hook.sh"),
             zsh_hook_file: temp.path().join("shell/zsh-hook.zsh"),
             scripts_dir: config_dir.join("scripts"),

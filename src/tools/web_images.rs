@@ -2,7 +2,7 @@ use super::{vision, ToolProgress, ToolRegistry, ToolSpec};
 use crate::config::{AppConfig, ProviderConfig, VisionPluginConfig};
 use crate::i18n::{agent_text, text as t};
 use crate::llm::{ChatMessage, OpenAiCompatibleClient};
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use anyhow::{bail, Context, Result};
 use futures_util::{future::join_all, StreamExt};
 use image::{DynamicImage, GenericImageView, ImageBuffer, ImageFormat, Rgb, RgbImage};
@@ -168,7 +168,7 @@ impl VisionScreening {
 pub fn register(
     registry: &mut ToolRegistry,
     config: AppConfig,
-    paths: MiyuPaths,
+    paths: GQYPaths,
     allow_download: bool,
 ) {
     registry.register(ToolSpec::new_with_progress(
@@ -200,7 +200,7 @@ pub fn register(
 async fn search_web_images(
     args: Value,
     config: AppConfig,
-    paths: MiyuPaths,
+    paths: GQYPaths,
     allow_download: bool,
     progress: ToolProgress,
 ) -> Result<String> {
@@ -1019,7 +1019,7 @@ fn build_candidate(
 
 async fn download_and_store_images(
     config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     cache_dir: &Path,
     query: &str,
     candidates: Vec<ImageCandidate>,
@@ -1968,7 +1968,7 @@ fn stored_json(item: StoredImage) -> Value {
 
 async fn screen_images_with_vision(
     config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     query: &str,
     items: &mut [StoredImage],
 ) {
