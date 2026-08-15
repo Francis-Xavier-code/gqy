@@ -2,7 +2,7 @@
 
 use super::*;
 
-fn validate_classification(classification: &MemeClassification) -> Result<()> {
+pub(crate) fn validate_classification(classification: &MemeClassification) -> Result<()> {
     if !classification.save {
         return Ok(());
     }
@@ -41,7 +41,7 @@ fn validate_classification(classification: &MemeClassification) -> Result<()> {
     Ok(())
 }
 
-fn validate_tags(tags: &[String], required: bool) -> Result<()> {
+pub(crate) fn validate_tags(tags: &[String], required: bool) -> Result<()> {
     if (required && tags.is_empty()) || tags.len() > MAX_TAGS {
         bail!(
             "tags must contain between {} and {MAX_TAGS} items",
@@ -61,7 +61,7 @@ fn validate_tags(tags: &[String], required: bool) -> Result<()> {
     Ok(())
 }
 
-fn validate_text_field(name: &str, value: &str, min: usize, max: usize) -> Result<()> {
+pub(crate) fn validate_text_field(name: &str, value: &str, min: usize, max: usize) -> Result<()> {
     let trimmed = value.trim();
     let count = trimmed.chars().count();
     if trimmed != value || count < min || count > max || value.chars().any(char::is_control) {
@@ -70,7 +70,7 @@ fn validate_text_field(name: &str, value: &str, min: usize, max: usize) -> Resul
     Ok(())
 }
 
-fn validate_image_bytes(bytes: &[u8]) -> Result<ValidatedImageFormat> {
+pub(crate) fn validate_image_bytes(bytes: &[u8]) -> Result<ValidatedImageFormat> {
     let reader = image::ImageReader::new(Cursor::new(bytes))
         .with_guessed_format()
         .context("detecting image format")?;
@@ -94,7 +94,7 @@ fn validate_image_bytes(bytes: &[u8]) -> Result<ValidatedImageFormat> {
     Ok(format)
 }
 
-fn validate_dimensions(width: u32, height: u32) -> Result<()> {
+pub(crate) fn validate_dimensions(width: u32, height: u32) -> Result<()> {
     if !(MIN_IMAGE_EDGE..=MAX_IMAGE_EDGE).contains(&width)
         || !(MIN_IMAGE_EDGE..=MAX_IMAGE_EDGE).contains(&height)
         || u64::from(width) * u64::from(height) > MAX_IMAGE_PIXELS
