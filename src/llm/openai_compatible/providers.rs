@@ -130,23 +130,23 @@ pub(crate) fn zen_upstream_failed(provider: &ProviderConfig, status: u16, body: 
 
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct ChatRequest {
-    model: String,
-    messages: Vec<ChatMessage>,
-    temperature: f32,
+    pub(crate) model: String,
+    pub(crate) messages: Vec<ChatMessage>,
+    pub(crate) temperature: f32,
     pub(crate) stream: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) stream_options: Option<ChatStreamOptions>,
     /// Only set by cache-keepalive pings; normal chat leaves the provider
     /// default in place.
     #[serde(skip_serializing_if = "Option::is_none")]
-    max_tokens: Option<u32>,
+    pub(crate) max_tokens: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) tools: Option<Vec<ToolDefinition>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    chat_template_kwargs: Option<ChatTemplateKwargs>,
+    pub(crate) chat_template_kwargs: Option<ChatTemplateKwargs>,
     #[serde(flatten)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    extra_body: Option<Map<String, Value>>,
+    pub(crate) extra_body: Option<Map<String, Value>>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -156,22 +156,22 @@ pub(crate) struct ChatStreamOptions {
 
 #[derive(Debug, Serialize)]
 pub(crate) struct ResponsesRequest {
-    model: String,
-    input: Vec<Value>,
+    pub(crate) model: String,
+    pub(crate) input: Vec<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    instructions: Option<String>,
+    pub(crate) instructions: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    previous_response_id: Option<String>,
-    stream: bool,
+    pub(crate) previous_response_id: Option<String>,
+    pub(crate) stream: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
-    tools: Option<Vec<Value>>,
+    pub(crate) tools: Option<Vec<Value>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) reasoning: Option<ResponsesReasoning>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    temperature: Option<f32>,
+    pub(crate) temperature: Option<f32>,
     #[serde(flatten)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    extra_body: Option<Map<String, Value>>,
+    pub(crate) extra_body: Option<Map<String, Value>>,
 }
 
 #[derive(Debug, Serialize)]
@@ -191,21 +191,21 @@ pub(crate) fn default_responses_reasoning(summary: &str) -> ResponsesReasoning {
 
 #[derive(Debug, Serialize)]
 pub(crate) struct AnthropicRequest {
-    model: String,
+    pub(crate) model: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    system: Option<String>,
-    messages: Vec<AnthropicMessage>,
+    pub(crate) system: Option<String>,
+    pub(crate) messages: Vec<AnthropicMessage>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    tools: Option<Vec<AnthropicTool>>,
-    stream: bool,
-    max_tokens: u32,
+    pub(crate) tools: Option<Vec<AnthropicTool>>,
+    pub(crate) stream: bool,
+    pub(crate) max_tokens: u32,
     #[serde(skip_serializing_if = "Option::is_none")]
-    temperature: Option<f32>,
+    pub(crate) temperature: Option<f32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    thinking: Option<Value>,
+    pub(crate) thinking: Option<Value>,
     #[serde(flatten)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    extra_body: Option<Map<String, Value>>,
+    pub(crate) extra_body: Option<Map<String, Value>>,
 }
 
 #[derive(Debug, Serialize)]

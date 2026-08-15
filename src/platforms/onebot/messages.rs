@@ -262,11 +262,11 @@ pub(crate) fn parse_message(
 // ---------------------------------------------------------------------------
 
 pub(crate) struct OneBotAdapter {
-    conn: ConnectionHandle,
+    pub(crate) conn: ConnectionHandle,
     pub(crate) registry: Arc<Mutex<ConnectionRegistry>>,
-    http: reqwest::Client,
+    pub(crate) http: reqwest::Client,
     pub(crate) self_id: i64,
-    target: Target,
+    pub(crate) target: Target,
     pub(crate) max_reply_chars: usize,
 }
 

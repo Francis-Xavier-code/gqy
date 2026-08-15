@@ -438,12 +438,12 @@ impl ConnectionRegistry {
 /// the echo table for request/response API calls.
 #[derive(Clone)]
 pub(crate) struct ConnectionHandle {
-    out_tx: mpsc::UnboundedSender<String>,
+    pub(crate) out_tx: mpsc::UnboundedSender<String>,
     pub(crate) pending: Arc<Mutex<HashMap<String, oneshot::Sender<Value>>>>,
     pub(crate) bot_name: Arc<Mutex<Option<String>>>,
     pub(crate) asset_base_url: Option<String>,
     pub(crate) assets: crate::platforms::assets::AssetLeaseStore,
-    shutdown: watch::Sender<bool>,
+    pub(crate) shutdown: watch::Sender<bool>,
 }
 
 impl ConnectionHandle {

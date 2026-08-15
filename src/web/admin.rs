@@ -979,8 +979,8 @@ pub(crate) fn canonical_prompt_documents(documents: &[PromptDocument]) -> Vec<(S
 }
 
 pub(crate) struct FileBackup {
-    path: PathBuf,
-    content: Option<Vec<u8>>,
+    pub(crate) path: PathBuf,
+    pub(crate) content: Option<Vec<u8>>,
 }
 
 pub(crate) struct PersonaScopeBackup {

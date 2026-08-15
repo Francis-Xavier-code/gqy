@@ -458,8 +458,8 @@ impl Layout {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct ResourceMigrationEntry {
-    source: PathBuf,
-    destination: PathBuf,
+    pub(crate) source: PathBuf,
+    pub(crate) destination: PathBuf,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
