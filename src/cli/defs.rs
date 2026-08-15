@@ -4,12 +4,12 @@ use super::*;
 
 use keyboard_enhancement::KeyboardEnhancementState;
 
-fn run_history(paths: &GQYPaths, args: HistoryArgs) -> Result<()> {
+pub(crate) fn run_history(paths: &GQYPaths, args: HistoryArgs) -> Result<()> {
     let state = StateStore::new(paths)?;
     run_history_with_state(&state, args)
 }
 
-fn run_history_with_state(state: &StateStore, args: HistoryArgs) -> Result<()> {
+pub(crate) fn run_history_with_state(state: &StateStore, args: HistoryArgs) -> Result<()> {
     for entry in state.history(args.limit)? {
         if args.raw {
             println!("{}", serde_json::to_string(&entry)?);
@@ -48,7 +48,7 @@ fn run_history_with_state(state: &StateStore, args: HistoryArgs) -> Result<()> {
     Ok(())
 }
 
-async fn run_kb(paths: &GQYPaths, args: KbArgs) -> Result<()> {
+pub(crate) async fn run_kb(paths: &GQYPaths, args: KbArgs) -> Result<()> {
     let config = AppConfig::load(paths)?;
     let kb = tools::knowledge_base::KnowledgeBase::new(config, paths.clone())?;
     match args.command {
@@ -110,7 +110,7 @@ async fn run_kb(paths: &GQYPaths, args: KbArgs) -> Result<()> {
     Ok(())
 }
 
-async fn run_update_default_kb(paths: &GQYPaths) -> Result<()> {
+pub(crate) async fn run_update_default_kb(paths: &GQYPaths) -> Result<()> {
     let config = AppConfig::load_or_default(paths)?;
     let state = crate::default_kb::update(paths, &config, |stage| {
         let mut stderr = io::stderr().lock();
@@ -124,7 +124,7 @@ async fn run_update_default_kb(paths: &GQYPaths) -> Result<()> {
     Ok(())
 }
 
-fn write_default_kb_update_progress(
+pub(crate) fn write_default_kb_update_progress(
     output: &mut impl Write,
     stage: crate::default_kb::UpdateStage,
 ) -> io::Result<()> {
@@ -132,7 +132,7 @@ fn write_default_kb_update_progress(
     output.flush()
 }
 
-fn run_memory(paths: &GQYPaths, args: MemoryArgs) -> Result<()> {
+pub(crate) fn run_memory(paths: &GQYPaths, args: MemoryArgs) -> Result<()> {
     let config = AppConfig::load_or_default(paths)?;
     let store = MemoryStore::new(&config, paths);
     match args.command {
@@ -155,7 +155,7 @@ fn run_memory(paths: &GQYPaths, args: MemoryArgs) -> Result<()> {
     Ok(())
 }
 
-fn run_skills(paths: &GQYPaths, args: SkillsArgs) -> Result<()> {
+pub(crate) fn run_skills(paths: &GQYPaths, args: SkillsArgs) -> Result<()> {
     std::fs::create_dir_all(&paths.skills_dir)?;
     match args.command {
         SkillsCommand::List => {
@@ -226,7 +226,7 @@ fn run_skills(paths: &GQYPaths, args: SkillsArgs) -> Result<()> {
     Ok(())
 }
 
-fn skill_names(paths: &GQYPaths) -> Result<Vec<String>> {
+pub(crate) fn skill_names(paths: &GQYPaths) -> Result<Vec<String>> {
     let mut names = Vec::new();
     if !paths.skills_dir.exists() {
         return Ok(names);
@@ -241,7 +241,7 @@ fn skill_names(paths: &GQYPaths) -> Result<Vec<String>> {
     Ok(names)
 }
 
-fn skill_dir(paths: &GQYPaths, name: &str) -> Result<PathBuf> {
+pub(crate) fn skill_dir(paths: &GQYPaths, name: &str) -> Result<PathBuf> {
     let clean = name.trim();
     if clean.is_empty()
         || clean.contains('/')
@@ -258,7 +258,7 @@ fn skill_dir(paths: &GQYPaths, name: &str) -> Result<PathBuf> {
     Ok(dir)
 }
 
-async fn run_reset(paths: &GQYPaths) -> Result<()> {
+pub(crate) async fn run_reset(paths: &GQYPaths) -> Result<()> {
     let config = AppConfig::load_or_default(paths)?;
     let state = StateStore::new(paths)?;
     let memory = MemoryStore::new(&config, paths);
@@ -269,7 +269,7 @@ async fn run_reset(paths: &GQYPaths) -> Result<()> {
     Ok(())
 }
 
-async fn run_reset_memory_command(paths: &GQYPaths) -> Result<()> {
+pub(crate) async fn run_reset_memory_command(paths: &GQYPaths) -> Result<()> {
     if !io::stdin().is_terminal() {
         bail!(
             "{}",
@@ -296,14 +296,14 @@ async fn run_reset_memory_command(paths: &GQYPaths) -> Result<()> {
     Ok(())
 }
 
-fn wipe_summary() -> &'static str {
+pub(crate) fn wipe_summary() -> &'static str {
     t(
         "This erases everything GQY has accumulated: memory, every conversation's contents, group-chat contexts, and auto-generated skills. It cannot be undone.",
         "这会抹掉 GQY 积累的一切：记忆、所有会话的内容、群聊上下文、自动生成的技能。不可撤销。",
     )
 }
 
-async fn run_wipe(paths: &GQYPaths, assume_yes: bool) -> Result<()> {
+pub(crate) async fn run_wipe(paths: &GQYPaths, assume_yes: bool) -> Result<()> {
     if !assume_yes {
         if !io::stdin().is_terminal() {
             bail!(
@@ -344,19 +344,19 @@ async fn run_wipe(paths: &GQYPaths, assume_yes: bool) -> Result<()> {
     Ok(())
 }
 
-fn print_wipe_message() -> &'static str {
+pub(crate) fn print_wipe_message() -> &'static str {
     t(
         "erased all conversations, QQ contexts, memory, and generated skills for the current persona",
         "已抹掉当前人格的全部会话内容、QQ 上下文、记忆和自动技能",
     )
 }
 
-fn print_reset_message() {
+pub(crate) fn print_reset_message() {
     let message = t("cleared current conversation history", "已清空当前会话历史");
     println!("\x1b[2m{message}\x1b[0m\n");
 }
 
-fn join_message(parts: Vec<String>) -> String {
+pub(crate) fn join_message(parts: Vec<String>) -> String {
     parts.join(" ").trim().to_string()
 }
 pub(crate) fn handle_agent_event(
@@ -489,16 +489,16 @@ pub(crate) const RELOAD_RETRY_INTERVAL: Duration = Duration::from_secs(5);
 pub(crate) const RELOAD_RESPONSE_TIMEOUT: Duration = Duration::from_secs(60);
 #[derive(Clone, Debug)]
 pub(crate) struct PastedText {
-    text: String,
+    pub(crate) text: String,
 }
 
 #[derive(Clone, Debug)]
 pub(crate) struct ReplFooterStatus {
-    provider: String,
-    model: String,
+    pub(crate) provider: String,
+    pub(crate) model: String,
     mixed_models: bool,
-    thinking: Option<String>,
-    token_usage: render::TokenMeter,
+    pub(crate) thinking: Option<String>,
+    pub(crate) token_usage: render::TokenMeter,
 }
 
 /// The daemon reports Σ as three flat numbers; regroup them for the meters.
