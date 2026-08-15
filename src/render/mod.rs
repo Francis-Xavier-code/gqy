@@ -1,6 +1,8 @@
 
 mod core;
 use core::*;
+pub(crate) mod math;
+pub(crate) mod wait_spinner;
 mod render_impl;
 use render_impl::*;
 mod widgets;
