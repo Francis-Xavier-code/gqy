@@ -215,7 +215,7 @@ impl OpenAiCompatibleClient {
             });
         // 保温 ping 也进 cache-usage 记账:不然命中率诊断里多出一段
         // "看不见的流量"(deepseek 报告 P2 的观测盲区)。
-        super::cache_log::record(
+        crate::llm::cache_log::record(
             "keepalive",
             &self.provider.id,
             &self.provider.default_model,
@@ -352,7 +352,7 @@ impl OpenAiCompatibleClient {
                         next.endpoint_id = endpoint.id();
                     }
                     mark_endpoint_success(endpoint);
-                    super::cache_log::record(
+                    crate::llm::cache_log::record(
                         self.request_scope,
                         &endpoint.provider.id,
                         &endpoint.provider.default_model,

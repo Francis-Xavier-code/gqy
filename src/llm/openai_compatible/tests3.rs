@@ -2,6 +2,8 @@
 #![cfg(test)]
 
 use super::*;
+use std::net::TcpListener;
+use std::sync::atomic::AtomicUsize;
 
 #[test]
 fn typed_failures_drive_endpoint_cooldowns() {
@@ -301,7 +303,7 @@ fn subagent_output_visibility_follows_tool_detail_mode() {
     assert!(full.detailed_reasoning_summary);
 }
 
-async fn read_http_headers(stream: &mut tokio::net::TcpStream) {
+pub(crate) async fn read_http_headers(stream: &mut tokio::net::TcpStream) {
     let mut request = Vec::new();
     let mut byte = [0u8; 1];
     while !request.ends_with(b"\r\n\r\n") {
@@ -311,7 +313,7 @@ async fn read_http_headers(stream: &mut tokio::net::TcpStream) {
     }
 }
 
-async fn write_http_sse_response(stream: &mut tokio::net::TcpStream, body: &str) {
+pub(crate) async fn write_http_sse_response(stream: &mut tokio::net::TcpStream, body: &str) {
     let response = format!(
             "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
             body.len(),
@@ -452,7 +454,7 @@ async fn a_rate_limited_endpoint_still_fails_over_to_a_different_one() {
     second_server.abort();
 }
 
-fn test_client(provider: ProviderConfig) -> OpenAiCompatibleClient {
+pub(crate) fn test_client(provider: ProviderConfig) -> OpenAiCompatibleClient {
     let client = reqwest::Client::new();
     let endpoint = LlmEndpoint {
         client: client.clone(),
@@ -494,7 +496,7 @@ fn test_paths(root: &std::path::Path) -> GQYPaths {
     }
 }
 
-fn test_provider(id: &str, base_url: &str) -> ProviderConfig {
+pub(crate) fn test_provider(id: &str, base_url: &str) -> ProviderConfig {
     ProviderConfig {
         id: id.to_string(),
         display_name: id.to_string(),

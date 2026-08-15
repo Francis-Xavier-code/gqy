@@ -1,6 +1,6 @@
 use super::{
-    ChatMessage, ChatResult, ChatStreamChunk, ChatStreamKind, ResponsesContinuation, ToolCall,
-    ToolCallFunction, ToolDefinition, Usage,
+    ChatContent, ChatContentPart, ChatMessage, ChatResult, ChatStreamChunk, ChatStreamKind,
+    ResponsesContinuation, ToolCall, ToolCallFunction, ToolDefinition, Usage,
 };
 use crate::config::{AppConfig, ProviderConfig};
 use crate::default_models::OPENCODE_ZEN_BASE_URL;
