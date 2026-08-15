@@ -414,8 +414,8 @@ pub(crate) struct LiveReplEditor {
     pub(crate) input: String,
     pub(crate) cursor: usize,
     pub(crate) history: Vec<String>,
-    history_index: usize,
-    history_clean_index: Option<usize>,
+    pub(crate) history_index: usize,
+    pub(crate) history_clean_index: Option<usize>,
     pub(crate) is_pasted: bool,
     pasted_images: Vec<Option<crate::clipboard::PastedImage>>,
     pasted_texts: Vec<Option<PastedText>>,
@@ -424,7 +424,7 @@ pub(crate) struct LiveReplEditor {
     /// focus reporting. Starts `true`: a terminal that never reports focus
     /// leaves this pinned, and notifications stay quiet rather than firing on
     /// every turn.
-    focused: bool,
+    pub(crate) focused: bool,
 }
 
 pub(crate) struct LiveSubmission {

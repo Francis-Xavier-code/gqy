@@ -123,15 +123,15 @@ impl Drop for CallTempDir {
 
 #[derive(Debug, Clone)]
 pub(crate) struct VisionScreening {
-    status: String,
+    pub(crate) status: String,
     pub(crate) accepted: bool,
-    description: String,
-    reason: String,
-    provider_id: String,
-    model: String,
-    error: String,
-    relevance: u8,
-    quality: u8,
+    pub(crate) description: String,
+    pub(crate) reason: String,
+    pub(crate) provider_id: String,
+    pub(crate) model: String,
+    pub(crate) error: String,
+    pub(crate) relevance: u8,
+    pub(crate) quality: u8,
     pub(crate) safe: bool,
 }
 

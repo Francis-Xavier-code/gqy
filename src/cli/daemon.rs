@@ -852,10 +852,10 @@ pub(crate) fn is_daemon_fallback_log(path: &Path) -> bool {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct DaemonLogFollowCursor {
-    current: Option<PathBuf>,
-    current_offset: u64,
-    fallback: Option<PathBuf>,
-    fallback_offset: u64,
+    pub(crate) current: Option<PathBuf>,
+    pub(crate) current_offset: u64,
+    pub(crate) fallback: Option<PathBuf>,
+    pub(crate) fallback_offset: u64,
 }
 
 #[derive(Debug, Eq, PartialEq)]

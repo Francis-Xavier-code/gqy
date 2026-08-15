@@ -549,10 +549,10 @@ pub(crate) struct ColumnPlan {
 }
 
 pub(crate) struct Placement {
-    block_index: usize,
-    source_start: u32,
-    source_end: u32,
-    y: u32,
+    pub(crate) block_index: usize,
+    pub(crate) source_start: u32,
+    pub(crate) source_end: u32,
+    pub(crate) y: u32,
 }
 
 pub(crate) fn plan_columns(

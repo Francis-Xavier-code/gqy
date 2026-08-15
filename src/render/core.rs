@@ -79,8 +79,8 @@ pub(crate) struct CommandStreamState {
 
 #[derive(Clone, serde::Serialize)]
 pub(crate) struct CommandOutputPreviewLine {
-    stream: &'static str,
-    text: String,
+    pub(crate) stream: &'static str,
+    pub(crate) text: String,
 }
 
 #[derive(Clone, serde::Serialize)]

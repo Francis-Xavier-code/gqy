@@ -39,7 +39,7 @@ pub(crate) struct ModelsResponse {
 
 #[derive(Deserialize)]
 pub(crate) struct ModelInfo {
-    id: String,
+    pub(crate) id: String,
 }
 
 pub(crate) fn select_active_provider(

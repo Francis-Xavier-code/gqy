@@ -42,11 +42,11 @@ impl RuntimeState {
 
 pub(crate) struct SessionRuntime {
     last_touched: Instant,
-    last_reply: Option<Instant>,
-    heat: f64,
+    pub(crate) last_reply: Option<Instant>,
+    pub(crate) heat: f64,
     heat_updated: Instant,
     continuation: Option<Continuation>,
-    pending: HashMap<String, PendingReply>,
+    pub(crate) pending: HashMap<String, PendingReply>,
 }
 
 impl SessionRuntime {
@@ -146,16 +146,16 @@ pub(crate) struct ActiveReplyTarget {
 }
 
 pub(crate) struct PendingReply {
-    generation: u64,
-    started: Instant,
-    trigger: TriggerKind,
+    pub(crate) generation: u64,
+    pub(crate) started: Instant,
+    pub(crate) trigger: TriggerKind,
     /// 回复承诺已成立(直触发,或主动判断已通过)。补救窗口内的新消息
     /// 直接顶替目标而不再重新判断;未承诺(仍在判断中)则取消旧判断、
     /// 对新消息重新判断。
-    committed: bool,
-    reactions: Vec<(String, String)>,
-    targets: Vec<ActiveReplyTarget>,
-    cancel: tokio::sync::watch::Sender<bool>,
+    pub(crate) committed: bool,
+    pub(crate) reactions: Vec<(String, String)>,
+    pub(crate) targets: Vec<ActiveReplyTarget>,
+    pub(crate) cancel: tokio::sync::watch::Sender<bool>,
 }
 
 pub(crate) async fn wait_for_supersede(receiver: &mut tokio::sync::watch::Receiver<bool>) {

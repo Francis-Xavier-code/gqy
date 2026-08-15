@@ -50,8 +50,8 @@ type PlatformAccessScopes = HashMap<String, PlatformAccessPermissions>;
 
 #[derive(Debug)]
 pub(crate) struct SharedPlatformAccess {
-    index: RwLock<PlatformAccessIndex>,
-    mutations: Mutex<()>,
+    pub(crate) index: RwLock<PlatformAccessIndex>,
+    pub(crate) mutations: Mutex<()>,
 }
 
 pub(crate) static PLATFORM_ACCESS_INDEXES: OnceLock<

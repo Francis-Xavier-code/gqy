@@ -46,7 +46,7 @@ fn renderer_loads_only_the_fonts_needed_by_the_request() {
         assert!(!faces.is_empty());
         assert!(faces.iter().all(|face| matches!(
             &face.source,
-            fontdb::Source::File(path) if path == font_dir.join(CJK_FONT_FILE)
+            fontdb::Source::File(path) if *path == font_dir.join(CJK_FONT_FILE)
         )));
         let families = faces
             .iter()
