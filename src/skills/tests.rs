@@ -3,8 +3,6 @@
 
 use super::*;
 
-use super::*;
-
 fn test_paths(root: &Path) -> GQYPaths {
     GQYPaths {
         root_dir: root.to_path_buf(),

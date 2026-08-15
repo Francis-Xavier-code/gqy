@@ -5,16 +5,11 @@ use super::tests4::*;
 use super::*;
 
 #[cfg(test)]
-use crate::config::{ActiveProviderModelConfig, AppConfig, ProviderConfig};
-use crate::paths::GQYPaths;
-use crate::platforms::{
-    ConversationKind, OutboundMessage, PlatformAdapter, PlatformConversation, SendReceipt,
-};
-use crate::tools::{empty_parameters, ToolSpec};
+use crate::config::AppConfig;
+
+use crate::platforms::{OutboundMessage, PlatformAdapter, SendReceipt};
+
 use futures_util::future::BoxFuture;
-use std::path::PathBuf;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::{TcpListener, TcpStream};
 
 pub(crate) struct NoopPlatformAdapter;
 

@@ -3,8 +3,6 @@
 
 use super::*;
 
-use super::*;
-
 #[test]
 fn default_score_has_no_active_reply_bias() {
     let settings = RealContextPluginSettings::default();

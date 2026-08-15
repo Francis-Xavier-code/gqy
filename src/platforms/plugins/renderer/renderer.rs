@@ -3,17 +3,15 @@
 use super::*;
 
 use anyhow::{anyhow, bail, Context, Result};
-use cosmic_text::{
-    Align as TextAlign, Attrs, Buffer, Color, Family, FontSystem, LayoutGlyph, Metrics, Shaping,
-    Style as FontStyle, SwashCache, Weight, Wrap,
-};
+use cosmic_text::{Align as TextAlign, Buffer, Color, FontSystem, Style as FontStyle, SwashCache};
+
 use fontdb::Database as FontDatabase;
-use image::codecs::png::PngEncoder;
-use image::{ColorType, ImageEncoder, Pixel as _, Rgba, RgbaImage};
+
+use image::Pixel as _;
 use pulldown_cmark::{Alignment, Event, Options, Parser, Tag, TagEnd};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::io::{self, Write};
+use std::io::{self};
 use std::path::PathBuf;
 use std::process::Stdio;
 use std::sync::Arc;
@@ -21,7 +19,6 @@ use std::time::Duration;
 use tokio::io::{AsyncRead, AsyncWrite};
 use tokio::process::{Child, ChildStdin, ChildStdout};
 use tokio::sync::Mutex;
-use unicode_segmentation::UnicodeSegmentation;
 
 pub(crate) const MAX_INPUT_CHARS: usize = 20_000;
 pub(crate) const MAX_PAGE_PIXELS: u64 = 20_000_000;

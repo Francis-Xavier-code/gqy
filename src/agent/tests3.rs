@@ -4,7 +4,7 @@
 use super::tests4::*;
 use super::*;
 use crate::tools::{empty_parameters, ToolSpec};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::io::AsyncWriteExt;
 use tokio::net::TcpListener;
 
 #[tokio::test]

@@ -1,7 +1,6 @@
 //! handlers — 自 src/platforms/onebot.rs 拆分。
 
 use super::*;
-use crate::platforms::SessionTurnAcquireError;
 
 pub(crate) async fn handle_message_with_activity(
     state: DaemonState,

@@ -2,21 +2,15 @@
 
 use super::*;
 
-use super::{
-    ChatMessage, ChatResult, ChatStreamChunk, ChatStreamKind, ResponsesContinuation, ToolCall,
-    ToolCallFunction, ToolDefinition, Usage,
-};
 use crate::config::{AppConfig, ProviderConfig};
-use crate::default_models::OPENCODE_ZEN_BASE_URL;
-use crate::i18n::text as t;
+
 use crate::models_cache::{self, ModelReasoningInfo, ReasoningSetting, ReasoningVariant};
 use crate::paths::GQYPaths;
 use anyhow::{bail, Context, Result};
-use futures_util::{Stream, StreamExt};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
 use std::io::{ErrorKind, Write};
 use std::os::fd::AsRawFd;

@@ -3,17 +3,16 @@
 use super::*;
 
 use crate::i18n::text as t;
-use crate::llm::{ChatResult, ChatStreamChunk, ChatStreamKind, Usage};
-use crate::render::wait_spinner::{braille_frame, SpinnerStyle, WaitSpinner, SPINNER_INTERVAL};
+use crate::llm::{ChatResult, ChatStreamKind, Usage};
+use crate::render::wait_spinner::{braille_frame, WaitSpinner};
 use crate::tools::CommandOutputStream;
 use anyhow::Result;
-use crossterm::cursor::{Hide, MoveToColumn, MoveUp, Show};
-use crossterm::style::{Color, ResetColor, SetForegroundColor};
+use crossterm::cursor::{MoveToColumn, MoveUp};
 use crossterm::terminal::{Clear, ClearType};
 use crossterm::{execute, terminal};
 use serde_json::Value;
 use std::collections::{BTreeMap, VecDeque};
-use std::io::{self, IsTerminal, Write};
+use std::io::{self, Write};
 use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::UnicodeWidthStr;
 

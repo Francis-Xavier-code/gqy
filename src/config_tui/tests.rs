@@ -1,8 +1,6 @@
 //! tests — 自 src/config_tui.rs 外移。
 #![cfg(test)]
 
-use super::*;
-
 use super::{
     apply_real_context_values, apply_reply_processor_values, choice_display_label,
     field_display_value, language_choice_label, language_choice_value, menu_window,

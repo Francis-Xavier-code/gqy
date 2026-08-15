@@ -7,9 +7,9 @@ use anyhow::{bail, Context, Result};
 use directories::{BaseDirs, UserDirs};
 use serde::{Deserialize, Serialize};
 use std::fs::{self, File, OpenOptions};
-use std::io::{Read, Write};
+use std::io::Write;
 use std::os::fd::AsRawFd;
-use std::os::unix::fs::{symlink, DirBuilderExt, OpenOptionsExt, PermissionsExt};
+use std::os::unix::fs::{DirBuilderExt, OpenOptionsExt, PermissionsExt};
 use std::path::{Component, Path, PathBuf};
 
 pub(crate) const LAYOUT_MARKER: &str = ".layout-v1";

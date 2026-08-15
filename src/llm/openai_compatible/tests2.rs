@@ -3,8 +3,8 @@
 
 use super::tests3::*;
 use super::*;
-use std::sync::atomic::AtomicUsize;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+use tokio::io::AsyncWriteExt;
 use tokio::net::TcpListener;
 
 #[test]

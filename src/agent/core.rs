@@ -1,39 +1,30 @@
 //! core — 自 src/agent/mod.rs 拆分。
 
-use super::*;
-
-use crate::clipboard::{ClipboardImage, PastedImage};
+use crate::clipboard::PastedImage;
 use crate::config::{AppConfig, PromptAudience};
-use crate::host_info::xml_attr_escape;
+
 use crate::llm::{
-    ChatContent, ChatContentPart, ChatMessage, ChatResult, ChatStreamChunk, ChatStreamKind,
-    ImageUrlContent, OpenAiCompatibleClient, ToolCall, ToolCallFunction, TurnTokens, Usage,
+    ChatMessage, ChatStreamChunk, ChatStreamKind, OpenAiCompatibleClient, TurnTokens, Usage,
 };
-use crate::memory::{EvictedTurn, MemoryAccess, MemoryOrganizerHandle, MemoryOrigin, MemoryStore};
+
+use crate::memory::{MemoryOrganizerHandle, MemoryOrigin, MemoryStore};
 use crate::paths::GQYPaths;
-use crate::persona_hint;
+
 use crate::platforms::{PlatformContextImageRef, PlatformTurnContext};
-use crate::question::{
-    answered_tool_output, closed_tool_output, unavailable_tool_output, QuestionCancelled,
-    QuestionExchange, QuestionRequest, QuestionResponse,
-};
-use crate::render::wait_spinner::SPINNER_INTERVAL;
-use crate::state::{
-    QueuedPrompt, QueuedPromptAttachment, RedoCandidate, RedoInputKind, StateStore,
-    TurnRedoCheckpointPayload,
-};
-use crate::tools::{self, memes, vision, ToolRegistry};
-use anyhow::{bail, Context, Result};
-use base64::Engine;
-use chrono::Local;
-use serde_json::Value;
-use std::collections::{BTreeSet, HashMap, HashSet};
-use std::io::IsTerminal;
+use crate::question::{QuestionRequest, QuestionResponse};
+
+use crate::state::StateStore;
+
+use crate::tools::{self, ToolRegistry};
+use anyhow::Result;
+
+use std::collections::HashSet;
+
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use tokio::sync::{mpsc, oneshot, Notify};
+use tokio::sync::{oneshot, Notify};
 
 pub(crate) const MAX_QUESTION_ROUNDS_PER_TURN: usize = 8;
 

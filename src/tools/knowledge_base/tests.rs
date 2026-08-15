@@ -3,7 +3,6 @@
 
 use super::*;
 
-use super::*;
 use crate::paths::GQYPaths;
 
 fn test_paths(root: &Path) -> GQYPaths {

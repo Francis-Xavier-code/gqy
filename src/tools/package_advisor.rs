@@ -4,7 +4,7 @@
 
 use super::{ToolRegistry, ToolSpec};
 use crate::paths::GQYPaths;
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Result};
 use serde_json::{json, Value};
 use std::path::{Path, PathBuf};
 use std::process::Stdio;

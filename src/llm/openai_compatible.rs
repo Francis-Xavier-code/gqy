@@ -9,24 +9,20 @@ use crate::models_cache::{self, ModelReasoningInfo, ReasoningSetting, ReasoningV
 use crate::paths::GQYPaths;
 use anyhow::{bail, Context, Result};
 use futures_util::{Stream, StreamExt};
-use reqwest::Client;
+
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 use std::collections::{BTreeSet, HashMap, HashSet};
-use std::fs::{File, OpenOptions};
-use std::io::{ErrorKind, Write};
-use std::os::fd::AsRawFd;
-use std::path::PathBuf;
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, LazyLock, Mutex};
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+
+use std::sync::Arc;
+use std::time::{Duration, Instant};
 
 mod core;
 pub use core::*;
 mod client_impl;
-pub use client_impl::*;
+
 mod client_impl2;
-pub use client_impl2::*;
+
 mod providers;
 pub use providers::*;
 mod providers2;

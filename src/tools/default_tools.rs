@@ -1,5 +1,5 @@
 use super::{CommandOutputStream, ToolProgress, ToolRegistry, ToolSpec};
-use crate::host_info::{parse_macos_system_version, read_small_file};
+use crate::host_info::parse_macos_system_version;
 use crate::i18n::agent_text as t;
 use crate::tools::patch_preview::write_with_patch_preview;
 use anyhow::{bail, Result};

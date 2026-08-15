@@ -5,7 +5,7 @@
 use super::*;
 
 #[cfg(test)]
-use crate::question::{QuestionOption, QuestionPrompt};
+use crate::question::{};
 use crate::state::PlatformSessionBindingKey;
 
 #[test]

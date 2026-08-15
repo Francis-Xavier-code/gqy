@@ -1,12 +1,9 @@
-use crate::i18n::text as t;
-use anyhow::{bail, Context, Result};
-use directories::{BaseDirs, UserDirs};
-use serde::{Deserialize, Serialize};
+use anyhow::{bail, Result};
 use std::fs::{self, File, OpenOptions};
-use std::io::{Read, Write};
-use std::os::fd::AsRawFd;
-use std::os::unix::fs::{symlink, DirBuilderExt, OpenOptionsExt, PermissionsExt};
-use std::path::{Component, Path, PathBuf};
+use std::io::Read;
+
+use std::os::unix::fs::{symlink, OpenOptionsExt, PermissionsExt};
+use std::path::Path;
 
 mod layout;
 pub use layout::*;
