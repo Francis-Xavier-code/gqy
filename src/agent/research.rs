@@ -16,9 +16,9 @@ pub(crate) fn tool_output_succeeded(output: &str) -> bool {
 
 #[derive(Debug)]
 pub(crate) struct AutoArtifactCandidate {
-    call_id: String,
-    tool_name: String,
-    path: PathBuf,
+    pub(crate) call_id: String,
+    pub(crate) tool_name: String,
+    pub(crate) path: PathBuf,
 }
 
 pub(crate) fn artifact_delivery_requested(messages: &[ChatMessage]) -> bool {

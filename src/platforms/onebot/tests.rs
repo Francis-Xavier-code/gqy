@@ -66,13 +66,13 @@ pub(crate) fn friend_request_event(user_id: i64, flag: &str) -> Value {
 }
 
 pub(crate) struct BlockingObserverPlugin {
-    observed: mpsc::UnboundedSender<String>,
-    release_first: Arc<tokio::sync::Notify>,
+    pub(crate) observed: mpsc::UnboundedSender<String>,
+    pub(crate) release_first: Arc<tokio::sync::Notify>,
 }
 
 pub(crate) struct BlockingJudgePlugin {
-    entered: mpsc::UnboundedSender<String>,
-    barrier: Arc<tokio::sync::Barrier>,
+    pub(crate) entered: mpsc::UnboundedSender<String>,
+    pub(crate) barrier: Arc<tokio::sync::Barrier>,
 }
 
 impl super::super::plugins::PlatformPlugin for BlockingJudgePlugin {

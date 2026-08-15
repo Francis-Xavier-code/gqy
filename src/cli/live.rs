@@ -10,13 +10,13 @@ pub(crate) struct LiveReplTail {
     /// 回合中途逐请求刷新计量时的基线(回合开始前的 footer 快照)。
     /// 每次 RoundUsage 事件都从基线重新叠加,避免累计值重复相加;
     /// 任何权威更新(set_footer)都会清掉它。
-    round_base_footer: Option<Box<ReplFooterStatus>>,
+    pub(crate) round_base_footer: Option<Box<ReplFooterStatus>>,
     pub(crate) jobs: Vec<crate::tools::jobs::JobOverview>,
-    job_spinner: usize,
+    pub(crate) job_spinner: usize,
     pub(crate) output_cursor: (u16, u16),
-    tail_start: u16,
-    tail_rows: u16,
-    input_cursor: (u16, u16),
+    pub(crate) tail_start: u16,
+    pub(crate) tail_rows: u16,
+    pub(crate) input_cursor: (u16, u16),
     pub(crate) rendered: bool,
     pub(crate) external_output_active: bool,
     pub(crate) raw_mode_handoff: bool,
@@ -24,10 +24,10 @@ pub(crate) struct LiveReplTail {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct LiveTailPlacement {
-    output_row: u16,
+    pub(crate) output_row: u16,
     pub(crate) tail_start: u16,
-    overflow: u16,
-    anchored: bool,
+    pub(crate) overflow: u16,
+    pub(crate) anchored: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

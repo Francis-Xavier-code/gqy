@@ -203,104 +203,104 @@ pub(crate) struct PersonaMetadata {
 pub(crate) struct ConfigResponse {
     pub(crate) config: Value,
     pub(crate) secret_states: HashMap<String, bool>,
-    prompts: PromptDocuments,
-    models: Vec<SafeModel>,
-    multimodal_models: Vec<SafeModel>,
-    display: WebDisplayConfig,
-    context: ContextSnapshot,
-    persona: PersonaIdentity,
+    pub(crate) prompts: PromptDocuments,
+    pub(crate) models: Vec<SafeModel>,
+    pub(crate) multimodal_models: Vec<SafeModel>,
+    pub(crate) display: WebDisplayConfig,
+    pub(crate) context: ContextSnapshot,
+    pub(crate) persona: PersonaIdentity,
 }
 
 #[derive(Clone, Debug, Serialize)]
 pub(crate) struct PersonaIdentity {
     pub(crate) name: String,
     pub(crate) avatar_url: Option<String>,
-    board_image_url: Option<String>,
-    board_title: String,
-    board_subtitle: String,
-    starter_prompts: Vec<String>,
+    pub(crate) board_image_url: Option<String>,
+    pub(crate) board_title: String,
+    pub(crate) board_subtitle: String,
+    pub(crate) starter_prompts: Vec<String>,
 }
 
 #[derive(Serialize)]
 pub(crate) struct BootstrapResponse {
-    version: &'static str,
-    boot_id: String,
-    latest_event_id: u64,
-    active_run_id: Option<String>,
-    running_turn_id: Option<String>,
-    external_queue_available: bool,
-    turns: Vec<SafeTurn>,
-    queued_prompts: Vec<SafeQueuedPrompt>,
-    models: Vec<SafeModel>,
-    display: WebDisplayConfig,
-    context: ContextSnapshot,
-    usage: SafeUsageSnapshot,
-    capabilities: Capabilities,
-    sessions: Vec<Value>,
-    current_session_id: String,
+    pub(crate) version: &'static str,
+    pub(crate) boot_id: String,
+    pub(crate) latest_event_id: u64,
+    pub(crate) active_run_id: Option<String>,
+    pub(crate) running_turn_id: Option<String>,
+    pub(crate) external_queue_available: bool,
+    pub(crate) turns: Vec<SafeTurn>,
+    pub(crate) queued_prompts: Vec<SafeQueuedPrompt>,
+    pub(crate) models: Vec<SafeModel>,
+    pub(crate) display: WebDisplayConfig,
+    pub(crate) context: ContextSnapshot,
+    pub(crate) usage: SafeUsageSnapshot,
+    pub(crate) capabilities: Capabilities,
+    pub(crate) sessions: Vec<Value>,
+    pub(crate) current_session_id: String,
     /// Every turn currently running, across all sessions.
-    runs: Vec<Value>,
-    persona: PersonaIdentity,
-    redo_candidate: Option<SafeRedoCandidate>,
+    pub(crate) runs: Vec<Value>,
+    pub(crate) persona: PersonaIdentity,
+    pub(crate) redo_candidate: Option<SafeRedoCandidate>,
 }
 
 #[derive(Serialize)]
 pub(crate) struct Capabilities {
-    multi_conversation: bool,
-    attachments: bool,
-    queue: bool,
-    redo: bool,
+    pub(crate) multi_conversation: bool,
+    pub(crate) attachments: bool,
+    pub(crate) queue: bool,
+    pub(crate) redo: bool,
 }
 
 #[derive(Clone, Serialize)]
 pub(crate) struct WebDisplayConfig {
-    reasoning: String,
-    tool_calls: String,
-    readable_tool_names: bool,
-    command_output_lines: usize,
-    mixed_model_endpoint_display: String,
-    show_mixed_model_endpoint: bool,
+    pub(crate) reasoning: String,
+    pub(crate) tool_calls: String,
+    pub(crate) readable_tool_names: bool,
+    pub(crate) command_output_lines: usize,
+    pub(crate) mixed_model_endpoint_display: String,
+    pub(crate) show_mixed_model_endpoint: bool,
 }
 
 #[derive(Clone, Serialize)]
 pub(crate) struct SafeQueuedPrompt {
-    id: String,
-    content: String,
-    submitted_at: String,
-    attachments: Vec<SafeUserAttachment>,
+    pub(crate) id: String,
+    pub(crate) content: String,
+    pub(crate) submitted_at: String,
+    pub(crate) attachments: Vec<SafeUserAttachment>,
 }
 
 #[derive(Serialize)]
 pub(crate) struct SafeModel {
-    provider_id: String,
-    provider_name: String,
-    model: String,
-    active: bool,
+    pub(crate) provider_id: String,
+    pub(crate) provider_name: String,
+    pub(crate) model: String,
+    pub(crate) active: bool,
 }
 
 #[derive(Serialize)]
 pub(crate) struct SafeTurn {
-    id: String,
-    seq: i64,
-    status: &'static str,
-    active_context: bool,
-    user_content: String,
-    assistant_content: String,
-    assistant_reasoning: Option<String>,
-    provider_id: Option<String>,
-    model: Option<String>,
-    user_timestamp: String,
-    assistant_timestamp: Option<String>,
-    token_total: u64,
-    token_prompt: u64,
-    token_cache_read: u64,
-    token_usage_estimated: bool,
-    question_exchanges: Vec<crate::question::QuestionExchange>,
-    followups: Vec<SafeFollowup>,
-    assets: Vec<SafeImageAsset>,
-    artifacts: Vec<SafeArtifactAsset>,
-    attachments: Vec<SafeUserAttachment>,
-    revision: i64,
+    pub(crate) id: String,
+    pub(crate) seq: i64,
+    pub(crate) status: &'static str,
+    pub(crate) active_context: bool,
+    pub(crate) user_content: String,
+    pub(crate) assistant_content: String,
+    pub(crate) assistant_reasoning: Option<String>,
+    pub(crate) provider_id: Option<String>,
+    pub(crate) model: Option<String>,
+    pub(crate) user_timestamp: String,
+    pub(crate) assistant_timestamp: Option<String>,
+    pub(crate) token_total: u64,
+    pub(crate) token_prompt: u64,
+    pub(crate) token_cache_read: u64,
+    pub(crate) token_usage_estimated: bool,
+    pub(crate) question_exchanges: Vec<crate::question::QuestionExchange>,
+    pub(crate) followups: Vec<SafeFollowup>,
+    pub(crate) assets: Vec<SafeImageAsset>,
+    pub(crate) artifacts: Vec<SafeArtifactAsset>,
+    pub(crate) attachments: Vec<SafeUserAttachment>,
+    pub(crate) revision: i64,
 }
 
 #[derive(Serialize)]
@@ -329,70 +329,70 @@ impl From<crate::state::RedoCandidate> for SafeRedoCandidate {
 
 #[derive(Serialize)]
 pub(crate) struct SafeFollowup {
-    id: String,
-    content: String,
-    submitted_at: String,
-    preceding_assistant_content: Option<String>,
-    preceding_assistant_reasoning: Option<String>,
-    provider_id: Option<String>,
-    model: Option<String>,
-    attachments: Vec<SafeUserAttachment>,
+    pub(crate) id: String,
+    pub(crate) content: String,
+    pub(crate) submitted_at: String,
+    pub(crate) preceding_assistant_content: Option<String>,
+    pub(crate) preceding_assistant_reasoning: Option<String>,
+    pub(crate) provider_id: Option<String>,
+    pub(crate) model: Option<String>,
+    pub(crate) attachments: Vec<SafeUserAttachment>,
 }
 
 #[derive(Clone, Serialize)]
 pub(crate) struct SafeUserAttachment {
-    id: String,
-    url: String,
-    name: String,
-    mime: String,
-    kind: String,
-    size: u64,
-    width: u32,
-    height: u32,
+    pub(crate) id: String,
+    pub(crate) url: String,
+    pub(crate) name: String,
+    pub(crate) mime: String,
+    pub(crate) kind: String,
+    pub(crate) size: u64,
+    pub(crate) width: u32,
+    pub(crate) height: u32,
 }
 
 #[derive(Serialize)]
 pub(crate) struct SafeImageAsset {
-    id: String,
-    url: String,
-    mime: String,
-    width: u32,
-    height: u32,
-    alt: String,
-    hide_caption: bool,
+    pub(crate) id: String,
+    pub(crate) url: String,
+    pub(crate) mime: String,
+    pub(crate) width: u32,
+    pub(crate) height: u32,
+    pub(crate) alt: String,
+    pub(crate) hide_caption: bool,
 }
 
 #[derive(Clone, Serialize)]
 pub(crate) struct SafeArtifactAsset {
-    id: String,
-    url: String,
-    name: String,
-    mime: String,
-    kind: String,
-    type_label: String,
-    size: u64,
-    updated_at: String,
+    pub(crate) id: String,
+    pub(crate) url: String,
+    pub(crate) name: String,
+    pub(crate) mime: String,
+    pub(crate) kind: String,
+    pub(crate) type_label: String,
+    pub(crate) size: u64,
+    pub(crate) updated_at: String,
 }
 
 #[derive(Serialize)]
 pub(crate) struct SafeUsageSnapshot {
-    requests: u64,
-    prompt_tokens: u64,
-    completion_tokens: u64,
-    total_tokens: u64,
-    conversation_tokens: u64,
-    cache_read_tokens: u64,
-    cache_write_tokens: u64,
-    reasoning_tokens: u64,
-    last_usage: Option<Usage>,
-    last_conversation_usage: Option<Usage>,
+    pub(crate) requests: u64,
+    pub(crate) prompt_tokens: u64,
+    pub(crate) completion_tokens: u64,
+    pub(crate) total_tokens: u64,
+    pub(crate) conversation_tokens: u64,
+    pub(crate) cache_read_tokens: u64,
+    pub(crate) cache_write_tokens: u64,
+    pub(crate) reasoning_tokens: u64,
+    pub(crate) last_usage: Option<Usage>,
+    pub(crate) last_conversation_usage: Option<Usage>,
 }
 
 #[derive(Serialize)]
 pub(crate) struct ModelResponse {
-    models: Vec<SafeModel>,
-    display: WebDisplayConfig,
-    context: ContextSnapshot,
+    pub(crate) models: Vec<SafeModel>,
+    pub(crate) display: WebDisplayConfig,
+    pub(crate) context: ContextSnapshot,
 }
 
 #[derive(Serialize)]

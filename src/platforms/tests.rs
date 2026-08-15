@@ -64,9 +64,9 @@ impl plugins::PlatformPlugin for SuppressingToolPlugin {
 
 pub(crate) struct CountingAdapter {
     pub(crate) calls: AtomicUsize,
-    fail_first: bool,
+    pub(crate) fail_first: bool,
     pub(crate) messages: Mutex<Vec<OutboundMessage>>,
-    group_members: Vec<PlatformGroupMember>,
+    pub(crate) group_members: Vec<PlatformGroupMember>,
 }
 
 struct PartialFailureAdapter {

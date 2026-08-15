@@ -133,14 +133,14 @@ pub(crate) async fn apply_repl_session_switch(
 
 /// One row of the daemon's session list, parsed from `ListSessions` JSON.
 pub(crate) struct SessionListEntry {
-    id: String,
-    name: String,
-    is_current: bool,
-    turns: u64,
-    snippet: String,
-    workspace: Option<String>,
+    pub(crate) id: String,
+    pub(crate) name: String,
+    pub(crate) is_current: bool,
+    pub(crate) turns: u64,
+    pub(crate) snippet: String,
+    pub(crate) workspace: Option<String>,
     /// "dev" | "normal",由 daemon 按会话人格推导。
-    mode: String,
+    pub(crate) mode: String,
 }
 
 pub(crate) fn session_list_entries(data: &serde_json::Value) -> Vec<SessionListEntry> {

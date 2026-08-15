@@ -527,9 +527,9 @@ pub(crate) struct ThinkingVariantPreferences {
     #[serde(default)]
     pub(crate) selected: HashMap<String, String>,
     #[serde(skip)]
-    changes: HashMap<String, Option<String>>,
+    pub(crate) changes: HashMap<String, Option<String>>,
     #[serde(skip)]
-    provider_renames: Vec<(String, String)>,
+    pub(crate) provider_renames: Vec<(String, String)>,
 }
 
 pub(crate) fn thinking_variant_preferences_file(paths: &GQYPaths) -> PathBuf {
