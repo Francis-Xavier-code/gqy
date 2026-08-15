@@ -2,8 +2,6 @@
 
 use super::*;
 
-mod client_impl2;
-use client_impl2::*;
 impl OpenAiCompatibleClient {
     /// 当前主 provider id,用量历史记账用(具体模型以 ChatResult 为准)。
     pub fn provider_id(&self) -> &str {
