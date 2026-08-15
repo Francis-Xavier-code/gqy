@@ -2,6 +2,7 @@
 
 use super::*;
 
+use std::sync::atomic::AtomicI64;
 #[derive(Default)]
 pub(crate) struct InboundMessage {
     pub(crate) text: String,

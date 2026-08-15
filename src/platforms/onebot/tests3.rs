@@ -4,6 +4,9 @@
 use super::tests::*;
 use super::*;
 
+use axum::http::HeaderMap;
+use tokio::sync::mpsc;
+use tokio::sync::watch;
 #[tokio::test]
 async fn tool_followup_reservation_requires_the_same_conversation_and_sender() {
     let temp = tempfile::tempdir().unwrap();

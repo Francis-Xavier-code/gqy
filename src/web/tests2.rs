@@ -7,6 +7,7 @@ use super::*;
 use crate::question::{QuestionOption, QuestionPrompt};
 use crate::state::PlatformSessionBindingKey;
 
+use crate::question::QuestionResponse;
 #[test]
 pub(crate) fn startup_repairs_a_platform_owned_current_session() {
     let temp = tempfile::tempdir().unwrap();

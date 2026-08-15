@@ -6,6 +6,7 @@ use std::sync::atomic::AtomicUsize;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpListener;
 
+use std::sync::atomic::Ordering;
 #[test]
 fn typed_failures_drive_endpoint_cooldowns() {
     let rate_limit =

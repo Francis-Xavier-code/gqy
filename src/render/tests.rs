@@ -3,6 +3,7 @@
 
 use super::*;
 
+use unicode_width::UnicodeWidthStr;
 #[cfg(test)]
 
 fn visible_command_lines(lines: Vec<String>) -> Vec<String> {

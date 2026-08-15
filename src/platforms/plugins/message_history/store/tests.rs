@@ -3,6 +3,7 @@
 
 use super::*;
 
+use crate::platforms::ConversationKind;
 #[cfg(test)]
 use tempfile::TempDir;
 

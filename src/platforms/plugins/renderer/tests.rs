@@ -3,6 +3,8 @@
 
 use super::*;
 
+use std::path::PathBuf;
+use std::time::Duration;
 #[cfg(test)]
 
 fn render(markdown: &str, raw_config: &RenderConfig) -> Result<Vec<RenderedImage>> {

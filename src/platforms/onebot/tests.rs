@@ -6,6 +6,7 @@ use super::*;
 
 #[cfg(test)]
 use crate::paths::GQYPaths;
+use tokio::sync::mpsc;
 
 /// issue #29:唤醒合成事件必须继承发起者身份,不能伪装成机器人自己。
 #[test]
