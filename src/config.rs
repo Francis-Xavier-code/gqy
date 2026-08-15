@@ -1,15 +1,26 @@
+use crate::default_models::{
+    OPENCODE_DEFAULT_CHAT_MODEL, OPENCODE_DEFAULT_VISION_MODEL, OPENCODE_PROVIDER_ID,
+    OPENCODE_ZEN_BASE_URL,
+};
+use crate::paths::GQYPaths;
+use crate::prompts::default_system_prompt;
+use anyhow::{bail, Context, Result};
+use serde::{Deserialize, Deserializer, Serialize};
+use std::collections::{BTreeMap, HashMap, HashSet};
+use std::path::{Path, PathBuf};
+
 mod core;
-use core::*;
+pub use core::*;
 mod plugins;
-use plugins::*;
+pub use plugins::*;
 mod defaults;
-use defaults::*;
+pub use defaults::*;
 mod app_impl;
-use app_impl::*;
+pub use app_impl::*;
 mod app_impl2;
-use app_impl2::*;
+pub use app_impl2::*;
 mod schema;
-use schema::*;
+pub use schema::*;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]
