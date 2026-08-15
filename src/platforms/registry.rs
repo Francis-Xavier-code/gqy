@@ -284,12 +284,13 @@ pub(crate) struct PlatformRuntime {
     pub(crate) onebot: Arc<Mutex<onebot::ConnectionRegistry>>,
     pub(crate) qq_listener: onebot::QqListenerManager,
     pub(crate) rate: Arc<Mutex<RateWindow>>,
-    plugins: Arc<OnceLock<std::result::Result<Arc<plugins::PlatformPluginRegistry>, String>>>,
+    pub(crate) plugins:
+        Arc<OnceLock<std::result::Result<Arc<plugins::PlatformPluginRegistry>, String>>>,
     pub(crate) assets: assets::AssetLeaseStore,
     pub(crate) turn_permits: Arc<tokio::sync::Semaphore>,
     pub(crate) file_store_lock: Arc<tokio::sync::Mutex<()>>,
     pub(crate) message_activity: MessageActivityRegistry,
-    session_turn_locks: Arc<Mutex<HashMap<String, Weak<SessionTurnState>>>>,
+    pub(crate) session_turn_locks: Arc<Mutex<HashMap<String, Weak<SessionTurnState>>>>,
 }
 
 impl PlatformRuntime {
@@ -624,11 +625,11 @@ pub(crate) struct PlatformTurnContext {
     pub(crate) paths: GQYPaths,
     pub(crate) state_store: StateStore,
     adapter: Arc<dyn PlatformAdapter>,
-    plugins: Arc<plugins::PlatformPluginRegistry>,
+    pub(crate) plugins: Arc<plugins::PlatformPluginRegistry>,
     config_manager: Option<Weak<Mutex<crate::web::ManagerState>>>,
     inbound_event: Option<Arc<PlatformInboundEvent>>,
-    message_activity: Option<MessageActivityHandle>,
-    response_target: Mutex<Option<PendingResponseTarget>>,
+    pub(crate) message_activity: Option<MessageActivityHandle>,
+    pub(crate) response_target: Mutex<Option<PendingResponseTarget>>,
     group_member_cache: Mutex<HashMap<String, PlatformGroupMember>>,
     plugin_values: Mutex<BTreeMap<String, Value>>,
     delivered_image_digests: Mutex<HashSet<blake3::Hash>>,

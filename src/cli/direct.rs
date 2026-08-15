@@ -632,11 +632,11 @@ pub(crate) fn apply_session_model_override(state: &StateStore, config: &mut AppC
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct VariantMenuItem {
-    provider_id: String,
-    model: String,
-    options: Vec<VariantMenuOption>,
-    selected: usize,
-    cursor: usize,
+    pub(crate) provider_id: String,
+    pub(crate) model: String,
+    pub(crate) options: Vec<VariantMenuOption>,
+    pub(crate) selected: usize,
+    pub(crate) cursor: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

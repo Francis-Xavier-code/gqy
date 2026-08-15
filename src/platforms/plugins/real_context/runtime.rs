@@ -129,20 +129,20 @@ pub(crate) struct Continuation {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub(crate) struct ActiveReplyTarget {
-    message_id: String,
-    sender_id: String,
-    sender_name: String,
-    timestamp: i64,
-    content: String,
-    reply_message_id: Option<String>,
-    reply_sender_id: Option<String>,
-    reply_sender_name: Option<String>,
-    reply_content: Option<String>,
+    pub(crate) message_id: String,
+    pub(crate) sender_id: String,
+    pub(crate) sender_name: String,
+    pub(crate) timestamp: i64,
+    pub(crate) content: String,
+    pub(crate) reply_message_id: Option<String>,
+    pub(crate) reply_sender_id: Option<String>,
+    pub(crate) reply_sender_name: Option<String>,
+    pub(crate) reply_content: Option<String>,
     #[serde(default)]
-    mentioned_user_ids: Vec<String>,
+    pub(crate) mentioned_user_ids: Vec<String>,
     #[serde(default)]
-    mentioned_users: Vec<PlatformMention>,
-    supplemental: bool,
+    pub(crate) mentioned_users: Vec<PlatformMention>,
+    pub(crate) supplemental: bool,
 }
 
 pub(crate) struct PendingReply {
@@ -171,6 +171,6 @@ pub(crate) async fn wait_for_supersede(receiver: &mut tokio::sync::watch::Receiv
 
 #[derive(Default)]
 pub(crate) struct DynamicGate {
-    active: AtomicUsize,
-    notify: Notify,
+    pub(crate) active: AtomicUsize,
+    pub(crate) notify: Notify,
 }

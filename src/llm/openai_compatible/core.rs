@@ -167,8 +167,8 @@ pub(crate) fn http_status_retry_delay(attempt: usize) -> Duration {
 
 #[derive(Debug)]
 pub(crate) struct TransportFailure {
-    stage: &'static str,
-    kind: TransportFailureKind,
+    pub(crate) stage: &'static str,
+    pub(crate) kind: TransportFailureKind,
 }
 
 impl std::fmt::Display for TransportFailure {
@@ -204,8 +204,8 @@ impl std::fmt::Display for HttpFailureKind {
 
 #[derive(Debug)]
 pub(crate) struct HttpStatusFailure {
-    status: u16,
-    kind: HttpFailureKind,
+    pub(crate) status: u16,
+    pub(crate) kind: HttpFailureKind,
 }
 
 impl HttpStatusFailure {
@@ -525,7 +525,7 @@ pub(crate) fn rename_thinking_variant_entries<T>(
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub(crate) struct ThinkingVariantPreferences {
     #[serde(default)]
-    selected: HashMap<String, String>,
+    pub(crate) selected: HashMap<String, String>,
     #[serde(skip)]
     changes: HashMap<String, Option<String>>,
     #[serde(skip)]
@@ -748,27 +748,27 @@ impl ResponsesContinuationHealth {
 
 #[derive(Clone)]
 pub struct OpenAiCompatibleClient {
-    client: Client,
-    provider: ProviderConfig,
-    api_key: String,
-    endpoints: Arc<Vec<LlmEndpoint>>,
-    thinking_variants: HashMap<String, String>,
-    reasoning_visibility: ReasoningVisibility,
+    pub(crate) client: Client,
+    pub(crate) provider: ProviderConfig,
+    pub(crate) api_key: String,
+    pub(crate) endpoints: Arc<Vec<LlmEndpoint>>,
+    pub(crate) thinking_variants: HashMap<String, String>,
+    pub(crate) reasoning_visibility: ReasoningVisibility,
     /// True when partial output never reaches a person mid-request — platform
     /// turns buffer a round and post it as one message. Nothing is committed
     /// until the round ends, so a dropped stream can be retried invisibly.
-    buffered_delivery: bool,
-    detailed_reasoning_summary: bool,
-    request_timeouts: Option<RequestTimeouts>,
+    pub(crate) buffered_delivery: bool,
+    pub(crate) detailed_reasoning_summary: bool,
+    pub(crate) request_timeouts: Option<RequestTimeouts>,
     /// Per-clone completion cap. Auxiliary callers (compaction summaries)
     /// clone the client and set this so a runaway summary cannot eat the
     /// window; None leaves the provider default untouched.
-    max_tokens_override: Option<u32>,
-    continuation_health: ResponsesContinuationHealth,
+    pub(crate) max_tokens_override: Option<u32>,
+    pub(crate) continuation_health: ResponsesContinuationHealth,
     /// Scope tag for the per-request cache accounting log ("chat", "qq-judge",
     /// "compact", …). Auxiliary callers override it via `with_request_scope`
     /// so cache stats separate the main conversation from side channels.
-    request_scope: &'static str,
+    pub(crate) request_scope: &'static str,
 }
 
 #[derive(Clone, Copy)]
@@ -786,9 +786,9 @@ pub(crate) enum ReasoningVisibility {
 
 #[derive(Clone)]
 pub(crate) struct LlmEndpoint {
-    client: Client,
-    provider: ProviderConfig,
-    api_key: String,
+    pub(crate) client: Client,
+    pub(crate) provider: ProviderConfig,
+    pub(crate) api_key: String,
     key_index: usize,
 }
 

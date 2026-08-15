@@ -633,9 +633,9 @@ pub(crate) async fn run_daemon_logs(paths: &GQYPaths, args: DaemonLogsArgs) -> R
 #[derive(Debug, Eq, PartialEq)]
 pub(crate) struct ParsedDaemonLogLine<'a> {
     timestamp: &'a str,
-    level: &'a str,
-    module: &'a str,
-    message: &'a str,
+    pub(crate) level: &'a str,
+    pub(crate) module: &'a str,
+    pub(crate) message: &'a str,
 }
 
 pub(crate) fn parse_daemon_log_line(line: &str) -> Option<ParsedDaemonLogLine<'_>> {
@@ -860,8 +860,8 @@ pub(crate) struct DaemonLogFollowCursor {
 
 #[derive(Debug, Eq, PartialEq)]
 pub(crate) struct DaemonLogSnapshot {
-    lines: Vec<String>,
-    cursor: DaemonLogFollowCursor,
+    pub(crate) lines: Vec<String>,
+    pub(crate) cursor: DaemonLogFollowCursor,
 }
 
 pub(crate) fn daemon_log_follow_cursor_for_files(

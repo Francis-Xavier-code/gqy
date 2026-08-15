@@ -207,7 +207,7 @@ pub(crate) struct UsageAccumulator {
     reasoning_tokens: u64,
     cache_reported: bool,
     has_usage: bool,
-    estimated: bool,
+    pub(crate) estimated: bool,
 }
 
 impl UsageAccumulator {
@@ -1356,8 +1356,8 @@ pub(crate) fn compact_loaded_tools_report(output: &str) -> Option<String> {
 
 #[derive(Default)]
 pub(crate) struct LoadedItems {
-    targets: Vec<String>,
-    tools: Vec<String>,
+    pub(crate) targets: Vec<String>,
+    pub(crate) tools: Vec<String>,
 }
 
 pub(crate) fn loaded_items_from_output(output: &str) -> LoadedItems {

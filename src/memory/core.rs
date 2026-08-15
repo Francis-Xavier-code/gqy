@@ -114,18 +114,18 @@ pub(crate) fn jieba_block_character(character: char) -> bool {
 
 #[derive(Clone)]
 pub struct MemoryStore {
-    config: MemoryConfig,
-    kb_config: KnowledgeBasePluginConfig,
+    pub(crate) config: MemoryConfig,
+    pub(crate) kb_config: KnowledgeBasePluginConfig,
     /// Kept whole because the embedding call needs provider lookup and the
     /// knowledge base's timeout setting.
-    app_config: AppConfig,
-    writes_enabled: bool,
-    access: MemoryAccess,
-    writer_principal: Option<String>,
-    writer_display_name: String,
-    data_db: PathBuf,
-    state_db: PathBuf,
-    skills_dir: PathBuf,
+    pub(crate) app_config: AppConfig,
+    pub(crate) writes_enabled: bool,
+    pub(crate) access: MemoryAccess,
+    pub(crate) writer_principal: Option<String>,
+    pub(crate) writer_display_name: String,
+    pub(crate) data_db: PathBuf,
+    pub(crate) state_db: PathBuf,
+    pub(crate) skills_dir: PathBuf,
 }
 
 /// Read authorization for one agent run. Storage remains persona-global; this
@@ -151,9 +151,9 @@ impl MemoryAccess {
 
 #[derive(Clone, Debug)]
 pub(crate) struct MemoryOwnership {
-    visibility: &'static str,
-    owner_principal: String,
-    owner_display_name: String,
+    pub(crate) visibility: &'static str,
+    pub(crate) owner_principal: String,
+    pub(crate) owner_display_name: String,
 }
 
 impl MemoryOwnership {
@@ -265,12 +265,12 @@ pub struct MemoryHit {
     pub timestamp: String,
     pub source: String,
     pub retention: Option<String>,
-    visibility: String,
-    owner_principal: String,
-    owner_display_name: String,
-    subjects: String,
-    source_episode_ids: Vec<i64>,
-    origin_session_id: String,
+    pub(crate) visibility: String,
+    pub(crate) owner_principal: String,
+    pub(crate) owner_display_name: String,
+    pub(crate) subjects: String,
+    pub(crate) source_episode_ids: Vec<i64>,
+    pub(crate) origin_session_id: String,
 }
 
 #[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd, Deserialize, Serialize)]

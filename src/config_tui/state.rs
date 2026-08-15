@@ -1198,8 +1198,8 @@ pub(crate) fn pad(value: &str, width: usize) -> String {
 }
 
 pub(crate) struct Field {
-    label: &'static str,
-    value: String,
+    pub(crate) label: &'static str,
+    pub(crate) value: String,
     textarea: bool,
     /// 预设对话列表:Enter 进入列表式子编辑器而不是 $EDITOR(验收 #19),
     /// value 仍是 `user:`/`assistant:` 行格式的序列化文本。
@@ -1207,9 +1207,9 @@ pub(crate) struct Field {
     sensitive: bool,
     boolean: bool,
     modalities: bool,
-    choices: Vec<String>,
-    empty_choice_label: &'static str,
-    raw_choice_labels: bool,
+    pub(crate) choices: Vec<String>,
+    pub(crate) empty_choice_label: &'static str,
+    pub(crate) raw_choice_labels: bool,
 }
 
 impl Field {

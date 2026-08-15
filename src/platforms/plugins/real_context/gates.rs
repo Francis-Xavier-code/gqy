@@ -508,9 +508,9 @@ pub(super) fn format_history(
 }
 
 pub(crate) struct FormattedHistory {
-    text: String,
-    images: Vec<crate::platforms::PlatformContextImageRef>,
-    message_count: usize,
+    pub(crate) text: String,
+    pub(crate) images: Vec<crate::platforms::PlatformContextImageRef>,
+    pub(crate) message_count: usize,
 }
 
 pub(crate) fn format_history_for_turn(

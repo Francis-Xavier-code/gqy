@@ -181,19 +181,19 @@ pub(crate) const GQY_WALLPAPER: &[u8] = include_bytes!("../../pics/GQY-image.png
 
 #[derive(Clone)]
 pub(crate) struct DaemonState {
-    auth: WebAuth,
-    boot_id: Arc<str>,
+    pub(crate) auth: WebAuth,
+    pub(crate) boot_id: Arc<str>,
     pub(crate) web_port: u16,
-    web_public: bool,
-    web_bind: IpAddr,
+    pub(crate) web_public: bool,
+    pub(crate) web_bind: IpAddr,
     pub(crate) paths: GQYPaths,
     pub(crate) manager: Arc<Mutex<ManagerState>>,
     pub(crate) state_store: StateStore,
     pub(crate) events: EventHub,
     pub(crate) questions: QuestionBroker,
     pub(crate) actor_tx: mpsc::UnboundedSender<ActorCommand>,
-    shutdown_tx: broadcast::Sender<()>,
-    turn_engine: TurnEngineState,
+    pub(crate) shutdown_tx: broadcast::Sender<()>,
+    pub(crate) turn_engine: TurnEngineState,
     pub(crate) platforms: PlatformRuntime,
 }
 
@@ -312,10 +312,10 @@ impl TurnEngineState {
 /// a QQ conversation-specific model pool gets its own client/tool snapshot.
 /// Configuration reloads clear the cache before the next request.
 pub(crate) struct TurnResources {
-    client: OpenAiCompatibleClient,
-    normal_tools: tools::ToolRegistry,
-    dev_tools: tools::ToolRegistry,
-    restricted_tools: tools::ToolRegistry,
+    pub(crate) client: OpenAiCompatibleClient,
+    pub(crate) normal_tools: tools::ToolRegistry,
+    pub(crate) dev_tools: tools::ToolRegistry,
+    pub(crate) restricted_tools: tools::ToolRegistry,
 }
 
 pub(crate) const MAX_CACHED_TURN_RESOURCE_CONFIGS: usize = 16;
@@ -541,7 +541,7 @@ pub(crate) struct ManagerState {
     pub(crate) active_runs: HashMap<String, RunInfo>,
     pub(crate) admin_busy: bool,
     pub(crate) context: ContextSnapshot,
-    persona_session_ids: HashMap<String, String>,
+    pub(crate) persona_session_ids: HashMap<String, String>,
 }
 
 impl ManagerState {
@@ -785,7 +785,7 @@ pub(crate) fn resync_record(inner: &mut EventHubInner) -> VecDeque<EventRecord> 
 
 #[derive(Clone)]
 pub(crate) struct QuestionBroker {
-    pending: Arc<Mutex<HashMap<String, PendingQuestion>>>,
+    pub(crate) pending: Arc<Mutex<HashMap<String, PendingQuestion>>>,
 }
 
 pub(crate) struct PendingQuestion {
@@ -1339,7 +1339,7 @@ impl RunEventMapper {
 
 #[derive(Debug)]
 pub(crate) struct ApiError {
-    status: StatusCode,
+    pub(crate) status: StatusCode,
     pub(crate) message: String,
 }
 
@@ -1370,41 +1370,41 @@ impl IntoResponse for ApiError {
 #[derive(Default, Deserialize)]
 pub(crate) struct EventsQuery {
     #[serde(default)]
-    after: u64,
+    pub(crate) after: u64,
 }
 
 #[derive(Deserialize)]
 pub(crate) struct AttachmentQuery {
-    session_id: String,
+    pub(crate) session_id: String,
 }
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct CreateTurnRequest {
-    content: String,
+    pub(crate) content: String,
     /// 兼容字段:旧前端仍会带 mode;会话模式创建时定死,daemon 按会话
     /// 记录强制,这个值只解析不采信。缺省即普通。
     #[serde(default)]
-    mode: Option<String>,
+    pub(crate) mode: Option<String>,
     #[serde(default)]
-    attachment_ids: Vec<String>,
+    pub(crate) attachment_ids: Vec<String>,
     /// Target session; defaults to the global current session. The turn runs
     /// there without moving the current pointer (per-view WebUI sessions).
     #[serde(default)]
-    session_id: Option<String>,
+    pub(crate) session_id: Option<String>,
 }
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct QueuePromptRequest {
-    content: String,
-    run_id: String,
-    turn_id: String,
+    pub(crate) content: String,
+    pub(crate) run_id: String,
+    pub(crate) turn_id: String,
     #[serde(default)]
-    attachment_ids: Vec<String>,
+    pub(crate) attachment_ids: Vec<String>,
     /// Target session; defaults to the global current session.
     #[serde(default)]
-    session_id: Option<String>,
+    pub(crate) session_id: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -1435,37 +1435,37 @@ pub(crate) struct TurnUpdateReceipt {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct RedoTurnRequest {
-    expected_revision: i64,
-    input_id: String,
+    pub(crate) expected_revision: i64,
+    pub(crate) input_id: String,
     #[serde(default)]
-    content: Option<String>,
+    pub(crate) content: Option<String>,
     /// 同 CreateTurnRequest.mode:兼容旧前端,只解析不采信。
     #[serde(default)]
-    mode: Option<String>,
+    pub(crate) mode: Option<String>,
 }
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct AnswerQuestionRequest {
-    answers: QuestionAnswers,
+    pub(crate) answers: QuestionAnswers,
 }
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct SetModelsRequest {
-    models: Vec<ActiveProviderModelConfig>,
+    pub(crate) models: Vec<ActiveProviderModelConfig>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct ThinkingVariantUpdate {
-    provider_id: String,
-    model: String,
-    selected: Option<String>,
+    pub(crate) provider_id: String,
+    pub(crate) model: String,
+    pub(crate) selected: Option<String>,
 }
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct SetThinkingVariantsRequest {
-    updates: Vec<ThinkingVariantUpdate>,
+    pub(crate) updates: Vec<ThinkingVariantUpdate>,
 }

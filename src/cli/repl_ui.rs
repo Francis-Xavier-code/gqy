@@ -695,13 +695,13 @@ pub(crate) enum ReplSlashCommand {
 }
 
 pub(crate) struct ReplCommandSpec {
-    name: &'static str,
-    command: ReplSlashCommand,
+    pub(crate) name: &'static str,
+    pub(crate) command: ReplSlashCommand,
     /// Argument hint rendered in /help, e.g. "[count]"; empty when the
     /// command takes no arguments (enforced at dispatch).
-    arg_hint: &'static str,
-    help_en: &'static str,
-    help_zh: &'static str,
+    pub(crate) arg_hint: &'static str,
+    pub(crate) help_en: &'static str,
+    pub(crate) help_zh: &'static str,
 }
 
 /// Single source of truth for REPL slash commands: drives Tab completion,

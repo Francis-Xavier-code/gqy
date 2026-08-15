@@ -4,17 +4,17 @@ use super::*;
 
 #[derive(Default)]
 pub(crate) struct InboundMessage {
-    text: String,
-    text_chars: usize,
-    rejected_reason: Option<&'static str>,
-    images: Vec<MediaRef>,
-    unresolved_image_files: Vec<String>,
-    files: Vec<FileRef>,
-    at_self: bool,
-    reply_to_message_id: Option<String>,
-    quoted_message_data: Option<Value>,
-    mentioned_user_ids: Vec<String>,
-    media: Vec<PlatformInboundMedia>,
+    pub(crate) text: String,
+    pub(crate) text_chars: usize,
+    pub(crate) rejected_reason: Option<&'static str>,
+    pub(crate) images: Vec<MediaRef>,
+    pub(crate) unresolved_image_files: Vec<String>,
+    pub(crate) files: Vec<FileRef>,
+    pub(crate) at_self: bool,
+    pub(crate) reply_to_message_id: Option<String>,
+    pub(crate) quoted_message_data: Option<Value>,
+    pub(crate) mentioned_user_ids: Vec<String>,
+    pub(crate) media: Vec<PlatformInboundMedia>,
 }
 
 #[derive(Debug)]
@@ -46,9 +46,9 @@ impl MediaRef {
 }
 
 pub(crate) struct FileRef {
-    file_id: Option<String>,
-    name: String,
-    url: Option<String>,
+    pub(crate) file_id: Option<String>,
+    pub(crate) name: String,
+    pub(crate) url: Option<String>,
 }
 
 /// A conversation no other test shares. The delivered-image ledger is

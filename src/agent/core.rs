@@ -180,9 +180,9 @@ pub struct AgentTurnControl {
     mode: Arc<Mutex<AgentMode>>,
     normal_tools: ToolRegistry,
     dev_tools: ToolRegistry,
-    queue_ingress: Option<Arc<QueueIngressBarrier>>,
-    supersede: Option<Arc<TurnSupersedeSignal>>,
-    supersede_seen: Arc<AtomicU64>,
+    pub(crate) queue_ingress: Option<Arc<QueueIngressBarrier>>,
+    pub(crate) supersede: Option<Arc<TurnSupersedeSignal>>,
+    pub(crate) supersede_seen: Arc<AtomicU64>,
 }
 
 #[derive(Default)]
@@ -884,91 +884,91 @@ where
 }
 
 pub struct Agent {
-    state: StateStore,
-    client: OpenAiCompatibleClient,
-    system_prompt: String,
+    pub(crate) state: StateStore,
+    pub(crate) client: OpenAiCompatibleClient,
+    pub(crate) system_prompt: String,
     /// Per-run system additions supplied by a transport/plugin. They are
     /// intentionally excluded from prompt-change hashing and persistence.
-    runtime_system_context: Vec<String>,
+    pub(crate) runtime_system_context: Vec<String>,
     /// Per-message transport context (sender identity JSON, message ids, …)
     /// rendered as a tail system message after the user turn. Kept out of the
     /// system prompt so the stable prefix stays byte-identical across turns.
-    turn_system_context: Vec<String>,
+    pub(crate) turn_system_context: Vec<String>,
     /// Raw user input snapshot taken before platform plugins wrapped the turn
     /// content (instruction boilerplate, group history, …). The memory diary
     /// records this instead of the wrapped prompt — the minimal C10 "记忆只读
     /// raw_content" separation. `None` on paths whose input is already raw
     /// (terminal, WebUI) and on redo replays.
-    memory_content: Option<String>,
-    suppress_session_history: bool,
-    trim_at_ratio: f32,
-    trim_batch_ratio: f32,
-    tools_enabled: bool,
-    max_tool_rounds: usize,
-    tools: Arc<Mutex<ToolRegistry>>,
-    memory: MemoryStore,
-    memory_organizer: Option<MemoryOrganizerHandle>,
-    memory_origin: MemoryOrigin,
-    memory_database_id: String,
-    memory_generation: i64,
-    mode: AgentMode,
-    prompt_audience: PromptAudience,
-    config: AppConfig,
-    paths: GQYPaths,
-    on_overflow: String,
-    turn_display_content: Option<String>,
-    attachment_run_id: Option<String>,
-    image_platform: Option<String>,
-    image_platform_label: Option<String>,
-    platform_context: Option<Arc<PlatformTurnContext>>,
-    context_images: Vec<PlatformContextImageRef>,
+    pub(crate) memory_content: Option<String>,
+    pub(crate) suppress_session_history: bool,
+    pub(crate) trim_at_ratio: f32,
+    pub(crate) trim_batch_ratio: f32,
+    pub(crate) tools_enabled: bool,
+    pub(crate) max_tool_rounds: usize,
+    pub(crate) tools: Arc<Mutex<ToolRegistry>>,
+    pub(crate) memory: MemoryStore,
+    pub(crate) memory_organizer: Option<MemoryOrganizerHandle>,
+    pub(crate) memory_origin: MemoryOrigin,
+    pub(crate) memory_database_id: String,
+    pub(crate) memory_generation: i64,
+    pub(crate) mode: AgentMode,
+    pub(crate) prompt_audience: PromptAudience,
+    pub(crate) config: AppConfig,
+    pub(crate) paths: GQYPaths,
+    pub(crate) on_overflow: String,
+    pub(crate) turn_display_content: Option<String>,
+    pub(crate) attachment_run_id: Option<String>,
+    pub(crate) image_platform: Option<String>,
+    pub(crate) image_platform_label: Option<String>,
+    pub(crate) platform_context: Option<Arc<PlatformTurnContext>>,
+    pub(crate) context_images: Vec<PlatformContextImageRef>,
     /// 本回合的浮动尾部人格提醒全文。只追加进发送副本
     /// `request_messages`,永不进 `messages`,因此不化石化、不落库——
     /// 见 persona_hint 模块头注释。
-    persona_reminder: Option<String>,
+    pub(crate) persona_reminder: Option<String>,
     /// 重复调用链(advisory 防死循环,见 tools::repeat_reminder 模块头)。
     /// 人类新输入(新回合/排队插话)重置;注入的提醒只进本轮工作消息,
     /// 不进化石。
-    repeat_chain: crate::tools::repeat_reminder::RepeatChain,
+    pub(crate) repeat_chain: crate::tools::repeat_reminder::RepeatChain,
     /// 预设对话(begin_dialogs):system 之后、真实历史之前的 user/assistant
     /// 示例对,每请求注入、永不落库。构造时从当前人格 scope 的
     /// dialogs/<scope>.md 加载。
-    preset_dialogs: Vec<(String, String)>,
+    pub(crate) preset_dialogs: Vec<(String, String)>,
     /// Exact (messages, tools) of the most recent live request; feeds the
     /// idle cache-keepalive pings (v7 DeepSeek 高命中策略). Only populated
     /// while `cache.keepalive_seconds > 0`.
-    last_request_snapshot: Option<(Vec<ChatMessage>, Vec<crate::llm::ToolDefinition>)>,
+    pub(crate) last_request_snapshot: Option<(Vec<ChatMessage>, Vec<crate::llm::ToolDefinition>)>,
     /// 上一条真实请求最终落在哪个 endpoint(provider_id, model):keepalive
     /// ping 必须钉住同一缓存域,轮转调度下打到别家=白花钱不保温
     /// (deepseek 报告 P2)。
-    last_request_endpoint: Option<(String, String)>,
+    pub(crate) last_request_endpoint: Option<(String, String)>,
     /// Cancels the currently running keepalive loop, if any.
-    keepalive_cancel: Option<Arc<std::sync::atomic::AtomicBool>>,
+    pub(crate) keepalive_cancel: Option<Arc<std::sync::atomic::AtomicBool>>,
     /// Consecutive auto-compactions that failed to bring the context back
     /// under the trigger. A healthy compaction lands below the trigger; two
     /// in a row mean the verbatim floor alone exceeds it (window too small),
     /// so auto-compaction latches off until the context drops (`compact_stuck`).
-    consecutive_compacts: std::sync::atomic::AtomicU32,
-    compact_stuck: std::sync::atomic::AtomicBool,
+    pub(crate) consecutive_compacts: std::sync::atomic::AtomicU32,
+    pub(crate) compact_stuck: std::sync::atomic::AtomicBool,
     /// Max turn seq observed right after the previous auto-compaction (-1 =
     /// none yet). A new compaction firing within a few turns of the last one
     /// means some single item (a huge paste or tool output) refills the
     /// window instantly — compacting harder won't help ("thrashing").
-    last_compact_max_seq: std::sync::atomic::AtomicI64,
-    rapid_compacts: std::sync::atomic::AtomicU32,
+    pub(crate) last_compact_max_seq: std::sync::atomic::AtomicI64,
+    pub(crate) rapid_compacts: std::sync::atomic::AtomicU32,
     /// One-shot "context is getting large" notice at the soft watermark.
-    soft_notice_sent: std::sync::atomic::AtomicBool,
+    pub(crate) soft_notice_sent: std::sync::atomic::AtomicBool,
 }
 
 pub(crate) struct PreparedUserInput {
-    content: String,
-    message: ChatMessage,
-    hints: Vec<ChatMessage>,
+    pub(crate) content: String,
+    pub(crate) message: ChatMessage,
+    pub(crate) hints: Vec<ChatMessage>,
 }
 
 /// Output of a `task` call executed in the parallel group.
 pub(crate) struct GroupTaskOutput {
-    output: String,
+    pub(crate) output: String,
     /// Persistable tool report, extracted at completion.
-    report: Option<String>,
+    pub(crate) report: Option<String>,
 }

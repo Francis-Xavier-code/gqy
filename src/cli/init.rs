@@ -180,8 +180,8 @@ pub(crate) fn alarm_worker_paths(state_dir: PathBuf, cache_dir: PathBuf) -> GQYP
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct PopOutcome {
-    turns: usize,
-    archived: bool,
+    pub(crate) turns: usize,
+    pub(crate) archived: bool,
 }
 
 pub(crate) fn run_pop(paths: &GQYPaths, args: PopArgs) -> Result<()> {

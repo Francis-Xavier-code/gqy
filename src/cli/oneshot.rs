@@ -293,10 +293,10 @@ pub(crate) async fn run_chat_with_options(
 }
 
 pub(crate) struct RemoteTurnSummary {
-    result: ChatResult,
-    context_tokens: u64,
-    context_window: Option<usize>,
-    cumulative_tokens: TurnTokens,
+    pub(crate) result: ChatResult,
+    pub(crate) context_tokens: u64,
+    pub(crate) context_window: Option<usize>,
+    pub(crate) cumulative_tokens: TurnTokens,
 }
 
 /// Marker error for a remote turn interrupted by the user (Ctrl+C) or a
