@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#171821">
+  <title>Miyu</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/vendor/katex/katex.min.css">
+  <!-- matugen 生成的 MD3 token 覆盖;app.js 依据「配色方案」切换 link.disabled -->
+  <link rel="stylesheet" href="/theme.css" id="matugenThemeLink">
+  <script defer src="/vendor/katex/katex.min.js"></script>
+  <script defer src="/app.js"></script>
+</head>
+<body data-theme="graphite">
+  <div class="app-shell" id="appShell">
+    <button class="page-scrim sidebar-scrim" id="sidebarScrim" type="button" aria-label="关闭会话栏" tabindex="-1"></button>
+
+    <aside class="sidebar" id="sidebar" aria-label="会话">
+      <header class="brand-row">
+        <div class="brand-identity">
+          <img src="/assets/miyu-logo.png" alt="Miyu" class="brand-avatar" id="brandAvatar">
+          <div>
+            <strong id="brandName">Miyu</strong>
+            <span><i class="status-dot is-connecting" id="sidebarStatusDot"></i><span id="sidebarConnectionStatus">连接中</span></span>
+          </div>
+        </div>
+        <button class="new-chat-button" id="newChatButton" type="button" title="新对话" aria-label="新对话" disabled>
+          <span class="icon-slot" data-icon="square-pen" aria-hidden="true"><span class="icon-fallback">＋</span></span>
+        </button>
+        <button class="icon-button sidebar-collapse-button" id="sidebarCollapseButton" type="button" title="收起侧边栏" aria-label="收起侧边栏">
+          <span class="icon-slot" data-icon="panel-left-close" aria-hidden="true"><span class="icon-fallback">◧</span></span>
+        </button>
+        <button class="icon-button sidebar-close" id="sidebarClose" type="button" title="关闭会话栏" aria-label="关闭会话栏">
+          <span class="icon-slot" data-icon="x" aria-hidden="true"><span class="icon-fallback">×</span></span>
+        </button>
+      </header>
+
+      <nav class="session-list" id="sessionList" aria-label="会话">
+        <div class="session-items" id="sessionItems"></div>
+      </nav>
+
+      <footer class="sidebar-footer">
+        <div class="sidebar-actions">
+          <button class="sidebar-action" id="consoleButton" type="button">
+            <span class="icon-slot" data-icon="layout-grid" aria-hidden="true"><span class="icon-fallback">▦</span></span>
+            <span class="settings-label">控制台</span>
+          </button>
+          <button class="icon-button" id="sidebarThemeButton" type="button" title="切换主题" aria-label="切换主题">
+            <span class="icon-slot" data-icon="sun-moon" aria-hidden="true"><span class="icon-fallback">◐</span></span>
+          </button>
+        </div>
+      </footer>
+    </aside>
+
+    <main class="main-stage" id="mainStage">
+      <header class="topbar">
+        <div class="topbar-leading">
+          <button class="icon-button sidebar-expand-button" id="sidebarExpandButton" type="button" title="展开侧边栏" aria-label="展开侧边栏" hidden>
+            <span class="icon-slot" data-icon="panel-left-open" aria-hidden="true"><span class="icon-fallback">▣</span></span>
+          </button>
+          <button class="icon-button mobile-menu-button" id="mobileMenuButton" type="button" title="打开会话栏" aria-label="打开会话栏">
+            <span class="icon-slot" data-icon="panel-left" aria-hidden="true"><span class="icon-fallback">☰</span></span>
+          </button>
+          <div class="conversation-heading">
+            <strong id="conversationTitle">新对话</strong>
+            <span id="conversationMeta">正在载入</span>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <div class="model-menu-wrap" id="modelMenuWrap">
+            <button class="model-button" id="modelButton" type="button" aria-haspopup="menu" aria-expanded="false" disabled>
+              <span class="model-mark" id="modelMark">--</span>
+              <span class="model-label" id="modelLabel">正在载入</span>
+              <span class="icon-slot" data-icon="chevron-down" aria-hidden="true"><span class="icon-fallback">⌄</span></span>
+            </button>
+            <div class="model-menu" id="modelMenu" role="menu" aria-label="选择模型" hidden></div>
+          </div>
+          <button class="icon-button" id="themeButton" type="button" title="切换主题" aria-label="切换主题">
+            <span class="icon-slot" data-icon="moon" aria-hidden="true"><span class="icon-fallback">◐</span></span>
+          </button>
+          <button class="icon-button artifact-toggle-button" id="artifactToggleButton" type="button" title="打开预览" aria-label="打开预览" hidden>
+            <span class="icon-slot" data-icon="panel-right" aria-hidden="true"><span class="icon-fallback">▥</span></span>
+          </button>
+          <button class="icon-button" id="topbarSettingsButton" type="button" title="打开设置" aria-label="打开设置">
+            <span class="icon-slot" data-icon="sliders-horizontal" aria-hidden="true"><span class="icon-fallback">⚙</span></span>
+          </button>
+        </div>
+      </header>
+
+      <section class="conversation-stage" id="conversationStage">
+        <div class="inline-error" id="errorRegion" role="alert" hidden></div>
+
+        <div class="chat-scroll" id="chatScroll">
+          <div class="loading-state" id="loadingState" role="status">
+            <span class="loading-mark" aria-hidden="true"></span>
+            <span>正在载入对话</span>
+          </div>
+
+          <section class="blocked-state" id="blockedState" aria-labelledby="blockedTitle" hidden>
+            <img src="/assets/miyu-logo.png" alt="" aria-hidden="true">
+            <h1 id="blockedTitle">登录 Miyu</h1>
+            <p id="blockedMessage">输入访问密码以继续。</p>
+            <form class="login-form" id="loginForm" hidden novalidate>
+              <label for="loginPassword">访问密码</label>
+              <div class="login-input">
+                <span class="icon-slot" data-icon="lock-keyhole" aria-hidden="true"><span class="icon-fallback">*</span></span>
+                <input id="loginPassword" name="password" type="password" autocomplete="current-password" required spellcheck="false" autocapitalize="none">
+              </div>
+              <p class="login-error" id="loginError" role="alert" hidden></p>
+              <button class="login-submit" id="loginSubmit" type="submit">
+                <span class="icon-slot" data-icon="log-in" aria-hidden="true"><span class="icon-fallback">→</span></span>
+                <span id="loginSubmitLabel">登录</span>
+              </button>
+            </form>
+            <button class="secondary-button" id="retryBootstrapButton" type="button">
+              <span class="icon-slot" data-icon="refresh-cw" aria-hidden="true"><span class="icon-fallback">↻</span></span>
+              <span>重新载入</span>
+            </button>
+          </section>
+
+          <div class="timeline" id="timeline" hidden></div>
+
+          <section class="empty-state" id="emptyState" aria-labelledby="emptyTitle" hidden>
+            <div class="empty-visual" id="emptyVisual">
+              <img id="emptyBoardImage" src="/assets/miyuwallpaper.png" alt="Miyu 看板图片">
+            </div>
+            <div class="empty-copy">
+              <span class="empty-kicker"><i class="status-dot"></i><span id="emptyKickerName">Miyu</span></span>
+              <h1 id="emptyTitle">今天想聊些什么？</h1>
+              <p id="emptySubtitle">从一个问题、计划或此刻的想法开始。</p>
+            </div>
+            <div class="prompt-grid" id="promptGrid">
+              <button type="button" data-prompt="查询今天的天气">
+                <span class="icon-slot" data-icon="cloud-sun" aria-hidden="true"><span class="icon-fallback">☀</span></span>
+                <span>查询今天的天气</span>
+              </button>
+              <button type="button" data-prompt="分析一个问题">
+                <span class="icon-slot" data-icon="lightbulb" aria-hidden="true"><span class="icon-fallback">?</span></span>
+                <span>分析一个问题</span>
+              </button>
+              <button type="button" data-prompt="发表情包打个招呼吧">
+                <span class="icon-slot" data-icon="smile" aria-hidden="true"><span class="icon-fallback">☺</span></span>
+                <span>发表情包打个招呼吧</span>
+              </button>
+              <button type="button" data-prompt="搜索一张图片">
+                <span class="icon-slot" data-icon="image-search" aria-hidden="true"><span class="icon-fallback">⌕</span></span>
+                <span>搜索一张图片</span>
+              </button>
+            </div>
+          </section>
+        </div>
+
+        <button class="jump-bottom-button" id="jumpBottomButton" type="button" title="回到底部" aria-label="回到底部" hidden>
+          <span class="icon-slot" data-icon="arrow-down" aria-hidden="true"><span class="icon-fallback">↓</span></span>
+        </button>
+
+        <footer class="composer-dock" id="composerDock">
+          <div class="jobs-strip" id="jobsStrip" hidden></div>
+          <div class="question-dock" id="questionDock" aria-label="待回答问题" aria-live="polite" hidden></div>
+          <form class="composer" id="composerForm">
+            <div class="queue-tray" id="queueTray" aria-label="排队中的消息" hidden></div>
+            <div class="attachment-tray" id="attachmentTray" aria-label="待发送附件" hidden></div>
+            <textarea id="composerInput" rows="3" placeholder="给 Miyu 发消息" aria-label="消息" disabled></textarea>
+            <input id="attachmentInput" type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif,.txt,.md,.markdown,.json,.jsonl,.csv,.tsv,.log,.rs,.js,.jsx,.ts,.tsx,.py,.go,.java,.c,.cc,.cpp,.h,.hpp,.cs,.rb,.php,.swift,.kt,.kts,.sh,.bash,.zsh,.fish,.toml,.yaml,.yml,.xml,.html,.css,.scss,.sql" hidden>
+            <div class="composer-footer">
+              <div class="composer-controls">
+                <span class="mode-badge" id="modeBadge" data-mode="normal" title="普通模式会话（创建时定死）">
+                  <span class="mode-label">普通</span>
+                </span>
+                <button class="thinking-variant-button" id="thinkingVariantButton" type="button" title="思考程度" aria-label="思考程度" aria-haspopup="dialog" aria-expanded="false" aria-controls="thinkingVariantPopover" disabled>
+                  <span class="icon-slot brain-icon" data-icon="brain" aria-hidden="true"><span class="icon-fallback">B</span></span>
+                  <span class="icon-slot thinking-chevron" data-icon="chevron-down" aria-hidden="true"><span class="icon-fallback">⌄</span></span>
+                </button>
+                <span class="composer-state" id="composerState">正在载入</span>
+              </div>
+              <div class="composer-submit">
+                <div class="live-stop-rail" id="liveStopRail" aria-label="正在运行的回复" hidden></div>
+                <div class="composer-context">
+                  <div class="context-heading">
+                    <span>上下文</span>
+                    <span id="contextNumbers">-- / --</span>
+                  </div>
+                  <div class="context-track" id="contextTrack" role="progressbar" aria-label="上下文使用情况" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <i id="contextBar"></i>
+                  </div>
+                </div>
+                <span class="character-count" id="characterCount" hidden>0 / 20,000</span>
+                <button class="attach-button" id="attachButton" type="button" title="添加附件" aria-label="添加附件" disabled>
+                  <span class="icon-slot" data-icon="paperclip" aria-hidden="true"><span class="icon-fallback">+</span></span>
+                </button>
+                <button class="send-button" id="sendButton" type="submit" title="发送消息" aria-label="发送消息" disabled>
+                  <span class="icon-slot" data-icon="arrow-up" aria-hidden="true"><span class="icon-fallback">↑</span></span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </footer>
+      </section>
+
+      <aside class="artifact-workspace" id="artifactWorkspace" aria-label="预览工作区" aria-hidden="true" hidden>
+        <div class="artifact-resize-handle" id="artifactResizeHandle" aria-hidden="true"></div>
+        <header class="artifact-header">
+          <div class="artifact-leading">
+            <div class="artifact-mode-switch" role="group" aria-label="查看方式">
+              <button id="artifactPreviewButton" type="button" title="预览" aria-label="预览" aria-pressed="true">
+                <span class="icon-slot" data-icon="eye" aria-hidden="true"><span class="icon-fallback">◉</span></span>
+              </button>
+              <button id="artifactSourceButton" type="button" title="查看源码" aria-label="查看源码" aria-pressed="false">
+                <span class="icon-slot" data-icon="code-2" aria-hidden="true"><span class="icon-fallback">&lt;/&gt;</span></span>
+              </button>
+            </div>
+            <div class="artifact-image-actions" id="artifactImageActions" aria-label="图片操作" hidden>
+              <a id="artifactImageExternalButton" title="在新标签页打开原图" aria-label="在新标签页打开原图" target="_blank" rel="noopener noreferrer">
+                <span class="icon-slot" data-icon="external-link" aria-hidden="true"><span class="icon-fallback">↗</span></span>
+              </a>
+              <button id="artifactImageZoomOutButton" type="button" title="缩小" aria-label="缩小">
+                <span class="icon-slot" data-icon="zoom-out" aria-hidden="true"><span class="icon-fallback">−</span></span>
+              </button>
+              <button id="artifactImageZoomInButton" type="button" title="放大" aria-label="放大">
+                <span class="icon-slot" data-icon="zoom-in" aria-hidden="true"><span class="icon-fallback">＋</span></span>
+              </button>
+            </div>
+            <div class="artifact-resource-wrap">
+              <button class="artifact-title-button" id="artifactTitleButton" type="button" aria-haspopup="menu" aria-expanded="false">
+                <strong id="artifactTitle">预览</strong>
+                <small id="artifactTypeLabel"></small>
+                <span class="icon-slot" data-icon="chevron-down" aria-hidden="true"><span class="icon-fallback">⌄</span></span>
+              </button>
+              <div class="artifact-resource-menu" id="artifactResourceMenu" role="menu" hidden></div>
+            </div>
+          </div>
+          <div class="artifact-actions">
+            <button class="icon-button" id="artifactCopyButton" type="button" title="复制" aria-label="复制">
+              <span class="icon-slot" data-icon="copy" aria-hidden="true"><span class="icon-fallback">□</span></span>
+            </button>
+            <a class="artifact-download-button" id="artifactDownloadButton" title="下载" aria-label="下载" download>
+              <span class="icon-slot" data-icon="download" aria-hidden="true"><span class="icon-fallback">↓</span></span>
+            </a>
+            <button class="icon-button" id="artifactMaximizeButton" type="button" title="全屏显示" aria-label="全屏显示">
+              <span class="icon-slot" data-icon="maximize-2" aria-hidden="true"><span class="icon-fallback">□</span></span>
+            </button>
+            <button class="icon-button" id="artifactCloseButton" type="button" title="关闭预览" aria-label="关闭预览">
+              <span class="icon-slot" data-icon="x" aria-hidden="true"><span class="icon-fallback">×</span></span>
+            </button>
+          </div>
+        </header>
+        <div class="artifact-view" id="artifactView"></div>
+      </aside>
+    </main>
+
+    <section class="thinking-variant-popover" id="thinkingVariantPopover" role="dialog" aria-modal="false" aria-label="思考程度" hidden>
+      <div class="thinking-variant-layout">
+        <section class="thinking-model-pane" aria-label="模型">
+          <div class="thinking-model-list" id="thinkingModelList" role="listbox" aria-label="选择要设置的模型"></div>
+        </section>
+        <section class="thinking-level-pane" aria-label="档位">
+          <div class="thinking-model-detail">
+            <strong id="thinkingModelName"></strong>
+            <small id="thinkingModelProvider"></small>
+          </div>
+          <div class="thinking-level-list" id="thinkingLevelList" role="radiogroup" aria-label="选择思考程度"></div>
+        </section>
+      </div>
+    </section>
+
+    <button class="page-scrim drawer-scrim" id="drawerScrim" type="button" aria-label="关闭设置" tabindex="-1"></button>
+    <section class="console-view" id="consoleView" aria-label="控制台" aria-hidden="true" hidden>
+      <aside class="con-rail" id="conRail">
+        <div class="con-rail-head">
+          <b>控制台</b>
+          <button class="icon-button" id="conRailToggle" type="button" title="收起/展开侧边栏" aria-label="收起/展开侧边栏">
+            <span class="icon-slot" data-icon="panel-left" aria-hidden="true"><span class="icon-fallback">▤</span></span>
+          </button>
+        </div>
+        <nav class="con-rail-nav">
+          <button class="con-rail-item active" type="button">
+            <span class="icon-slot" data-icon="chart-column" aria-hidden="true"><span class="icon-fallback">▮</span></span>
+            <span>数据统计</span>
+          </button>
+        </nav>
+        <footer class="con-rail-foot">
+          <button class="con-rail-item" id="consoleBack" type="button">
+            <span class="icon-slot" data-icon="chevron-left" aria-hidden="true"><span class="icon-fallback">‹</span></span>
+            <span>返回聊天</span>
+          </button>
+        </footer>
+      </aside>
+      <main class="con-main">
+        <div class="con-inner">
+          <div class="con-head">
+            <h2>数据统计</h2>
+            <button class="icon-button u-refresh" id="usageRefresh" type="button" title="刷新" aria-label="刷新">
+              <span class="icon-slot" data-icon="refresh-cw" aria-hidden="true"><span class="icon-fallback">⟳</span></span>
+            </button>
+            <small id="usageStamp">正在载入…</small>
+            <div class="con-segmented" id="usageRangeSeg">
+              <button class="on" data-range="1d" type="button">近一天</button>
+              <button data-range="7d" type="button">7 天</button>
+              <button data-range="30d" type="button">30 天</button>
+              <button data-range="all" type="button">至今</button>
+            </div>
+          </div>
+          <div class="u-tiles" id="usageTiles"></div>
+          <div class="u-card">
+            <div class="u-card-head"><h3>调用热力</h3><span class="u-hint">近一年 · 每格一天</span><div class="u-legend" id="usageHeatTotal"></div></div>
+            <div class="u-heat-body">
+              <div class="u-heat-days"><span>一</span><span>三</span><span>五</span></div>
+              <div class="u-heat-wrap">
+                <div class="u-heat-months" id="usageHeatMonths"></div>
+                <div class="u-heatmap" id="usageHeatmap"></div>
+              </div>
+            </div>
+            <div class="u-heat-scale">少 <i data-l="0"></i><i data-l="1"></i><i data-l="2"></i><i data-l="3"></i><i data-l="4"></i> 多</div>
+          </div>
+          <div class="u-card">
+            <div class="u-card-head">
+              <h3>每日 token</h3><span class="u-hint" id="usageBarsHint"></span>
+              <div class="u-legend">
+                <span><i class="u-lg1"></i>新输入</span>
+                <span><i class="u-lg2"></i>输出</span>
+                <span><i class="u-lg3"></i>缓存命中</span>
+              </div>
+            </div>
+            <div class="u-chart-wrap">
+              <div class="u-chart-y" id="usageBarsY"></div>
+              <div class="u-chart-plot">
+                <div class="u-bars" id="usageBars"></div>
+                <div class="u-bar-x" id="usageBarsX"></div>
+              </div>
+            </div>
+          </div>
+          <div id="usageSources"></div>
+          <div class="u-card">
+            <div class="u-card-head"><h3>最近调用</h3><span class="u-hint">usage-history.jsonl 尾部</span>
+              <div class="u-rec-filters">
+                <select id="usageSrcFilter" aria-label="按来源筛选"><option value="">全部来源</option></select>
+                <select id="usageModelFilter" aria-label="按模型筛选"><option value="">全部模型</option></select>
+              </div>
+            </div>
+            <div class="u-table-scroll"><table class="u-table u-records-table">
+              <thead><tr><th>时间</th><th>来源</th><th>模型</th><th class="num">输入</th><th class="num">输出</th><th class="num">消费</th><th>缓存命中</th><th>类型</th></tr></thead>
+              <tbody id="usageRecords"></tbody>
+            </table></div>
+          </div>
+        </div>
+      </main>
+    </section>
+
+    <aside class="settings-drawer" id="settingsDrawer" aria-label="设置" aria-hidden="true" tabindex="-1">
+      <header>
+        <div><small>MIYU</small><strong>设置</strong></div>
+        <button class="icon-button" id="settingsClose" type="button" title="关闭设置" aria-label="关闭设置">
+          <span class="icon-slot" data-icon="x" aria-hidden="true"><span class="icon-fallback">×</span></span>
+        </button>
+      </header>
+      <div class="settings-layout">
+        <nav class="settings-nav" aria-label="设置分类">
+          <button class="active" type="button" data-settings-view="interface">界面</button>
+          <button type="button" data-settings-view="prompts">提示词</button>
+          <button type="button" data-settings-view="general">全局</button>
+          <button type="button" data-settings-view="providers">供应商</button>
+          <button type="button" data-settings-view="models">模型池</button>
+          <button type="button" data-settings-view="plugins">插件</button>
+          <button type="button" data-settings-view="advanced">高级</button>
+        </nav>
+        <div class="settings-content">
+          <section class="settings-section settings-panel" data-settings-panel="interface">
+          <h2>配色方案</h2>
+          <div class="settings-card">
+            <div class="theme-options" role="group" aria-label="配色方案">
+              <button type="button" data-scheme-choice="madobe"><i class="theme-swatch hue-madobe"></i><span>默认</span></button>
+              <button type="button" data-scheme-choice="matugen" hidden><i class="theme-swatch hue-matugen"></i><span>壁纸取色</span></button>
+            </div>
+          </div>
+          </section>
+          <section class="settings-section settings-panel" data-settings-panel="interface">
+          <h2>显示 · 仅 WebUI</h2>
+          <div class="settings-card">
+            <div class="settings-row">
+              <div class="lbl"><strong>对话字号</strong><small>只影响消息正文，保存在浏览器本地，不写入 config</small></div>
+              <div class="segmented" id="chatFontSeg" role="group" aria-label="对话字号">
+                <button type="button" data-chat-font="14px">小</button>
+                <button type="button" data-chat-font="15px">标准</button>
+                <button type="button" data-chat-font="16px">大</button>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="lbl"><strong>展开思考内容</strong><small>默认展开每条回复的思考面板；关闭则收起为小签，点击查看</small></div>
+              <button class="toggle" id="reasoningExpandToggle" type="button" role="switch" aria-checked="false" aria-label="展开思考内容"></button>
+            </div>
+            <div class="settings-row">
+              <div class="lbl"><strong>展开工具详情</strong><small>默认展开工具签的参数与输出面板</small></div>
+              <button class="toggle" id="toolExpandToggle" type="button" role="switch" aria-checked="false" aria-label="展开工具详情"></button>
+            </div>
+          </div>
+          </section>
+          <section class="settings-section settings-panel" data-settings-panel="interface">
+          <h2>当前模型</h2>
+          <div class="settings-model" id="settingsModel">
+            <span class="model-mark" id="settingsModelMark">--</span>
+            <span><strong id="settingsModelName">正在载入</strong><small id="settingsModelProvider">--</small></span>
+          </div>
+          </section>
+          <section class="settings-section settings-panel" data-settings-panel="interface">
+          <h2>能力</h2>
+          <dl class="capability-list" id="capabilityList">
+            <div><dt>会话</dt><dd>正在载入</dd></div>
+            <div><dt>附件</dt><dd>正在载入</dd></div>
+            <div><dt>消息队列</dt><dd>正在载入</dd></div>
+          </dl>
+          </section>
+          <section class="settings-section about-section settings-panel" data-settings-panel="interface">
+          <h2>关于</h2>
+          <div class="about-row"><span>Miyu WebUI</span><span id="versionLabel">--</span></div>
+          </section>
+          <section class="settings-section settings-panel" data-settings-panel="prompts" hidden>
+          <h2>自定义提示词</h2>
+          <div class="prompt-editor" id="promptEditor"></div>
+          </section>
+          <section class="settings-section settings-panel" data-settings-panel="general" hidden>
+          <h2>全局设置</h2>
+          <div class="config-form" id="generalConfigForm"></div>
+          </section>
+          <section class="settings-section settings-panel" data-settings-panel="providers" hidden>
+          <div class="settings-section-heading"><h2>供应商</h2><button class="secondary-button compact-button" id="addProviderButton" type="button">添加</button></div>
+          <div class="provider-editor" id="providerEditor"></div>
+          </section>
+          <section class="settings-section settings-panel" data-settings-panel="models" hidden>
+          <h2>模型池</h2>
+          <div class="model-pool-editor" id="modelPoolEditor"></div>
+          </section>
+           <section class="settings-section settings-panel" data-settings-panel="plugins" hidden>
+           <h2>插件配置</h2>
+           <div class="plugin-editor" id="pluginEditor"></div>
+           <section class="qq-history-tool" aria-labelledby="qqHistoryTitle">
+             <h2 id="qqHistoryTitle">QQ群管理记录</h2>
+             <p class="settings-description">输入 bot QQ 和群号，查看已保存的违规者与踢人记录。</p>
+             <form class="qq-history-form" id="qqHistoryForm">
+               <label>bot QQ<input id="qqHistoryAccount" inputmode="numeric" pattern="[0-9]*" maxlength="12" required></label>
+               <label>群号<input id="qqHistoryGroup" inputmode="numeric" pattern="[0-9]*" maxlength="12" required></label>
+               <button class="secondary-button compact-button" type="submit">加载</button>
+             </form>
+             <div class="qq-history-status" id="qqHistoryStatus" role="status"></div>
+             <div class="qq-history-output" id="qqHistoryOutput" hidden></div>
+           </section>
+           </section>
+          <section class="settings-section settings-panel" data-settings-panel="advanced" hidden>
+          <h2>完整配置</h2>
+          <p class="settings-description">这里包含结构化表单未单独展示的所有配置项。应用到草稿后仍需保存。</p>
+          <textarea class="config-json-editor" id="advancedConfigEditor" spellcheck="false" aria-label="完整配置 JSON"></textarea>
+          <button class="secondary-button" id="applyAdvancedConfigButton" type="button">应用到草稿</button>
+          </section>
+        </div>
+      </div>
+      <footer class="settings-footer">
+        <span id="settingsStatus">尚未载入配置</span>
+        <div>
+          <button class="secondary-button" id="reloadConfigButton" type="button">重新载入</button>
+          <button class="primary-button" id="saveConfigButton" type="button" disabled>保存配置</button>
+        </div>
+      </footer>
+    </aside>
+
+    <div class="toast-region" id="toastRegion" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <dialog class="reset-dialog" id="resetDialog" aria-labelledby="resetDialogTitle" aria-describedby="resetDialogDescription">
+      <form method="dialog">
+        <header>
+          <span class="dialog-icon" aria-hidden="true">
+            <span class="icon-slot" data-icon="triangle-alert"><span class="icon-fallback">!</span></span>
+          </span>
+          <div>
+            <h2 id="resetDialogTitle">清空当前会话？</h2>
+            <p id="resetDialogDescription">该会话的对话记录将被永久清除，此操作无法撤销。</p>
+          </div>
+        </header>
+        <footer>
+          <button class="secondary-button" id="resetCancelButton" type="submit" value="cancel">取消</button>
+          <button class="danger-button" id="resetConfirmButton" type="button">清空记录</button>
+        </footer>
+      </form>
+    </dialog>
+  </div>
+
+  <noscript>
+    <div class="noscript-state">Miyu WebUI 需要启用 JavaScript。</div>
+  </noscript>
+</body>
+</html>
