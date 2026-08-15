@@ -230,10 +230,10 @@ fn normalize_info_item(kind: &str, item: &Value) -> Value {
         "formula_url": if name.is_empty() { Value::Null } else { json!(format!("https://formulae.brew.sh/{kind}/{name}")) },
     });
     if kind == "cask" {
-        normalized["version"] = item.get("version");
-        normalized["deprecated"] = item.get("deprecated");
-        normalized["disabled"] = item.get("disabled");
-        normalized["artifacts"] = item.get("artifacts");
+        normalized["version"] = item.get("version").cloned().unwrap_or(Value::Null);
+        normalized["deprecated"] = item.get("deprecated").cloned().unwrap_or(Value::Null);
+        normalized["disabled"] = item.get("disabled").cloned().unwrap_or(Value::Null);
+        normalized["artifacts"] = item.get("artifacts").cloned().unwrap_or(Value::Null);
         normalized["dependencies"] = item.get("depends_on");
         normalized["url"] = item
             .pointer("/url")
@@ -242,13 +242,16 @@ fn normalize_info_item(kind: &str, item: &Value) -> Value {
             .map(Value::String)
             .unwrap_or(Value::Null);
     } else {
-        normalized["versions"] = item.get("versions");
-        normalized["deprecated"] = item.get("deprecated");
-        normalized["disabled"] = item.get("disabled");
-        normalized["dependencies"] = item.get("dependencies");
-        normalized["build_dependencies"] = item.get("build_dependencies");
-        normalized["bottle"] = item.get("bottle");
-        normalized["installed"] = item.get("installed");
+        normalized["versions"] = item.get("versions").cloned().unwrap_or(Value::Null);
+        normalized["deprecated"] = item.get("deprecated").cloned().unwrap_or(Value::Null);
+        normalized["disabled"] = item.get("disabled").cloned().unwrap_or(Value::Null);
+        normalized["dependencies"] = item.get("dependencies").cloned().unwrap_or(Value::Null);
+        normalized["build_dependencies"] = item
+            .get("build_dependencies")
+            .cloned()
+            .unwrap_or(Value::Null);
+        normalized["bottle"] = item.get("bottle").cloned().unwrap_or(Value::Null);
+        normalized["installed"] = item.get("installed").cloned().unwrap_or(Value::Null);
         normalized["url"] = item
             .pointer("/urls/stable/url")
             .and_then(Value::as_str)
@@ -274,14 +277,10 @@ async fn brew_status() -> Result<String> {
         .map(|resp| resp.status().is_success())
         .unwrap_or(false);
 
-    let github: Value = client
-        .get(GITHUB_STATUS_URL)
-        .send()
-        .await
-        .map(|resp| resp.json::<Value>())
-        .ok()
-        .and_then(|future| future.ok())
-        .unwrap_or(Value::Null);
+    let github: Value = match client.get(GITHUB_STATUS_URL).send().await {
+        Ok(resp) => resp.json::<Value>().await.unwrap_or(Value::Null),
+        Err(_) => Value::Null,
+    };
     let github_indicator = github
         .pointer("/status/indicator")
         .and_then(Value::as_str)
