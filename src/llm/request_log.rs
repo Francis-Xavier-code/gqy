@@ -3,8 +3,8 @@
 //!
 //! 抓在三个序列化后的出网口(chat/anthropic/responses),记录的就是
 //! `.json(request)` 将要发出的同一结构——所有 extra_body、思考档、消息
-//! 变换都已生效。默认关闭;`miyu daemon logs request` 在监控期间开启,
-//! 环境变量 `MIYU_LOG_REQUESTS=1` 可常开(直连 REPL 也生效)。
+//! 变换都已生效。默认关闭;`gqy daemon logs request` 在监控期间开启,
+//! 环境变量 `GQY_LOG_REQUESTS=1` 可常开(直连 REPL 也生效)。
 //! 完整体积大(长上下文可达数百 KB/请求),全量落 JSONL 文件,不进
 //! 常规日志。开关是进程级内存位,daemon 重启自动回到关闭。
 
@@ -24,7 +24,7 @@ pub fn install_dir(dir: PathBuf) {
 
 fn env_init() {
     ENV_INIT.get_or_init(|| {
-        if std::env::var_os("MIYU_LOG_REQUESTS").is_some_and(|value| value != "0") {
+        if std::env::var_os("GQY_LOG_REQUESTS").is_some_and(|value| value != "0") {
             ENABLED.store(true, Ordering::Relaxed);
         }
     });

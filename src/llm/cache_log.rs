@@ -13,7 +13,7 @@
 
 use crate::config::CacheConfig;
 use crate::llm::Usage;
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -34,7 +34,7 @@ static SINK: OnceLock<Mutex<Sink>> = OnceLock::new();
 /// Installs (or updates) the process-wide sink. Called from client
 /// construction so every path that can issue LLM requests configures the
 /// sink before its first request; later calls just refresh the settings.
-pub(crate) fn configure(paths: &MiyuPaths, config: &CacheConfig) {
+pub(crate) fn configure(paths: &GQYPaths, config: &CacheConfig) {
     let dir = paths.cache_dir.join("logs");
     let mutex = SINK.get_or_init(|| {
         Mutex::new(Sink {
@@ -205,7 +205,7 @@ mod tests {
         assert!(!stale_file_date("cache-usage.2026-07-27.jsonl", today, 14));
         assert!(stale_file_date("cache-usage.2026-07-26.jsonl", today, 14));
         // 非本日志的文件一律不动
-        assert!(!stale_file_date("miyu.2026-07-01.log", today, 14));
+        assert!(!stale_file_date("gqy.2026-07-01.log", today, 14));
         assert!(!stale_file_date("cache-usage.not-a-date.jsonl", today, 14));
     }
 
@@ -248,7 +248,7 @@ mod tests {
         let dir = temp.path().to_path_buf();
         fs::create_dir_all(&dir).unwrap();
         fs::write(dir.join("cache-usage.2026-07-01.jsonl"), "old\n").unwrap();
-        fs::write(dir.join("miyu.2026-07-01.log"), "keep\n").unwrap();
+        fs::write(dir.join("gqy.2026-07-01.log"), "keep\n").unwrap();
         let mut sink = Sink {
             dir: dir.clone(),
             enabled: true,
@@ -263,6 +263,6 @@ mod tests {
         let second = fs::read_to_string(dir.join("cache-usage.2026-08-11.jsonl")).unwrap();
         assert_eq!(second.lines().count(), 1);
         assert!(!dir.join("cache-usage.2026-07-01.jsonl").exists());
-        assert!(dir.join("miyu.2026-07-01.log").exists());
+        assert!(dir.join("gqy.2026-07-01.log").exists());
     }
 }

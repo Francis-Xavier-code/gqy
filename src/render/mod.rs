@@ -2451,12 +2451,10 @@ pub(crate) fn tool_subject(name: &str, arguments: &str) -> Option<String> {
         | "search_evicted_context"
         | "recall_memories"
         | "recall_past_events"
-        | "aur_search_packages"
+        | "brew_search_packages"
         | "online_man_search"
-        | "protondb_query"
-        | "query_caniplayonlinux"
-        | "fcitx5_input_method_wiki_qurey" => string_arg(&args, &["query", "topic"]),
-        "archwiki_query" | "query_moegirl" => string_arg(&args, &["title", "query"]),
+        | "query_applegamingwiki" => string_arg(&args, &["query", "topic"]),
+        "query_moegirl" => string_arg(&args, &["title", "query"]),
         "search_knowledge_base_by_name" => string_arg(&args, &["file_name_query"]),
         "read_file" => {
             let path = string_arg(&args, &["path"])?;
@@ -2535,10 +2533,9 @@ pub(crate) fn tool_subject(name: &str, arguments: &str) -> Option<String> {
         "scientific_calculator" => string_arg(&args, &["expression", "operation"]),
         "set_alarm" => string_arg(&args, &["label", "time"]),
         "cancel_alarm" => string_arg(&args, &["id"]),
-        "aur_get_package_info"
-        | "archlinux_official_package_query"
-        | "review_aur_package"
-        | "install_aur_package" => string_arg(&args, &["package_name", "package"]),
+        "brew_get_package_info"
+        | "review_brew_package"
+        | "install_brew_package" => string_arg(&args, &["package_name", "package"]),
         "online_man_get_page" => {
             let page = string_arg(&args, &["name"])?;
             let section = string_arg(&args, &["section"]);
@@ -4825,7 +4822,7 @@ mod tests {
         let output = render_table(&[
             "| 项目 | 内容 |".to_string(),
             "|---|---|".to_string(),
-            "| 名字 | 未有 / Miyu |".to_string(),
+            "| 名字 | 未有 / GQY |".to_string(),
             "| 年龄 | 18 |".to_string(),
         ]);
         let terminal_width = terminal::size()
@@ -4911,7 +4908,7 @@ mod tests {
     fn patch_diff_wraps_long_lines_with_aligned_gutter() {
         let diff = format!(
             "--- a/run-vm.sh\n+++ b/run-vm.sh\n@@ -1,0 +1,1 @@\n+{}\n",
-            "RESULT=$(sudo virsh qemu-agent-command archlinux ".repeat(8)
+            "RESULT=$(system_profiler SPHardwareDataType --macbook ".repeat(8)
         );
         let output = render_patch_diff("run-vm.sh", &diff);
         let visible = strip_ansi_for_test(&output);
@@ -5041,12 +5038,12 @@ mod tests {
     #[test]
     fn code_block_content_has_default_color() {
         let mut renderer = MarkdownStreamRenderer::new();
-        let output = renderer.push("```\nXMODIFIERS \"@im=fcitx\"\n```\n");
+        let output = renderer.push("```\ndefaults write NSGlobalDomain AppleKeyboardUIMode -int 3\n```\n");
         assert!(output.contains(&format!(
-            "{CODE_BLOCK_BG}XMODIFIERS \"@im=fcitx\"{}{RESET}",
+            "{CODE_BLOCK_BG}defaults write NSGlobalDomain AppleKeyboardUIMode -int 3{}{RESET}",
             " ".repeat(2)
         )));
-        assert!(!output.contains("\x1b[33mXMODIFIERS"));
+        assert!(!output.contains("\x1b[33mdefaults"));
     }
 
     #[test]
@@ -5756,15 +5753,10 @@ mod tests {
                 "搜索旧上下文",
             ),
             ("recall_past_events", "Recall past events", "回忆往事"),
-            ("aur_check_status", "Check AUR status", "查询 AUR 状态"),
+            ("brew_check_status", "Check Homebrew status", "查询 Homebrew 状态"),
             ("online_man_search", "Search online manuals", "搜索在线手册"),
             ("online_man_get_page", "Read online manual", "读取在线手册"),
-            (
-                "fcitx5_input_method_wiki_qurey",
-                "Query Fcitx5 Wiki",
-                "查询 Fcitx5 Wiki",
-            ),
-            ("install_aur_package", "Install AUR package", "安装 AUR 包"),
+            ("install_brew_package", "Install Homebrew package", "安装 Homebrew 包"),
             (
                 "search_knowledge_base_by_name",
                 "Search knowledge base by name",
@@ -5809,12 +5801,12 @@ mod tests {
             SummaryStyle::Reasoning,
         )
         .unwrap();
-        write!(output, "~ Linux 游戏兼容性调查×1 运行中").unwrap();
+        write!(output, "~ 游戏兼容性调查×1 运行中").unwrap();
         let output = strip_ansi_for_test(&String::from_utf8(output).unwrap());
 
         assert_eq!(
             output,
-            "思考 · 59 词元 · 2.5s\n\n~ Linux 游戏兼容性调查×1 运行中"
+            "思考 · 59 词元 · 2.5s\n\n~ 游戏兼容性调查×1 运行中"
         );
     }
 

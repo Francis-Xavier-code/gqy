@@ -1,5 +1,5 @@
 use crate::config::{AppConfig, KnowledgeBasePluginConfig, MemoryConfig};
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use crate::platforms::PlatformPrincipal;
 use anyhow::{bail, Context, Result};
 use chrono::{DateTime, Duration as ChronoDuration, Utc};
@@ -384,7 +384,7 @@ pub(crate) struct LongDiaryDraft {
 }
 
 impl MemoryStore {
-    pub fn new(config: &AppConfig, paths: &MiyuPaths) -> Self {
+    pub fn new(config: &AppConfig, paths: &GQYPaths) -> Self {
         let data_dir = config.active_persona_memory_data_dir(paths).join("memory");
         let state_dir = config.active_persona_memory_state_dir(paths).join("memory");
         Self {
@@ -3128,10 +3128,10 @@ fn diary_content(created_at: &str, user_message: &str, assistant_message: &str) 
 mod tests {
     use super::*;
     use crate::config::AppConfig;
-    use crate::paths::MiyuPaths;
+    use crate::paths::GQYPaths;
 
-    fn test_paths(temp: &tempfile::TempDir) -> MiyuPaths {
-        MiyuPaths {
+    fn test_paths(temp: &tempfile::TempDir) -> GQYPaths {
+        GQYPaths {
             root_dir: temp.path().to_path_buf(),
             config_dir: temp.path().join("config"),
             config_file: temp.path().join("config/config.jsonc"),
@@ -3140,7 +3140,7 @@ mod tests {
             cache_dir: temp.path().join("cache"),
             state_dir: temp.path().join("state"),
             pictures_dir: temp.path().join("pictures"),
-            fish_hook_file: temp.path().join("fish/miyu.fish"),
+            fish_hook_file: temp.path().join("fish/gqy.fish"),
             bash_hook_file: temp.path().join("shell/bash-hook.sh"),
             zsh_hook_file: temp.path().join("shell/zsh-hook.zsh"),
             scripts_dir: temp.path().join("config/scripts"),
@@ -3227,7 +3227,7 @@ mod tests {
 
     fn scoped_store(
         config: &AppConfig,
-        paths: &MiyuPaths,
+        paths: &GQYPaths,
         origin: &MemoryOrigin,
         privileged: bool,
     ) -> MemoryStore {
@@ -3248,8 +3248,8 @@ mod tests {
         let reference = jieba_rs::Jieba::new();
         for input in [
             "我们中出了一个叛徒",
-            "Wayland 输入法需要 XMODIFIERS",
-            "Niri窗口规则和中文输入法配置",
+            "macOS 输入法需要切换中英文",
+            "访达窗口规则和中文输入法配置",
             "podman-compose 不能直接重新创建容器",
             "北京烤鸭真好吃，后天天气不好。",
             "Rust 2024 edition与C++20",
@@ -3481,12 +3481,12 @@ mod tests {
         let user_a = scoped_store(&config, &paths, &origin_a, false);
         let user_b = scoped_store(&config, &paths, &origin_b, false);
         let bob_fact = user_b
-            .remember_fact("Linux 隔离主题是 Bob 的私人偏好", "test")
+            .remember_fact("macOS 隔离主题是 Bob 的私人偏好", "test")
             .unwrap();
         let (database_id, generation) = user_b.identity().unwrap();
         user_b
             .process_after_turn(
-                "Linux 隔离主题 Bob 的设置",
+                "macOS 隔离主题 Bob 的设置",
                 "Bob 使用另一种方式",
                 &origin_b,
                 &database_id,
@@ -3496,8 +3496,8 @@ mod tests {
         let (database_id, generation) = user_a.identity().unwrap();
         user_a
             .process_after_turn(
-                "Linux 隔离主题与通用命令",
-                "使用 systemctl --user",
+                "macOS 隔离主题与通用命令",
+                "使用 launchctl print",
                 &origin_a,
                 &database_id,
                 generation,
@@ -3520,7 +3520,7 @@ mod tests {
                 operation: "update".to_string(),
                 target_id: Some(bob_fact),
                 memory_type: "preference".to_string(),
-                content: "Linux 隔离主题被 Alice 覆盖".to_string(),
+                content: "macOS 隔离主题被 Alice 覆盖".to_string(),
                 truth_status: "reported".to_string(),
                 importance: 3,
                 confidence: 0.8,
@@ -3542,7 +3542,7 @@ mod tests {
                 operation: "create".to_string(),
                 target_id: None,
                 memory_type: "fact".to_string(),
-                content: "Alice 使用 Linux 的私人经历".to_string(),
+                content: "Alice 使用 macOS 的私人经历".to_string(),
                 truth_status: "reported".to_string(),
                 importance: 3,
                 confidence: 0.8,
@@ -3567,13 +3567,13 @@ mod tests {
                         operation: "create".to_string(),
                         target_id: None,
                         memory_type: "fact".to_string(),
-                        content: "Linux 通用知识使用 systemctl --user".to_string(),
+                        content: "macOS 通用知识使用 launchctl print".to_string(),
                         truth_status: "accepted".to_string(),
                         importance: 3,
                         confidence: 0.9,
                         visibility: VISIBILITY_PUBLIC.to_string(),
                         subjects: Vec::new(),
-                        tags: vec!["Linux".to_string()],
+                        tags: vec!["macOS".to_string()],
                         diary_ids: vec![source_id],
                     }],
                     long_diaries: Vec::new(),
@@ -3581,10 +3581,10 @@ mod tests {
             )
             .unwrap();
         let bob_recall = user_b
-            .recall_memories("systemctl user", 10, false)
+            .recall_memories("launchctl", 10, false)
             .unwrap()
             .to_string();
-        assert!(bob_recall.contains("Linux 通用知识"));
+        assert!(bob_recall.contains("macOS 通用知识"));
     }
 
     #[test]
@@ -3736,7 +3736,7 @@ mod tests {
         let fact = MemoryHit {
             id: 1,
             kind: MemoryKind::Fact,
-            content: "AUR 的 GitHub 镜像只读".to_string(),
+            content: "Homebrew 的 GitHub 镜像只读".to_string(),
             score: 1.0,
             timestamp: stamp.clone(),
             source: "test".to_string(),
@@ -3757,7 +3757,7 @@ mod tests {
         };
         let updated_fact = MemoryHit {
             id: 1,
-            content: "AUR 的 GitHub 镜像只读，推送需走官方地址".to_string(),
+            content: "Homebrew 的 GitHub 镜像只读，推送需走官方地址".to_string(),
             ..fact.clone()
         };
         // 第一回合的注入块回放时携带的行
@@ -3940,9 +3940,9 @@ mod tests {
         let config = diary_config(14);
         let paths = test_paths(&temp);
         let store = MemoryStore::new(&config, &paths);
-        assert!(record_turn(&store, "Wayland 输入法配置", "设置 XMODIFIERS"));
+        assert!(record_turn(&store, "macOS 输入法配置", "切换中英文输入法"));
         for _ in 0..3 {
-            assert!(store.association("Wayland 输入法", None).unwrap().is_some());
+            assert!(store.association("macOS 输入法", None).unwrap().is_some());
         }
         let batch = store.next_organization_batch().unwrap().unwrap();
         assert_eq!(batch.diaries.len(), 1);
@@ -3954,12 +3954,12 @@ mod tests {
                 OrganizedOutput {
                     knowledge: Vec::new(),
                     long_diaries: vec![LongDiaryDraft {
-                        content: "我曾帮助处理 Wayland 输入法配置。".to_string(),
+                        content: "我曾帮助处理 macOS 输入法配置。".to_string(),
                         importance: 3,
                         confidence: 0.9,
                         visibility: VISIBILITY_PRIVILEGED.to_string(),
                         subjects: Vec::new(),
-                        tags: vec!["Wayland".to_string(), "输入法".to_string()],
+                        tags: vec!["macOS".to_string(), "输入法".to_string()],
                         diary_ids: vec![source_id],
                     }],
                 },

@@ -17,7 +17,7 @@
   /*
    * 夜阑 (dusk) —— 默认暗色主题。
    * MD3 system tokens;matugen 生成的 /theme.css 可整套覆盖。
-   * 种子色取自 miyu-logo:primary=瞳色减淡的雾蓝,secondary=发色暖金,
+   * 种子色取自 gqy-logo:primary=瞳色减淡的雾蓝,secondary=发色暖金,
    * tertiary=丝带酒红,surface=傍晚蓝紫。
    */
   --md-sys-color-primary: #aebde8;

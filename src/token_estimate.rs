@@ -104,7 +104,7 @@ mod tests {
         // build is red until someone updates a magic number".
         let reference = tiktoken_rs::o200k_base().unwrap();
         for text in [
-            include_str!("prompts/miyu.md"),
+            include_str!("prompts/GQY.md"),
             include_str!("prompts/compact.md"),
             include_str!("../README.md"),
         ] {

@@ -74,7 +74,7 @@ impl DeleteConfirmations {
         let token = random_confirmation_token();
         let scope = describe_scope(&request.scope);
         let mode = describe_delete_request(&request);
-        let phrase = format!("确认删除 Miyu 历史 范围={scope} 模式={mode} {token}");
+        let phrase = format!("确认删除 GQY 历史 范围={scope} 模式={mode} {token}");
         let now = Instant::now();
         let mut pending = self.pending.lock().unwrap();
         pending.retain(|_, entry| entry.expires_at > now && entry.principal != principal);
@@ -615,7 +615,7 @@ async fn delete(
     confirmations: DeleteConfirmations,
 ) -> Result<String> {
     if !effective_admin(&context) {
-        bail!("only a configured Miyu platform administrator may delete history");
+        bail!("only a configured GQY platform administrator may delete history");
     }
     let principal = DeletePrincipal::from_context(&context);
     match required_string(&arguments, "action")?.as_str() {
@@ -1064,7 +1064,7 @@ fn require_cross_conversation_access(
         bail!("cross-conversation history access is disabled");
     }
     if !effective_admin(context) {
-        bail!("only a Miyu platform administrator may access another conversation's history");
+        bail!("only a GQY platform administrator may access another conversation's history");
     }
     Ok(())
 }
@@ -1269,7 +1269,7 @@ fn now_unix() -> i64 {
 mod tests {
     use super::*;
     use crate::config::AppConfig;
-    use crate::paths::MiyuPaths;
+    use crate::paths::GQYPaths;
     use crate::platforms::plugins::PlatformPluginRegistry;
     use crate::platforms::{OutboundMessage, PlatformAdapter, PlatformConversation, SendReceipt};
     use crate::state::StateStore;
@@ -1284,12 +1284,12 @@ mod tests {
         }
 
         fn bot_display_name<'a>(&'a self) -> BoxFuture<'a, Result<String>> {
-            Box::pin(async { Ok("Miyu".to_string()) })
+            Box::pin(async { Ok("GQY".to_string()) })
         }
     }
 
-    fn test_paths(root: &std::path::Path) -> MiyuPaths {
-        MiyuPaths {
+    fn test_paths(root: &std::path::Path) -> GQYPaths {
+        GQYPaths {
             root_dir: root.to_path_buf(),
             config_dir: root.join("config"),
             config_file: root.join("config/config.jsonc"),

@@ -14,7 +14,7 @@ use crate::i18n::{is_zh, text as t};
 use crate::llm::{
     thinking_variant_options_for_model, ThinkingVariantOptions, ThinkingVariantPreferences,
 };
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use crate::platforms::commands::{self, PlatformCommandDescriptor};
 use crate::platforms::plugins::{
     active_judgement_skip_ids, apply_active_judgement_skip_editor_changes,
@@ -34,7 +34,7 @@ use std::process::Command;
 use std::sync::mpsc::{self, Receiver};
 use std::time::Duration;
 
-pub fn run(paths: &MiyuPaths) -> Result<bool> {
+pub fn run(paths: &GQYPaths) -> Result<bool> {
     AppConfig::init_files(paths)?;
     crate::models_cache::try_load(paths);
     crate::models_cache::spawn_background_refresh(paths.clone());
@@ -57,7 +57,7 @@ impl TerminalSession {
 
     fn run(
         mut self,
-        paths: &MiyuPaths,
+        paths: &GQYPaths,
         mut config: AppConfig,
         mut thinking_variants: ThinkingVariantPreferences,
     ) -> Result<bool> {
@@ -77,7 +77,7 @@ impl Drop for TerminalSession {
 
 fn run_main_menu(
     stdout: &mut io::Stdout,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &mut AppConfig,
     thinking_variants: &mut ThinkingVariantPreferences,
 ) -> Result<bool> {
@@ -123,7 +123,7 @@ fn run_main_menu(
         ];
         draw_menu(
             stdout,
-            t(" MIYU CONFIG ", " MIYU 配置 "),
+            t(" GQY CONFIG ", " GQY 配置 "),
             &options,
             selected,
             "",
@@ -309,9 +309,9 @@ fn plugin_names() -> [(&'static str, &'static str, &'static str); 13] {
             ),
         ),
         (
-            "archlinux",
-            "Arch Linux",
-            t("AUR status and ArchWiki lookup", "AUR 状态与 ArchWiki 查询"),
+            "brew",
+            "Homebrew",
+            t("Homebrew status and package lookup", "Homebrew 状态与包查询"),
         ),
         (
             "man",
@@ -328,8 +328,8 @@ fn plugin_names() -> [(&'static str, &'static str, &'static str); 13] {
         ),
         (
             "package_advisor",
-            t("AUR review", "AUR 审查"),
-            t("PKGBUILD/AUR security review", "PKGBUILD/AUR 安全审查"),
+            t("Homebrew review", "Homebrew 审查"),
+            t("Formula/cask security review", "Formula/cask 安全审查"),
         ),
         (
             "api_quota",
@@ -352,7 +352,7 @@ fn plugin_enabled(config: &AppConfig, index: usize) -> bool {
         5 => config.plugins.print_image.enabled,
         6 => config.plugins.memes.enabled,
         7 => config.plugins.knowledge_base.enabled,
-        8 => config.plugins.archlinux.enabled,
+        8 => config.plugins.brew.enabled,
         9 => config.plugins.man.enabled,
         10 => config.plugins.memory.enabled,
         11 => config.plugins.package_advisor.enabled,
@@ -372,7 +372,7 @@ fn toggle_plugin(config: &mut AppConfig, index: usize) {
         5 => config.plugins.print_image.enabled = value,
         6 => config.plugins.memes.enabled = value,
         7 => config.plugins.knowledge_base.enabled = value,
-        8 => config.plugins.archlinux.enabled = value,
+        8 => config.plugins.brew.enabled = value,
         9 => config.plugins.man.enabled = value,
         10 => config.plugins.memory.enabled = value,
         11 => config.plugins.package_advisor.enabled = value,
@@ -990,7 +990,7 @@ fn plugin_fields(config: &AppConfig, index: usize) -> Vec<Field> {
         ],
         8 => vec![Field::boolean(
             t("Enabled", "启用"),
-            config.plugins.archlinux.enabled,
+            config.plugins.brew.enabled,
         )],
         9 => vec![Field::boolean(
             t("Enabled", "启用"),
@@ -1201,7 +1201,7 @@ fn apply_plugin_fields(config: &mut AppConfig, index: usize, fields: &[Field]) -
                 fields[15].value.trim().parse()?;
         }
         8 => {
-            config.plugins.archlinux.enabled = parse_bool_field(&fields[0].value)?;
+            config.plugins.brew.enabled = parse_bool_field(&fields[0].value)?;
         }
         9 => {
             config.plugins.man.enabled = parse_bool_field(&fields[0].value)?;
@@ -1254,7 +1254,7 @@ fn apply_plugin_fields(config: &mut AppConfig, index: usize, fields: &[Field]) -
 
 fn edit_custom_prompts(
     stdout: &mut io::Stdout,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &mut AppConfig,
 ) -> Result<()> {
     let mut selected = 0usize;
@@ -1318,13 +1318,13 @@ fn edit_custom_prompts(
 /// 普通模式的提示词面:AI 人格与用户身份(原顶层两项下沉至此)。
 fn edit_normal_mode_prompts(
     stdout: &mut io::Stdout,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &mut AppConfig,
 ) -> Result<()> {
     let mut selected = 0usize;
     loop {
         let persona = if config.prompt.active_persona.trim().is_empty() {
-            "Miyu".to_string()
+            "GQY".to_string()
         } else {
             persona_display_name(&config.prompt.active_persona).to_string()
         };
@@ -1357,7 +1357,7 @@ fn edit_normal_mode_prompts(
 /// 开发模式的「AI 提示词」:编辑 config/dev-prompt.md 一个文件。清空
 /// 保存=删文件,运行时回退内置默认一行;记忆按保留人格 "dev" 落库,
 /// 与这份提示词的内容完全解耦——怎么改都不会切库。
-fn edit_dev_prompt(stdout: &mut io::Stdout, paths: &MiyuPaths) -> Result<()> {
+fn edit_dev_prompt(stdout: &mut io::Stdout, paths: &GQYPaths) -> Result<()> {
     let path = paths.config_dir.join(crate::config::DEV_PROMPT_FILE);
     let current = std::fs::read_to_string(&path).unwrap_or_default();
     let prefill = if current.trim().is_empty() {
@@ -1389,7 +1389,7 @@ fn edit_dev_prompt(stdout: &mut io::Stdout, paths: &MiyuPaths) -> Result<()> {
     Ok(())
 }
 
-fn edit_personas(stdout: &mut io::Stdout, paths: &MiyuPaths, config: &mut AppConfig) -> Result<()> {
+fn edit_personas(stdout: &mut io::Stdout, paths: &GQYPaths, config: &mut AppConfig) -> Result<()> {
     manage_personas(stdout, paths, config, PersonaMenuTarget::Global)?;
     Ok(())
 }
@@ -1407,10 +1407,10 @@ impl PersonaMenuTarget {
         }
     }
 
-    fn is_miyu(&self, config: &AppConfig) -> bool {
+    fn is_gqy(&self, config: &AppConfig) -> bool {
         match self {
             Self::Global => config.prompt.active_persona.trim().is_empty(),
-            Self::Platform(persona) => matches!(persona, PlatformPersonaOverride::Miyu),
+            Self::Platform(persona) => matches!(persona, PlatformPersonaOverride::GQY),
         }
     }
 
@@ -1428,10 +1428,10 @@ impl PersonaMenuTarget {
         }
     }
 
-    fn activate_miyu(&mut self, config: &mut AppConfig) {
+    fn activate_gqy(&mut self, config: &mut AppConfig) {
         match self {
             Self::Global => config.prompt.active_persona.clear(),
-            Self::Platform(persona) => *persona = PlatformPersonaOverride::Miyu,
+            Self::Platform(persona) => *persona = PlatformPersonaOverride::GQY,
         }
     }
 
@@ -1469,7 +1469,7 @@ impl PersonaMenuTarget {
 
 fn manage_personas(
     stdout: &mut io::Stdout,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &mut AppConfig,
     mut target: PersonaMenuTarget,
 ) -> Result<Option<PlatformPersonaOverride>> {
@@ -1487,8 +1487,8 @@ fn manage_personas(
             ));
         }
         options.push(format!(
-            "{}Miyu",
-            if target.is_miyu(config) { "* " } else { "  " }
+            "{}GQY",
+            if target.is_gqy(config) { "* " } else { "  " }
         ));
         options.extend(personas.iter().map(|name| {
             let display = persona_display_name(name);
@@ -1522,7 +1522,7 @@ fn manage_personas(
                 if matches!(&target, PersonaMenuTarget::Platform(_)) && selected == 0 {
                     target.activate_inherit();
                 } else if selected + 1 == custom_offset {
-                    target.activate_miyu(config);
+                    target.activate_gqy(config);
                 } else if let Some(name) = personas.get(selected.saturating_sub(custom_offset)) {
                     target.activate_custom(config, name.clone());
                 }
@@ -1547,10 +1547,10 @@ fn manage_personas(
                     }
                 }
             }
-            // 默认 Miyu 人格本体只读,但防失忆提示与预设对话是独立文件
+            // 默认 GQY 人格本体只读,但防失忆提示与预设对话是独立文件
             // (hints/default.md、dialogs/default.md),回车打开精简表单。
             KeyCode::Enter if selected + 1 == custom_offset => {
-                edit_miyu_persona_extras(stdout, paths, config)?;
+                edit_gqy_persona_extras(stdout, paths, config)?;
             }
             KeyCode::Char('d') if selected >= custom_offset => {
                 if let Some(name) = personas.get(selected - custom_offset) {
@@ -1585,7 +1585,7 @@ fn manage_personas(
 }
 
 fn apply_persona_edit(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &mut AppConfig,
     old_name: &str,
     new_name: &str,
@@ -1645,7 +1645,7 @@ fn apply_persona_edit(
 }
 
 fn apply_persona_delete(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &mut AppConfig,
     mut persisted: AppConfig,
     name: &str,
@@ -1676,7 +1676,7 @@ struct PersonaFormValues {
 
 /// 人格附属文件现值:防失忆提示(hints/<scope>.md)与预设对话
 /// (dialogs/<scope>.md)。
-fn persona_aux_values(paths: &MiyuPaths, config: &AppConfig, scope: &str) -> (String, String) {
+fn persona_aux_values(paths: &GQYPaths, config: &AppConfig, scope: &str) -> (String, String) {
     let hint =
         std::fs::read_to_string(crate::persona_hint::manual_hint_path(config, paths, scope))
             .map(|text| text.trim().to_string())
@@ -1688,7 +1688,7 @@ fn persona_aux_values(paths: &MiyuPaths, config: &AppConfig, scope: &str) -> (St
 /// 附属文件落盘:非空写入,空则删除(清空提示=回到自动蒸馏,清空
 /// 对话=不注入)。
 fn write_persona_aux(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &AppConfig,
     scope: &str,
     hint: &str,
@@ -1720,8 +1720,8 @@ fn write_persona_aux(
     Ok(())
 }
 
-fn persona_aux_fields(hint: String, dialogs: String, miyu: bool) -> Vec<Field> {
-    let (hint_label, dialogs_label) = if miyu {
+fn persona_aux_fields(hint: String, dialogs: String, gqy: bool) -> Vec<Field> {
+    let (hint_label, dialogs_label) = if gqy {
         (
             t(
                 "Anti-amnesia reminder (empty = built-in default)",
@@ -1752,7 +1752,7 @@ fn persona_aux_fields(hint: String, dialogs: String, miyu: bool) -> Vec<Field> {
 
 fn new_persona(
     stdout: &mut io::Stdout,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &AppConfig,
 ) -> Result<Option<String>> {
     let mut fields = vec![
@@ -1778,7 +1778,7 @@ fn new_persona(
 
 fn edit_persona(
     stdout: &mut io::Stdout,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &AppConfig,
     current_name: &str,
 ) -> Result<Option<PersonaFormValues>> {
@@ -1808,23 +1808,23 @@ fn edit_persona(
     }))
 }
 
-/// 默认 Miyu 人格:本体只读,回车只编辑附属的防失忆提示与预设对话
+/// 默认 GQY 人格:本体只读,回车只编辑附属的防失忆提示与预设对话
 /// (scope 固定为 default)。
-fn edit_miyu_persona_extras(
+fn edit_gqy_persona_extras(
     stdout: &mut io::Stdout,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &AppConfig,
 ) -> Result<()> {
-    let (hint, dialogs) = crate::persona_hint::miyu_aux_prefill(config, paths);
+    let (hint, dialogs) = crate::persona_hint::gqy_aux_prefill(config, paths);
     let mut fields = persona_aux_fields(hint, dialogs, true);
-    if !run_form(stdout, t(" MIYU EXTRAS ", " Miyu 人格附加 "), &mut fields)? {
+    if !run_form(stdout, t(" GQY EXTRAS ", " GQY 人格附加 "), &mut fields)? {
         return Ok(());
     }
     write_persona_aux(paths, config, "default", &fields[0].value, &fields[1].value)
 }
 
 fn ensure_persona_name_available(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &AppConfig,
     candidate: &str,
     current: Option<&str>,
@@ -1857,7 +1857,7 @@ fn ensure_persona_name_available(
 }
 
 fn move_persona_scope(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &AppConfig,
     old_name: &str,
     new_name: &str,
@@ -1923,7 +1923,7 @@ fn move_persona_scope(
     Ok(())
 }
 
-fn remove_persona_scope(paths: &MiyuPaths, config: &AppConfig, name: &str) -> Result<()> {
+fn remove_persona_scope(paths: &GQYPaths, config: &AppConfig, name: &str) -> Result<()> {
     remove_dir_if_exists(config.persona_memory_data_dir(paths, name))?;
     remove_dir_if_exists(config.persona_memory_state_dir(paths, name))?;
     remove_dir_if_exists(config.persona_skills_dir(paths, name))?;
@@ -1959,7 +1959,7 @@ fn remove_dir_if_exists(path: PathBuf) -> Result<()> {
 
 fn edit_identities(
     stdout: &mut io::Stdout,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &mut AppConfig,
 ) -> Result<()> {
     std::fs::create_dir_all(config.identities_dir_path(paths))?;
@@ -2039,7 +2039,7 @@ fn edit_identities(
 
 fn new_identity(
     stdout: &mut io::Stdout,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &AppConfig,
 ) -> Result<Option<String>> {
     edit_prompt_file_form(
@@ -2053,7 +2053,7 @@ fn new_identity(
 
 fn edit_identity(
     stdout: &mut io::Stdout,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &AppConfig,
     current_name: &str,
 ) -> Result<Option<String>> {
@@ -2075,11 +2075,11 @@ fn edit_identity(
     )
 }
 
-fn list_identities(paths: &MiyuPaths, config: &AppConfig) -> Result<Vec<String>> {
+fn list_identities(paths: &GQYPaths, config: &AppConfig) -> Result<Vec<String>> {
     list_markdown_files(&config.identities_dir_path(paths))
 }
 
-fn read_identity(paths: &MiyuPaths, config: &AppConfig, name: &str) -> Result<String> {
+fn read_identity(paths: &GQYPaths, config: &AppConfig, name: &str) -> Result<String> {
     let path = config.identity_path(paths, name);
     if path.exists() {
         Ok(std::fs::read_to_string(path)?)
@@ -2088,7 +2088,7 @@ fn read_identity(paths: &MiyuPaths, config: &AppConfig, name: &str) -> Result<St
     }
 }
 
-fn write_identity(paths: &MiyuPaths, config: &AppConfig, name: &str, content: &str) -> Result<()> {
+fn write_identity(paths: &GQYPaths, config: &AppConfig, name: &str, content: &str) -> Result<()> {
     let path = config.identity_path(paths, name);
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
@@ -2138,7 +2138,7 @@ fn edit_prompt_file_values(
     Ok(Some((name, fields[1].value.clone())))
 }
 
-fn list_personas(paths: &MiyuPaths, config: &AppConfig) -> Result<Vec<String>> {
+fn list_personas(paths: &GQYPaths, config: &AppConfig) -> Result<Vec<String>> {
     let mut names = list_markdown_files(&config.prompts_dir_path(paths))?;
     names.retain(|name| !name.eq_ignore_ascii_case("system-prompt.md"));
     Ok(names)
@@ -2162,7 +2162,7 @@ fn list_markdown_files(dir: &std::path::Path) -> Result<Vec<String>> {
     Ok(names)
 }
 
-fn read_persona(paths: &MiyuPaths, config: &AppConfig, name: &str) -> Result<String> {
+fn read_persona(paths: &GQYPaths, config: &AppConfig, name: &str) -> Result<String> {
     let path = config.persona_path(paths, name);
     if path.exists() {
         Ok(std::fs::read_to_string(path)?)
@@ -2171,7 +2171,7 @@ fn read_persona(paths: &MiyuPaths, config: &AppConfig, name: &str) -> Result<Str
     }
 }
 
-fn write_persona(paths: &MiyuPaths, config: &AppConfig, name: &str, content: &str) -> Result<()> {
+fn write_persona(paths: &GQYPaths, config: &AppConfig, name: &str, content: &str) -> Result<()> {
     let path = config.persona_path(paths, name);
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
@@ -2235,7 +2235,7 @@ fn parse_key_list(value: &str) -> Vec<String> {
 }
 
 struct ProviderBrowser<'a> {
-    paths: &'a MiyuPaths,
+    paths: &'a GQYPaths,
     config: &'a mut AppConfig,
     thinking_variants: &'a mut ThinkingVariantPreferences,
     active_col: usize,
@@ -2258,7 +2258,7 @@ struct ProviderBrowser<'a> {
 
 impl<'a> ProviderBrowser<'a> {
     fn new(
-        paths: &'a MiyuPaths,
+        paths: &'a GQYPaths,
         config: &'a mut AppConfig,
         thinking_variants: &'a mut ThinkingVariantPreferences,
     ) -> Self {
@@ -2774,7 +2774,7 @@ fn fetch_models(provider: &ProviderConfig) -> Result<Vec<String>> {
         .build()?
         .get(url)
         .header("Accept", "application/json")
-        .header("User-Agent", "miyu-config");
+        .header("User-Agent", "gqy-config");
     if !api_key.is_empty() {
         request = request.bearer_auth(api_key);
     }
@@ -2793,7 +2793,7 @@ fn fetch_models(provider: &ProviderConfig) -> Result<Vec<String>> {
         .collect())
 }
 
-fn auto_configure_model_tags(paths: &MiyuPaths, provider: &mut ProviderConfig, model: &str) {
+fn auto_configure_model_tags(paths: &GQYPaths, provider: &mut ProviderConfig, model: &str) {
     if provider.model_modalities.contains_key(model) {
         return;
     }
@@ -3168,7 +3168,7 @@ fn platforms_label(config: &AppConfig) -> String {
 
 fn select_platforms(
     stdout: &mut io::Stdout,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &mut AppConfig,
 ) -> Result<()> {
     let mut selected = 0usize;
@@ -3341,7 +3341,7 @@ fn enabled_label(value: bool) -> &'static str {
     }
 }
 
-fn edit_qq(stdout: &mut io::Stdout, paths: &MiyuPaths, config: &mut AppConfig) -> Result<()> {
+fn edit_qq(stdout: &mut io::Stdout, paths: &GQYPaths, config: &mut AppConfig) -> Result<()> {
     let mut selected = 0usize;
     loop {
         let qq = &config.platforms.qq;
@@ -4075,7 +4075,7 @@ fn edit_qq_advanced(stdout: &mut io::Stdout, config: &mut AppConfig) -> Result<(
 
 fn select_platform_model_routes(
     stdout: &mut io::Stdout,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &mut AppConfig,
 ) -> Result<()> {
     let mut selected = 0usize;
@@ -4148,7 +4148,7 @@ fn platform_model_route_label(route: &PlatformModelRoute) -> String {
 
 fn edit_platform_model_route(
     stdout: &mut io::Stdout,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &mut AppConfig,
     route_index: Option<usize>,
 ) -> Result<()> {
@@ -4328,14 +4328,14 @@ fn platform_persona_summary(persona: &PlatformPersonaOverride) -> String {
         PlatformPersonaOverride::Inherit => {
             t("inherit current persona", "继承当前人格").to_string()
         }
-        PlatformPersonaOverride::Miyu => "Miyu".to_string(),
+        PlatformPersonaOverride::GQY => "GQY".to_string(),
         PlatformPersonaOverride::Custom { name } => persona_display_name(name).to_string(),
     }
 }
 
 fn edit_platform_personas(
     stdout: &mut io::Stdout,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &mut AppConfig,
     persona: &mut PlatformPersonaOverride,
 ) -> Result<()> {
@@ -4668,7 +4668,7 @@ impl Default for ReplyProcessorSettingsForm {
 
 fn select_platform_plugins(
     stdout: &mut io::Stdout,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &mut AppConfig,
 ) -> Result<()> {
     let mut selected = 0usize;
@@ -4921,7 +4921,7 @@ fn apply_real_context_values(
 
 fn edit_real_context(
     stdout: &mut io::Stdout,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     config: &mut AppConfig,
 ) -> Result<()> {
     let (mut enabled, mut settings) = real_context_values(config)?;
@@ -7015,9 +7015,9 @@ fn edit_settings(stdout: &mut io::Stdout, config: &mut AppConfig) -> Result<()> 
             t("Turns replayed when reopening the REPL", "重开 REPL 回放的轮数"),
             config.display.repl_replay_turns.to_string(),
         ),
-        // 验收:default_mode 只能改 config.jsonc 不像话——空=裸 miyu 出帮助。
+        // 验收:default_mode 只能改 config.jsonc 不像话——空=裸 gqy 出帮助。
         Field::new(
-            t("Bare `miyu` default mode", "裸 miyu 默认模式"),
+            t("Bare `gqy` default mode", "裸 gqy 默认模式"),
             config.default_mode.clone(),
         )
         .choices(&["", "normal", "dev"])
@@ -7111,36 +7111,18 @@ fn parse_bool_field(value: &str) -> Result<bool> {
     }
 }
 
-struct FcitxState {
-    last_state: Option<char>,
-}
+/// TUI 编辑期间挂起输入法。原为 Linux 的 fcitx5-remote 机制(-c/-o);
+/// macOS 输入法没有等价命令行,保留空实现以维持编辑流程结构。
+struct InputMethodGuard;
 
-impl FcitxState {
+impl InputMethodGuard {
     fn new() -> Self {
-        let last_state = fcitx5_state();
-        run_fcitx5_remote("-c");
-        Self { last_state }
+        Self
     }
 
-    fn enter_editing(&mut self) {
-        if self.last_state == Some('2') {
-            run_fcitx5_remote("-o");
-        }
-    }
+    fn enter_editing(&mut self) {}
 
-    fn leave_editing(&mut self) {
-        self.last_state = fcitx5_state();
-        run_fcitx5_remote("-c");
-    }
-}
-
-fn fcitx5_state() -> Option<char> {
-    let output = Command::new("fcitx5-remote").output().ok()?;
-    output.stdout.first().copied().map(char::from)
-}
-
-fn run_fcitx5_remote(arg: &str) {
-    let _ = Command::new("fcitx5-remote").arg(arg).spawn();
+    fn leave_editing(&mut self) {}
 }
 
 fn edit_inline_value(
@@ -7151,18 +7133,18 @@ fn edit_inline_value(
 ) -> Result<Option<String>> {
     let mut value = current.to_string();
     let mut cursor = value.chars().count();
-    let mut fcitx = FcitxState::new();
-    fcitx.enter_editing();
+    let mut ime = InputMethodGuard::new();
+    ime.enter_editing();
     loop {
         draw_inline_editor(stdout, title, &value, cursor, sensitive)?;
         match read_key()? {
             KeyCode::Esc => {
-                fcitx.leave_editing();
+                ime.leave_editing();
                 execute!(stdout, Hide)?;
                 return Ok(None);
             }
             KeyCode::Enter => {
-                fcitx.leave_editing();
+                ime.leave_editing();
                 execute!(stdout, Hide)?;
                 return Ok(Some(value));
             }
@@ -7245,7 +7227,7 @@ fn run_form_from(
     start_editing: bool,
 ) -> Result<bool> {
     let mut selected = 0usize;
-    let mut fcitx = FcitxState::new();
+    let mut ime = InputMethodGuard::new();
     // Only a plain text field can be typed into directly; the others open
     // their own picker on Enter, so landing "inside" them would mean typing
     // free text where a choice was expected.
@@ -7254,7 +7236,7 @@ fn run_form_from(
             !field.boolean && !field.textarea && !field.modalities && field.choices.is_empty()
         });
     if editing {
-        fcitx.enter_editing();
+        ime.enter_editing();
     }
     let mut cursors = fields
         .iter()
@@ -7264,12 +7246,12 @@ fn run_form_from(
         draw_form(stdout, title, fields, selected, editing, &cursors, true)?;
         match read_key()? {
             KeyCode::Esc if editing => {
-                fcitx.leave_editing();
+                ime.leave_editing();
                 editing = false;
             }
             KeyCode::Esc | KeyCode::Char('q') if !editing => return Ok(false),
             KeyCode::Enter if editing => {
-                fcitx.leave_editing();
+                ime.leave_editing();
                 editing = false;
             }
             KeyCode::Enter if !editing && selected == fields.len() => return Ok(true),
@@ -7319,7 +7301,7 @@ fn run_form_from(
             }
             KeyCode::Enter if !editing => {
                 if !fields[selected].boolean {
-                    fcitx.enter_editing();
+                    ime.enter_editing();
                     editing = true;
                 }
             }
@@ -7364,7 +7346,7 @@ fn run_form_without_buttons(
 ) -> Result<()> {
     let mut selected = 0usize;
     let mut editing = false;
-    let mut fcitx = FcitxState::new();
+    let mut ime = InputMethodGuard::new();
     let mut cursors = fields
         .iter()
         .map(|field| field.value.chars().count())
@@ -7373,12 +7355,12 @@ fn run_form_without_buttons(
         draw_form(stdout, title, fields, selected, editing, &cursors, false)?;
         match read_key()? {
             KeyCode::Esc if editing => {
-                fcitx.leave_editing();
+                ime.leave_editing();
                 editing = false;
             }
             KeyCode::Esc | KeyCode::Char('q') if !editing => return Ok(()),
             KeyCode::Enter if editing => {
-                fcitx.leave_editing();
+                ime.leave_editing();
                 editing = false;
             }
             KeyCode::Enter if !editing && fields[selected].boolean => {
@@ -7422,7 +7404,7 @@ fn run_form_without_buttons(
             }
             KeyCode::Enter if !editing => {
                 if !fields[selected].boolean {
-                    fcitx.enter_editing();
+                    ime.enter_editing();
                     editing = true;
                 }
             }
@@ -8805,16 +8787,16 @@ mod tests {
     #[test]
     fn real_context_batch_parsers_are_line_based_and_deduplicated() {
         let mappings =
-            parse_real_context_identity_lines("# 昵称<Tab>QQ号\nMiyu\t123\n小羽 = 456").unwrap();
+            parse_real_context_identity_lines("# 昵称<Tab>QQ号\nGQY\t123\n小羽 = 456").unwrap();
         assert_eq!(mappings.len(), 2);
-        assert_eq!(mappings[0].nickname, "Miyu");
+        assert_eq!(mappings[0].nickname, "GQY");
         assert_eq!(mappings[0].user_id, 123);
-        assert!(parse_real_context_identity_lines("Miyu\t123\nMiyu\t456").is_err());
-        assert!(parse_real_context_identity_lines("Miyu 123").is_err());
+        assert!(parse_real_context_identity_lines("GQY\t123\nGQY\t456").is_err());
+        assert!(parse_real_context_identity_lines("GQY 123").is_err());
 
         assert_eq!(
-            parse_real_context_string_lines("晚安\n 晚安 \nMiyu", 128).unwrap(),
-            vec!["晚安", "Miyu"]
+            parse_real_context_string_lines("晚安\n 晚安 \nGQY", 128).unwrap(),
+            vec!["晚安", "GQY"]
         );
     }
 
@@ -8838,8 +8820,8 @@ mod tests {
         assert_eq!(parse_id_lines("123\n456\n123\n").unwrap(), vec![123, 456]);
         assert!(parse_id_lines("123\ninvalid\n456").is_err());
         assert_eq!(
-            parse_keyword_lines("Miyu\n 小羽 \nMiyu").unwrap(),
-            vec!["Miyu", "小羽"]
+            parse_keyword_lines("GQY\n 小羽 \nGQY").unwrap(),
+            vec!["GQY", "小羽"]
         );
     }
 
@@ -8851,8 +8833,8 @@ mod tests {
         );
         assert!(parse_id_lines("123,456").is_err());
         assert_eq!(
-            parse_keyword_lines(" Miyu \r\n\r\n小羽\nMiyu\n").unwrap(),
-            vec!["Miyu", "小羽"]
+            parse_keyword_lines(" GQY \r\n\r\n小羽\nGQY\n").unwrap(),
+            vec!["GQY", "小羽"]
         );
     }
 
@@ -8877,14 +8859,14 @@ mod tests {
     }
 
     #[test]
-    fn qq_conversation_persona_summary_distinguishes_inheritance_and_miyu() {
+    fn qq_conversation_persona_summary_distinguishes_inheritance_and_gqy() {
         assert_eq!(
             platform_persona_summary(&PlatformPersonaOverride::Inherit),
             t("inherit current persona", "继承当前人格")
         );
         assert_eq!(
-            platform_persona_summary(&PlatformPersonaOverride::Miyu),
-            "Miyu"
+            platform_persona_summary(&PlatformPersonaOverride::GQY),
+            "GQY"
         );
         assert_eq!(
             platform_persona_summary(&PlatformPersonaOverride::Custom {
@@ -8911,8 +8893,8 @@ mod tests {
         assert_eq!(target.pending_reference_count("Session.md"), 0);
         assert_eq!(target.pending_reference_count("Renamed.md"), 1);
 
-        target.activate_miyu(&mut config);
-        assert!(target.is_miyu(&config));
+        target.activate_gqy(&mut config);
+        assert!(target.is_gqy(&config));
         assert_eq!(config.prompt.active_persona, "Global.md");
         target.activate_inherit();
         assert!(matches!(
@@ -8927,14 +8909,14 @@ mod tests {
         let mut target = PersonaMenuTarget::Global;
 
         assert_eq!(target.custom_offset(), 1);
-        assert!(target.is_miyu(&config));
+        assert!(target.is_gqy(&config));
         target.activate_custom(&mut config, "Global.md".to_string());
         assert_eq!(target.custom_name(&config), Some("Global.md"));
         assert_eq!(target.pending_reference_count("Global.md"), 0);
 
-        target.activate_miyu(&mut config);
+        target.activate_gqy(&mut config);
         assert!(config.prompt.active_persona.is_empty());
-        assert!(target.is_miyu(&config));
+        assert!(target.is_gqy(&config));
     }
 
     #[test]

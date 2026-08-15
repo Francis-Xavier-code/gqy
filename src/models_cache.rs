@@ -22,7 +22,7 @@ struct ApiProvider {
     models: HashMap<String, ApiModel>,
     #[serde(default)]
     npm: Option<String>,
-    /// 该供应商的 API base URL,用来把 Miyu 配置里的自定义供应商
+    /// 该供应商的 API base URL,用来把 GQY 配置里的自定义供应商
     /// (id 不一定与 models.dev 键一致,如 opencodego vs opencode-go)
     /// 对到目录条目上,计费估算靠它。
     #[serde(default)]
@@ -88,7 +88,7 @@ struct ApiLimit {
 }
 
 impl ApiLimit {
-    /// The window Miyu may actually fill. Some catalogue entries advertise a
+    /// The window GQY may actually fill. Some catalogue entries advertise a
     /// total `context` larger than the `input` the provider will accept —
     /// opencode's big-pickle reports 200k context against a 160k input cap —
     /// and budgeting against the larger number puts compaction 20k of tokens
@@ -182,7 +182,7 @@ pub fn is_loaded() -> bool {
     cache_lock().lock().unwrap().is_some()
 }
 
-fn cache_file(paths: &crate::paths::MiyuPaths) -> PathBuf {
+fn cache_file(paths: &crate::paths::GQYPaths) -> PathBuf {
     paths.cache_dir.join("models_cache.json")
 }
 
@@ -319,7 +319,7 @@ fn fetch_and_cache(path: &PathBuf) -> Result<Cache> {
         .build()?;
     let text = client
         .get(API_URL)
-        .header("User-Agent", "Mozilla/5.0 Miyu/0.1")
+        .header("User-Agent", "Mozilla/5.0 GQY/0.1")
         .send()?
         .error_for_status()?
         .text()?;
@@ -338,7 +338,7 @@ fn fetch_and_cache(path: &PathBuf) -> Result<Cache> {
     Ok(cache)
 }
 
-pub fn try_load(paths: &crate::paths::MiyuPaths) {
+pub fn try_load(paths: &crate::paths::GQYPaths) {
     let path = cache_file(paths);
     let cache = load_from_disk(&path).ok();
     if let Some(cache) = cache {
@@ -347,7 +347,7 @@ pub fn try_load(paths: &crate::paths::MiyuPaths) {
     }
 }
 
-pub fn try_load_active(paths: &crate::paths::MiyuPaths, config: &crate::config::AppConfig) {
+pub fn try_load_active(paths: &crate::paths::GQYPaths, config: &crate::config::AppConfig) {
     let path = cache_file(paths);
     let cache = load_from_disk(&path).ok();
     if let Some(mut cache) = cache {
@@ -357,7 +357,7 @@ pub fn try_load_active(paths: &crate::paths::MiyuPaths, config: &crate::config::
     }
 }
 
-pub fn spawn_background_refresh(paths: crate::paths::MiyuPaths) {
+pub fn spawn_background_refresh(paths: crate::paths::GQYPaths) {
     let path = cache_file(&paths);
     std::thread::spawn(move || {
         let _refresh = refresh_lock().lock().unwrap();
@@ -370,7 +370,7 @@ pub fn spawn_background_refresh(paths: crate::paths::MiyuPaths) {
 }
 
 pub fn spawn_background_refresh_active(
-    paths: crate::paths::MiyuPaths,
+    paths: crate::paths::GQYPaths,
     config: crate::config::AppConfig,
 ) {
     spawn_provider_api_refresh(config.providers.clone());
@@ -386,7 +386,7 @@ pub fn spawn_background_refresh_active(
     });
 }
 
-pub fn ensure_active_metadata(paths: &crate::paths::MiyuPaths, config: &crate::config::AppConfig) {
+pub fn ensure_active_metadata(paths: &crate::paths::GQYPaths, config: &crate::config::AppConfig) {
     if !is_loaded() {
         try_load_active(paths, config);
     }
@@ -469,7 +469,7 @@ pub fn input_modalities(provider_id: &str, model_id: &str) -> Option<Vec<String>
 }
 
 pub fn input_modalities_blocking(
-    paths: &crate::paths::MiyuPaths,
+    paths: &crate::paths::GQYPaths,
     provider_id: &str,
     model_id: &str,
 ) -> Option<Vec<String>> {
@@ -569,7 +569,7 @@ fn fetch_provider_context_windows(
     let mut request = client
         .get(url)
         .header("Accept", "application/json")
-        .header("User-Agent", "miyu-model-metadata");
+        .header("User-Agent", "gqy-model-metadata");
     if !api_key.is_empty() {
         request = request.bearer_auth(api_key);
     }
@@ -755,7 +755,7 @@ fn lookup_context_window(
     matches.into_iter().min()
 }
 
-/// 模型单价查询,供计费估算。供应商对齐两步走:① Miyu 供应商 id 恰好是
+/// 模型单价查询,供计费估算。供应商对齐两步走:① GQY 供应商 id 恰好是
 /// models.dev 键(deepseek、openrouter 等官方模板);② 按 base_url 对齐
 /// (自定义 id,如 opencodego → opencode-go)。都对不上就不猜——同名
 /// 模型在不同渠道价格不同,跨供应商模糊匹配会算错钱。
@@ -820,7 +820,7 @@ pub fn pricing_resolver(
     }
 }
 
-pub fn refresh_blocking(paths: &crate::paths::MiyuPaths) -> Result<()> {
+pub fn refresh_blocking(paths: &crate::paths::GQYPaths) -> Result<()> {
     let _refresh = refresh_lock().lock().unwrap();
     if is_loaded() {
         return Ok(());

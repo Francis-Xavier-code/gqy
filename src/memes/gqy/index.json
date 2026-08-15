@@ -1,5 +1,5 @@
 {
-  "library": "miyu",
+  "library": "gqy",
   "version": 2,
   "memes": [
     {
@@ -224,14 +224,14 @@
     },
     {
       "id": "sha256:d5147c3edbd3eba757c006122b807494f2828150bf409deefb90c3dede0f6a5c",
-      "name": { "zh": "你有 Miyu 聪明吗", "en": "Smarter Than Miyu" },
+      "name": { "zh": "你有 GQY 聪明吗", "en": "Smarter Than GQY" },
       "file": "images/expr_6af8b8994f9d4646.jpg",
       "mime_type": "image/jpeg",
       "animated": false,
-      "description": "黑白小人举起旁边的 Miyu 头像，底部写“你还能有Miyu聪明？”。画面是以 Miyu 名义对别人进行自信嘲讽。",
+      "description": "黑白小人举起旁边的 GQY 头像，底部写“你还能有GQY聪明？”。画面是以 GQY 名义对别人进行自信嘲讽。",
       "usage": "适合熟人玩笑里对轻微犯傻、没悟透的问题、离谱发言进行欠揍式自夸。",
       "avoid": "真诚求助、复杂技术问题、对方心情差或不熟时不要使用。",
-      "tags": ["Miyu", "聪明", "嘲讽", "自夸", "犯傻", "挑衅", "熟人"]
+      "tags": ["GQY", "聪明", "嘲讽", "自夸", "犯傻", "挑衅", "熟人"]
     },
     {
       "id": "sha256:97410762d208d0147d6e89c2b6479040b2955e7ba6ae872fd8c2d0935b5790e1",

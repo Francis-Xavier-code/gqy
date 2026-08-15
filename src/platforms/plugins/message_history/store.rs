@@ -623,7 +623,7 @@ impl HistoryStore {
             .await
     }
 
-    /// The caller must complete Miyu-admin authorization before invoking this.
+    /// The caller must complete GQY-admin authorization before invoking this.
     /// The store intentionally has no concept of QQ group-owner/admin roles.
     pub(crate) async fn delete_history(&self, mut request: DeleteRequest) -> Result<DeleteReport> {
         if matches!(request.mode, DeleteMode::KeepDays(0)) {
@@ -676,7 +676,7 @@ impl HistoryStore {
         let (sender, receiver) = mpsc::channel(self.inner.queue_capacity);
         let path = self.inner.db_path.clone();
         std::thread::Builder::new()
-            .name("miyu-message-history".to_string())
+            .name("gqy-message-history".to_string())
             .spawn(move || actor_loop(path, receiver))
             .context("starting message history actor")?;
         *guard = Some(sender.clone());
@@ -2422,7 +2422,7 @@ mod tests {
             key.clone(),
             "bot-1",
             "bot-alias-1",
-            "Miyu old",
+            "GQY old",
             "bot",
             second_day + 20,
         );
@@ -2431,7 +2431,7 @@ mod tests {
             key.clone(),
             "bot-2",
             "bot-alias-2",
-            "Miyu",
+            "GQY",
             "bot",
             second_day + 30,
         );
@@ -2499,7 +2499,7 @@ mod tests {
         assert_eq!(ranking.items[0].message_count, 3);
         assert_eq!(ranking.items[0].active_days, 2);
         assert_eq!(ranking.items[1].sender_id, "bot-a");
-        assert_eq!(ranking.items[1].sender_name, "Miyu");
+        assert_eq!(ranking.items[1].sender_name, "GQY");
         assert_eq!(ranking.items[1].rank, 2);
 
         let without_bot = store

@@ -1,5 +1,5 @@
 use crate::i18n::text as t;
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use anyhow::Result;
 
 fn completion_entries() -> [(&'static str, &'static str); 16] {
@@ -26,8 +26,8 @@ fn completion_entries() -> [(&'static str, &'static str); 16] {
         (
             "reload",
             t(
-                "Reload configuration in the running Miyu daemon",
-                "在运行中的 Miyu daemon 内重新加载配置",
+                "Reload configuration in the running GQY daemon",
+                "在运行中的 GQY daemon 内重新加载配置",
             ),
         ),
         ("models", t("List or switch models", "列出或切换模型")),
@@ -55,15 +55,15 @@ fn completion_entries() -> [(&'static str, &'static str); 16] {
         (
             "remove-shell-hook",
             t(
-                "Remove installed Miyu shell hooks",
-                "安全删除已安装的 Miyu shell hook",
+                "Remove installed GQY shell hooks",
+                "安全删除已安装的 GQY shell hook",
             ),
         ),
         ("history", t("Show conversation history", "显示会话历史")),
         ("kb", t("Manage the local knowledge base", "管理本地知识库")),
         (
             "update-default-kb",
-            t("Update the default knowledge base", "更新 Miyu 默认知识库"),
+            t("Update the default knowledge base", "更新 GQY 默认知识库"),
         ),
         (
             "memory",
@@ -81,19 +81,19 @@ pub fn hook() -> String {
     let mut output = String::new();
     for (command, description) in completion_entries() {
         output.push_str(&format!(
-            "complete -c miyu -n __fish_use_subcommand -f -a {command} -d '{description}'\n"
+            "complete -c gqy -n __fish_use_subcommand -f -a {command} -d '{description}'\n"
         ));
     }
     output.push('\n');
     output.push_str(
-        r#"function __miyu_paste
-    set -l output (miyu --clipboard-paste 2>/dev/null)
+        r#"function __gqy_paste
+    set -l output (gqy --clipboard-paste 2>/dev/null)
     if test $status -eq 0; and test -n "$output"
-        if not set -q __miyu_image_counter
-            set -g __miyu_image_counter 0
+        if not set -q __gqy_image_counter
+            set -g __gqy_image_counter 0
         end
-        set __miyu_image_counter (math $__miyu_image_counter + 1)
-        set output (string replace "Image 1" "Image $__miyu_image_counter" -- $output)
+        set __gqy_image_counter (math $__gqy_image_counter + 1)
+        set output (string replace "Image 1" "Image $__gqy_image_counter" -- $output)
         commandline -i -- $output
         commandline -f repaint
     else
@@ -101,33 +101,33 @@ pub fn hook() -> String {
     end
 end
 
-bind \cv __miyu_paste
+bind \cv __gqy_paste
 
-function __miyu_insert_newline
+function __gqy_insert_newline
     commandline -f expand-abbr
     commandline -i \n
 end
 
-bind ctrl-j __miyu_insert_newline
-bind \cj __miyu_insert_newline
-bind -M insert ctrl-j __miyu_insert_newline
-bind -M insert \cj __miyu_insert_newline
+bind ctrl-j __gqy_insert_newline
+bind \cj __gqy_insert_newline
+bind -M insert ctrl-j __gqy_insert_newline
+bind -M insert \cj __gqy_insert_newline
 
-function __miyu_wrap_fish_prompt
-    functions -q __miyu_original_fish_prompt; and return
+function __gqy_wrap_fish_prompt
+    functions -q __gqy_original_fish_prompt; and return
     functions -q fish_prompt; or fish_prompt >/dev/null 2>/dev/null
     functions -q fish_prompt; or return
 
-    functions -c fish_prompt __miyu_original_fish_prompt
+    functions -c fish_prompt __gqy_original_fish_prompt
     function fish_prompt
-        if set -q __miyu_pending_buffer
+        if set -q __gqy_pending_buffer
             printf '\e[?25l'
         end
-        __miyu_original_fish_prompt
+        __gqy_original_fish_prompt
     end
 end
 
-function __miyu_replay_buffer
+function __gqy_replay_buffer
     set -l buffer $argv[1]
     set -l lines (string split \n -- "$buffer")
     if test (count $lines) -gt 0
@@ -147,45 +147,45 @@ function __miyu_replay_buffer
     end
 end
 
-function __miyu_restore_cursor
+function __gqy_restore_cursor
     printf '\e[?25h'
-    set -e __miyu_cursor_hidden
+    set -e __gqy_cursor_hidden
 end
 
-function __miyu_on_prompt --on-event fish_prompt
-    set -q __miyu_pending_buffer; or return
+function __gqy_on_prompt --on-event fish_prompt
+    set -q __gqy_pending_buffer; or return
 
-    set -l buffer $__miyu_pending_buffer
-    set -e __miyu_pending_buffer
-    set -e __miyu_image_counter
+    set -l buffer $__gqy_pending_buffer
+    set -e __gqy_pending_buffer
+    set -e __gqy_image_counter
 
-    trap __miyu_restore_cursor INT TERM EXIT
-    __miyu_replay_buffer "$buffer"
+    trap __gqy_restore_cursor INT TERM EXIT
+    __gqy_replay_buffer "$buffer"
     printf '\n'
-    printf '%s' "$buffer" | miyu --shell-intercept --shell fish --stdin
-    set -l miyu_status $status
+    printf '%s' "$buffer" | gqy --shell-intercept --shell fish --stdin
+    set -l gqy_status $status
     trap - INT TERM EXIT
-    __miyu_restore_cursor
-    return $miyu_status
+    __gqy_restore_cursor
+    return $gqy_status
 end
 
-function __miyu_execute_or_continue
+function __gqy_execute_or_continue
     commandline --is-valid
     set -l valid_status $status
     if test $valid_status -eq 2
         commandline -i \n
         commandline -f repaint
     else
-        set -e __miyu_image_counter
+        set -e __gqy_image_counter
         commandline -f execute
     end
 end
 
-function __miyu_buffer_is_multiline
+function __gqy_buffer_is_multiline
     test (string split \n -- "$argv[1]" | count) -gt 1
 end
 
-function __miyu_first_command
+function __gqy_first_command
     set -l tokens (commandline --input="$argv[1]" --tokens-expanded 2>/dev/null)
     while test (count $tokens) -gt 0
         set -l token $tokens[1]
@@ -199,64 +199,64 @@ function __miyu_first_command
     return 1
 end
 
-function __miyu_accept_line
+function __gqy_accept_line
     status is-interactive; or return
 
     commandline -f expand-abbr
     set -l buffer (commandline -b | string collect)
     set -l trimmed (string trim -- "$buffer")
     if test -z "$trimmed"
-        __miyu_execute_or_continue
+        __gqy_execute_or_continue
         return
     end
 
-    if not __miyu_buffer_is_multiline "$buffer"
-        __miyu_execute_or_continue
+    if not __gqy_buffer_is_multiline "$buffer"
+        __gqy_execute_or_continue
         return
     end
 
-    set -l first_command (__miyu_first_command "$buffer")
+    set -l first_command (__gqy_first_command "$buffer")
     if test -n "$first_command"; and not contains -- "$first_command" time test date which type command history; and type -q -- "$first_command"
-        __miyu_execute_or_continue
+        __gqy_execute_or_continue
         return
     end
 
-    printf '%s' "$buffer" | miyu --shell-classify --shell fish --stdin 2>/dev/null
+    printf '%s' "$buffer" | gqy --shell-classify --shell fish --stdin 2>/dev/null
     set -l classify_status $status
     if test $classify_status -eq 0
-        __miyu_execute_or_continue
+        __gqy_execute_or_continue
         return
     else if test $classify_status -ne 1
-        __miyu_execute_or_continue
+        __gqy_execute_or_continue
         return
     end
 
-    set -e __miyu_image_counter
-    __miyu_wrap_fish_prompt
-    set -g __miyu_cursor_hidden 1
+    set -e __gqy_image_counter
+    __gqy_wrap_fish_prompt
+    set -g __gqy_cursor_hidden 1
     history append -- "$buffer"
-    set -g __miyu_pending_buffer "$buffer"
+    set -g __gqy_pending_buffer "$buffer"
     commandline -b -- ""
     printf '\e[?25l'
     commandline -f execute
 end
 
-bind enter __miyu_accept_line
-bind \r __miyu_accept_line
-bind -M insert enter __miyu_accept_line
-bind -M insert \r __miyu_accept_line
+bind enter __gqy_accept_line
+bind \r __gqy_accept_line
+bind -M insert enter __gqy_accept_line
+bind -M insert \r __gqy_accept_line
 
 function fish_command_not_found
     status is-interactive; or return 127
 
-    set -e __miyu_image_counter
+    set -e __gqy_image_counter
 
     set -l current_line (status current-commandline 2>/dev/null | string collect)
     if test -n "$current_line"; and not string match -qr '[\n\r]' -- "$current_line"
-        set -l top_command (__miyu_first_command "$current_line")
+        set -l top_command (__gqy_first_command "$current_line")
         if test -z "$top_command"; or not type -q -- "$top_command"
             printf '\n'
-            printf '%s' "$current_line" | miyu --shell-intercept --shell fish --stdin 2>/dev/null
+            printf '%s' "$current_line" | gqy --shell-intercept --shell fish --stdin 2>/dev/null
             return 127
         end
     end
@@ -269,7 +269,7 @@ function fish_command_not_found
     set -l text (string join ' ' -- $command)
     string match -qr '[\n\r]' -- $text; and return 127
 
-    miyu --shell-intercept --shell fish -- $command 2>/dev/null
+    gqy --shell-intercept --shell fish -- $command 2>/dev/null
     return 127
 end
 "#,
@@ -277,7 +277,7 @@ end
     output
 }
 
-pub fn install(paths: &MiyuPaths) -> Result<()> {
+pub fn install(paths: &GQYPaths) -> Result<()> {
     if let Some(parent) = paths.fish_hook_file.parent() {
         std::fs::create_dir_all(parent)?;
     }
@@ -291,7 +291,7 @@ pub fn install(paths: &MiyuPaths) -> Result<()> {
     Ok(())
 }
 
-pub fn uninstall(paths: &MiyuPaths) -> Result<bool> {
+pub fn uninstall(paths: &GQYPaths) -> Result<bool> {
     let removed = match std::fs::remove_file(&paths.fish_hook_file) {
         Ok(()) => true,
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => false,
@@ -300,7 +300,7 @@ pub fn uninstall(paths: &MiyuPaths) -> Result<bool> {
     if removed {
         println!(
             "{}: fish",
-            t("removed Miyu shell hook", "已移除 Miyu shell hook")
+            t("removed GQY shell hook", "已移除 GQY shell hook")
         );
     }
     Ok(removed)
@@ -318,7 +318,7 @@ mod tests {
         assert!(hook.contains("--shell fish"));
         assert!(hook.contains("status current-commandline 2>/dev/null | string collect"));
         assert!(hook.contains("not type -q -- \"$top_command\"\n            printf '\\n'"));
-        assert!(hook.contains("printf '%s' \"$current_line\" | miyu --shell-intercept"));
+        assert!(hook.contains("printf '%s' \"$current_line\" | gqy --shell-intercept"));
         assert!(hook.contains("return 127"));
     }
 
@@ -328,13 +328,13 @@ mod tests {
         let expected = completion_entries();
         let completion_lines = hook
             .lines()
-            .filter(|line| line.starts_with("complete -c miyu "))
+            .filter(|line| line.starts_with("complete -c gqy "))
             .collect::<Vec<_>>();
 
         assert_eq!(completion_lines.len(), expected.len());
         for (command, description) in expected {
             let completion = format!(
-                "complete -c miyu -n __fish_use_subcommand -f -a {command} -d '{description}'"
+                "complete -c gqy -n __fish_use_subcommand -f -a {command} -d '{description}'"
             );
             assert!(completion_lines.contains(&completion.as_str()));
         }
@@ -343,21 +343,21 @@ mod tests {
     #[test]
     fn fish_hook_defines_paste_binding() {
         let hook = hook();
-        assert!(hook.contains("__miyu_paste"));
-        assert!(hook.contains("bind \\cv __miyu_paste"));
-        assert!(hook.contains("miyu --clipboard-paste"));
+        assert!(hook.contains("__gqy_paste"));
+        assert!(hook.contains("bind \\cv __gqy_paste"));
+        assert!(hook.contains("gqy --clipboard-paste"));
     }
 
     #[test]
     fn fish_hook_defines_enter_binding() {
         let hook = hook();
-        assert!(hook.contains("__miyu_accept_line"));
-        assert!(hook.contains("__miyu_wrap_fish_prompt"));
-        assert!(hook.contains("functions -c fish_prompt __miyu_original_fish_prompt"));
-        assert!(hook.contains("if set -q __miyu_pending_buffer"));
-        assert!(hook.contains("__miyu_replay_buffer"));
-        assert!(hook.contains("__miyu_on_prompt --on-event fish_prompt"));
-        assert!(hook.contains("__miyu_replay_buffer \"$buffer\"\n    printf '\\n'"));
+        assert!(hook.contains("__gqy_accept_line"));
+        assert!(hook.contains("__gqy_wrap_fish_prompt"));
+        assert!(hook.contains("functions -c fish_prompt __gqy_original_fish_prompt"));
+        assert!(hook.contains("if set -q __gqy_pending_buffer"));
+        assert!(hook.contains("__gqy_replay_buffer"));
+        assert!(hook.contains("__gqy_on_prompt --on-event fish_prompt"));
+        assert!(hook.contains("__gqy_replay_buffer \"$buffer\"\n    printf '\\n'"));
         assert!(!hook.contains("        fish_prompt\n"));
         assert!(hook.contains("string length --visible"));
         assert!(hook.contains("printf '\\e[?25l'"));
@@ -365,16 +365,16 @@ mod tests {
         assert!(hook.contains("not set_color $fish_color_error 2>/dev/null"));
         assert!(hook.contains("set_color normal"));
         assert!(hook.contains("printf '\\e[?25h'"));
-        assert!(hook.contains("set -g __miyu_cursor_hidden 1"));
-        assert!(hook.contains("set -e __miyu_cursor_hidden"));
-        assert!(hook.contains("return $miyu_status"));
-        assert!(hook.contains("__miyu_execute_or_continue"));
-        assert!(hook.contains("__miyu_buffer_is_multiline"));
+        assert!(hook.contains("set -g __gqy_cursor_hidden 1"));
+        assert!(hook.contains("set -e __gqy_cursor_hidden"));
+        assert!(hook.contains("return $gqy_status"));
+        assert!(hook.contains("__gqy_execute_or_continue"));
+        assert!(hook.contains("__gqy_buffer_is_multiline"));
         assert!(hook.contains("test (string split \\n -- \"$argv[1]\" | count) -gt 1"));
-        assert!(hook.contains("__miyu_first_command"));
+        assert!(hook.contains("__gqy_first_command"));
         assert!(hook.contains("commandline --input=\"$argv[1]\" --tokens-expanded"));
         assert!(hook.contains("type -q -- \"$first_command\""));
-        assert!(hook.contains("set -g __miyu_pending_buffer \"$buffer\""));
+        assert!(hook.contains("set -g __gqy_pending_buffer \"$buffer\""));
         assert!(hook.contains("history append -- \"$buffer\""));
         assert!(hook.contains("commandline -b -- \"\""));
         assert!(hook.contains("commandline -f execute"));
@@ -383,20 +383,20 @@ mod tests {
         assert!(!hook.contains("cancel-commandline"));
         assert!(hook.contains("commandline -b | string collect"));
         assert!(!hook.contains("commandline -b | string collect -N"));
-        assert!(!hook.contains("__miyu_multiline_has_unknown_command"));
+        assert!(!hook.contains("__gqy_multiline_has_unknown_command"));
         assert!(hook.contains("--shell-classify --shell fish --stdin"));
         assert!(hook.contains("--shell-intercept --shell fish --stdin"));
-        assert!(hook.contains("bind enter __miyu_accept_line"));
-        assert!(hook.contains("bind \\r __miyu_accept_line"));
-        assert!(hook.contains("bind ctrl-j __miyu_insert_newline"));
-        assert!(hook.contains("bind -M insert enter __miyu_accept_line"));
-        assert!(hook.contains("bind -M insert ctrl-j __miyu_insert_newline"));
+        assert!(hook.contains("bind enter __gqy_accept_line"));
+        assert!(hook.contains("bind \\r __gqy_accept_line"));
+        assert!(hook.contains("bind ctrl-j __gqy_insert_newline"));
+        assert!(hook.contains("bind -M insert enter __gqy_accept_line"));
+        assert!(hook.contains("bind -M insert ctrl-j __gqy_insert_newline"));
     }
 
     #[test]
     fn fish_hook_resets_image_counter_on_command_not_found() {
         let hook = hook();
-        assert!(hook.contains("set -e __miyu_image_counter"));
+        assert!(hook.contains("set -e __gqy_image_counter"));
     }
 
     #[test]
@@ -410,7 +410,7 @@ mod tests {
     #[test]
     fn uninstall_reports_only_existing_hook() {
         let temp = tempfile::tempdir().unwrap();
-        let paths = MiyuPaths {
+        let paths = GQYPaths {
             root_dir: temp.path().to_path_buf(),
             config_dir: temp.path().to_path_buf(),
             config_file: temp.path().join("config.json"),
@@ -419,7 +419,7 @@ mod tests {
             cache_dir: temp.path().join("cache"),
             state_dir: temp.path().join("state"),
             pictures_dir: temp.path().join("pictures"),
-            fish_hook_file: temp.path().join("miyu.fish"),
+            fish_hook_file: temp.path().join("gqy.fish"),
             bash_hook_file: temp.path().join("bash-hook.sh"),
             zsh_hook_file: temp.path().join("zsh-hook.zsh"),
             scripts_dir: temp.path().join("scripts"),

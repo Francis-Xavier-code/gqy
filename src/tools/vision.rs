@@ -3,7 +3,7 @@ use crate::clipboard::write_image_cache_file;
 use crate::config::{AppConfig, PrintImagePluginConfig};
 use crate::i18n::agent_text as t;
 use crate::llm::{ChatMessage, OpenAiCompatibleClient};
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use crate::platforms::{PlatformContextImageRef, PlatformImageData, PlatformTurnContext};
 use anyhow::{bail, Context, Result};
 use base64::Engine;
@@ -48,7 +48,7 @@ struct ScopedVisionState {
 pub fn register(
     registry: &mut ToolRegistry,
     config: AppConfig,
-    paths: MiyuPaths,
+    paths: GQYPaths,
     register_analyze: bool,
 ) {
     if !register_analyze {
@@ -77,7 +77,7 @@ pub fn register(
 pub fn register_scoped_local(
     registry: &mut ToolRegistry,
     config: AppConfig,
-    paths: MiyuPaths,
+    paths: GQYPaths,
     allowed_images: Vec<PathBuf>,
 ) {
     register_scoped(
@@ -94,7 +94,7 @@ pub fn register_scoped_local(
 pub fn register_scoped_platform(
     registry: &mut ToolRegistry,
     config: AppConfig,
-    paths: MiyuPaths,
+    paths: GQYPaths,
     allowed_images: Vec<PathBuf>,
     context_images: Vec<PlatformContextImageRef>,
     platform_context: Arc<PlatformTurnContext>,
@@ -114,7 +114,7 @@ pub fn register_scoped_platform(
 fn register_scoped(
     registry: &mut ToolRegistry,
     config: AppConfig,
-    paths: MiyuPaths,
+    paths: GQYPaths,
     allowed_images: Vec<PathBuf>,
     context_images: Vec<PlatformContextImageRef>,
     platform_context: Option<Arc<PlatformTurnContext>>,
@@ -311,7 +311,7 @@ fn print_size(args: &Value, print_config: &PrintImagePluginConfig) -> Option<Str
     }
 }
 
-async fn analyze_image(args: Value, config: AppConfig, paths: MiyuPaths) -> Result<String> {
+async fn analyze_image(args: Value, config: AppConfig, paths: GQYPaths) -> Result<String> {
     let vision = &config.plugins.vision;
     if !vision.enabled {
         bail!("vision plugin is disabled")
@@ -341,7 +341,7 @@ async fn analyze_image(args: Value, config: AppConfig, paths: MiyuPaths) -> Resu
 async fn analyze_scoped_image(
     args: Value,
     config: AppConfig,
-    paths: MiyuPaths,
+    paths: GQYPaths,
     state: Arc<ScopedVisionState>,
 ) -> Result<String> {
     let image = args
@@ -398,7 +398,7 @@ async fn analyze_scoped_image(
 }
 
 async fn resolve_context_image(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     state: &ScopedVisionState,
     image_id: &str,
 ) -> Result<ResolvedContextImage> {
@@ -485,7 +485,7 @@ async fn resolve_context_image(
         cache_path,
     };
     tracing::info!(
-        target: "miyu::qq",
+        target: "gqy::qq",
         image_id,
         message_id = %source.message_id,
         image_index = source.image_index,
@@ -521,7 +521,7 @@ fn image_data_url(mime: &str, data: &[u8]) -> String {
 
 pub async fn analyze_local_image_with_prompt(
     config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     image: &Path,
     prompt: &str,
 ) -> Result<String> {
@@ -531,7 +531,7 @@ pub async fn analyze_local_image_with_prompt(
 
 pub async fn analyze_image_url_with_prompt(
     config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     image_url: &str,
     prompt: &str,
 ) -> Result<String> {
@@ -571,7 +571,7 @@ where
     })?
 }
 
-fn vision_client(config: &AppConfig, paths: &MiyuPaths) -> Result<OpenAiCompatibleClient> {
+fn vision_client(config: &AppConfig, paths: &GQYPaths) -> Result<OpenAiCompatibleClient> {
     // An explicit global vision provider preserves its existing precedence.
     // Platform turns with a conversation override clear that single-provider
     // field in their private config clone, exposing the full routed pool here.
@@ -671,7 +671,7 @@ mod tests {
         }
 
         fn bot_display_name<'a>(&'a self) -> BoxFuture<'a, Result<String>> {
-            Box::pin(async { Ok("Miyu".to_string()) })
+            Box::pin(async { Ok("GQY".to_string()) })
         }
 
         fn message_images<'a>(
@@ -688,8 +688,8 @@ mod tests {
         }
     }
 
-    fn test_paths(root: &Path) -> MiyuPaths {
-        MiyuPaths {
+    fn test_paths(root: &Path) -> GQYPaths {
+        GQYPaths {
             root_dir: root.to_path_buf(),
             config_dir: root.join("config"),
             config_file: root.join("config/config.jsonc"),

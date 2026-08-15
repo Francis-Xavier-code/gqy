@@ -1,7 +1,7 @@
 /*
- * Miyu WebUI · matugen 模板
+ * GQY WebUI · matugen 模板
  * 由 matugen 根据壁纸生成 MD3 token,覆盖 WebUI 默认的 logo 派生配色。
- * 输出文件由 miyud 在 /theme.css 提供(文件不存在则 404,WebUI 自动回落默认配色)。
+ * 输出文件由 gqyd 在 /theme.css 提供(文件不存在则 404,WebUI 自动回落默认配色)。
  *
  * 用法见同目录 README.md。
  */

@@ -8,7 +8,7 @@
 
 use super::{CommandOutputStream, ToolProgress, ToolRegistry, ToolSpec};
 use crate::i18n::agent_text as t;
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -163,7 +163,7 @@ struct LedgerEntry {
 }
 
 struct JobHost {
-    paths: MiyuPaths,
+    paths: GQYPaths,
 }
 
 fn jobs() -> &'static Mutex<HashMap<String, JobEntry>> {
@@ -265,7 +265,7 @@ pub fn set_completion_hook(hook: CompletionHook) {
 
 /// One-time host init: remembers paths and sweeps ledger entries
 /// left behind by dead predecessor processes.
-pub fn init(paths: &MiyuPaths) {
+pub fn init(paths: &GQYPaths) {
     let _ = host().set(JobHost {
         paths: paths.clone(),
     });
@@ -279,11 +279,11 @@ fn require_host() -> Result<&'static JobHost> {
         .context("background jobs are not initialized in this process")
 }
 
-fn logs_dir(paths: &MiyuPaths) -> PathBuf {
+fn logs_dir(paths: &GQYPaths) -> PathBuf {
     paths.cache_dir.join("jobs")
 }
 
-fn ledger_path(paths: &MiyuPaths) -> PathBuf {
+fn ledger_path(paths: &GQYPaths) -> PathBuf {
     paths.runtime_dir().join("background-jobs.json")
 }
 
@@ -309,8 +309,8 @@ fn process_alive(pid: u32) -> bool {
 }
 
 /// Kill process groups recorded by predecessors that are no longer alive.
-/// Entries owned by other live Miyu processes are left untouched.
-pub fn sweep_stale_jobs(paths: &MiyuPaths) {
+/// Entries owned by other live GQY processes are left untouched.
+pub fn sweep_stale_jobs(paths: &GQYPaths) {
     let path = ledger_path(paths);
     let Ok(bytes) = std::fs::read(&path) else {
         return;
@@ -334,8 +334,8 @@ pub fn sweep_stale_jobs(paths: &MiyuPaths) {
                 pid = entry.pid,
                 "{}",
                 crate::i18n::text(
-                    "killing a background job leaked by a dead Miyu process",
-                    "清理已死亡 Miyu 进程遗留的后台任务"
+                    "killing a background job leaked by a dead GQY process",
+                    "清理已死亡 GQY 进程遗留的后台任务"
                 )
             );
             signal_process_group(entry.pid, libc::SIGKILL);
@@ -344,7 +344,7 @@ pub fn sweep_stale_jobs(paths: &MiyuPaths) {
     let _ = write_ledger(paths, &kept);
 }
 
-fn cleanup_old_logs(paths: &MiyuPaths) {
+fn cleanup_old_logs(paths: &GQYPaths) {
     let dir = logs_dir(paths);
     let Ok(entries) = std::fs::read_dir(&dir) else {
         return;
@@ -362,7 +362,7 @@ fn cleanup_old_logs(paths: &MiyuPaths) {
     }
 }
 
-fn write_ledger(paths: &MiyuPaths, entries: &[LedgerEntry]) -> Result<()> {
+fn write_ledger(paths: &GQYPaths, entries: &[LedgerEntry]) -> Result<()> {
     let path = ledger_path(paths);
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
@@ -371,7 +371,7 @@ fn write_ledger(paths: &MiyuPaths, entries: &[LedgerEntry]) -> Result<()> {
     Ok(())
 }
 
-fn sync_ledger(paths: &MiyuPaths) {
+fn sync_ledger(paths: &GQYPaths) {
     let owner_pid = std::process::id();
     let entries = jobs()
         .lock()
@@ -471,10 +471,10 @@ pub async fn spawn_background(
         .arg("-lc")
         .arg(command)
         .current_dir(&workspace)
-        // 工具桥环境:后台脚本里的 `miyu tool-call` 也能以本会话身份执行。
+        // 工具桥环境:后台脚本里的 `gqy tool-call` 也能以本会话身份执行。
         .envs(
             super::workspace::try_session()
-                .map(|session| ("MIYU_SESSION".to_string(), session.to_string())),
+                .map(|session| ("GQY_SESSION".to_string(), session.to_string())),
         )
         .stdin(std::process::Stdio::null())
         .stdout(std::process::Stdio::from(log.try_clone()?))
@@ -1113,7 +1113,7 @@ mod tests {
         INIT.get_or_init(|| {
             let temp = Box::leak(Box::new(tempfile::tempdir().unwrap()));
             let root = temp.path().to_path_buf();
-            let paths = MiyuPaths {
+            let paths = GQYPaths {
                 root_dir: root.to_path_buf(),
                 config_dir: root.join("config"),
                 config_file: root.join("config/config.jsonc"),
@@ -1121,7 +1121,7 @@ mod tests {
                 data_dir: root.join("data"),
                 cache_dir: root.join("cache"),
                 state_dir: root.join("state"),
-                ..crate::paths::MiyuPaths::new().unwrap()
+                ..crate::paths::GQYPaths::new().unwrap()
             };
             init(&paths);
         });

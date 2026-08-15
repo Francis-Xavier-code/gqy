@@ -4,14 +4,14 @@ pub use migrations::DEFAULT_SESSION_ID;
 pub(crate) mod usage;
 
 /// Newest `conversation.db` schema this build can open — the gate an import
-/// checks before restoring a database written by a newer Miyu.
+/// checks before restoring a database written by a newer GQY.
 pub fn latest_schema_version() -> i64 {
     migrations::LATEST_VERSION
 }
 
 use crate::llm::{TurnTokens, Usage};
 use crate::memory::EvictedTurn;
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -43,7 +43,7 @@ pub const USER_SESSION_KIND: &str = "user";
 /// 按人格隔离机制白拿会话/记忆/REPL 指针的分家;模式由会话的
 /// persona==DEV_PERSONA 推导,无需迁移。
 pub const DEV_PERSONA: &str = "dev";
-/// Backs a one-shot `miyu ask` / `miyu '<message>'` turn: created just before
+/// Backs a one-shot `gqy ask` / `gqy '<message>'` turn: created just before
 /// the turn, deleted right after, and invisible to every listing in between.
 pub const ASK_SESSION_KIND: &str = "ask";
 
@@ -181,7 +181,7 @@ pub struct StateStore {
 }
 
 impl StateStore {
-    pub fn new(paths: &MiyuPaths) -> Result<Self> {
+    pub fn new(paths: &GQYPaths) -> Result<Self> {
         let state_dir = paths.state_dir.clone();
         let conv_db = Arc::new(ConversationDb::open(&state_dir)?);
         let platform_access = shared_platform_access_index(&state_dir, &conv_db)?;
@@ -736,7 +736,7 @@ impl StateStore {
             std::fs::write(self.usage_file(), "{\n  \"requests\": 0,\n  \"prompt_tokens\": 0,\n  \"completion_tokens\": 0,\n  \"total_tokens\": 0,\n  \"conversation_tokens\": 0\n}\n")?;
         }
         if !self.profile_file().exists() {
-            std::fs::write(self.profile_file(), "# Miyu Profile\n\n")?;
+            std::fs::write(self.profile_file(), "# GQY Profile\n\n")?;
         }
         Ok(())
     }
@@ -2088,7 +2088,7 @@ mod tests {
     #[test]
     fn turn_lifecycle() {
         let temp = tempfile::tempdir().unwrap();
-        let store = StateStore::new(&MiyuPaths {
+        let store = StateStore::new(&GQYPaths {
             root_dir: temp.path().to_path_buf(),
             config_dir: temp.path().join("config"),
             config_file: temp.path().join("config/config.jsonc"),
@@ -2097,7 +2097,7 @@ mod tests {
             cache_dir: temp.path().join("cache"),
             state_dir: temp.path().join("state"),
             pictures_dir: temp.path().join("pictures"),
-            fish_hook_file: temp.path().join("fish/miyu.fish"),
+            fish_hook_file: temp.path().join("fish/gqy.fish"),
             bash_hook_file: temp.path().join("shell/bash-hook.sh"),
             zsh_hook_file: temp.path().join("shell/zsh-hook.zsh"),
             scripts_dir: temp.path().join("config/scripts"),
@@ -2106,7 +2106,7 @@ mod tests {
         .unwrap();
 
         store.init_files().unwrap();
-        assert!(!temp.path().join("state/miyu.log").exists());
+        assert!(!temp.path().join("state/gqy.log").exists());
 
         store.start_turn("turn_1", "hello", 999999).unwrap();
         let turns = store.load_turns().unwrap();
@@ -2123,7 +2123,7 @@ mod tests {
     #[test]
     fn question_exchange_persists_with_user_role_history() {
         let temp = tempfile::tempdir().unwrap();
-        let store = StateStore::new(&MiyuPaths {
+        let store = StateStore::new(&GQYPaths {
             root_dir: temp.path().to_path_buf(),
             config_dir: temp.path().join("config"),
             config_file: temp.path().join("config/config.jsonc"),
@@ -2132,7 +2132,7 @@ mod tests {
             cache_dir: temp.path().join("cache"),
             state_dir: temp.path().join("state"),
             pictures_dir: temp.path().join("pictures"),
-            fish_hook_file: temp.path().join("fish/miyu.fish"),
+            fish_hook_file: temp.path().join("fish/gqy.fish"),
             bash_hook_file: temp.path().join("shell/bash-hook.sh"),
             zsh_hook_file: temp.path().join("shell/zsh-hook.zsh"),
             scripts_dir: temp.path().join("config/scripts"),
@@ -2169,7 +2169,7 @@ mod tests {
     #[test]
     fn interrupt_turn() {
         let temp = tempfile::tempdir().unwrap();
-        let store = StateStore::new(&MiyuPaths {
+        let store = StateStore::new(&GQYPaths {
             root_dir: temp.path().to_path_buf(),
             config_dir: temp.path().join("config"),
             config_file: temp.path().join("config/config.jsonc"),
@@ -2178,7 +2178,7 @@ mod tests {
             cache_dir: temp.path().join("cache"),
             state_dir: temp.path().join("state"),
             pictures_dir: temp.path().join("pictures"),
-            fish_hook_file: temp.path().join("fish/miyu.fish"),
+            fish_hook_file: temp.path().join("fish/gqy.fish"),
             bash_hook_file: temp.path().join("shell/bash-hook.sh"),
             zsh_hook_file: temp.path().join("shell/zsh-hook.zsh"),
             scripts_dir: temp.path().join("config/scripts"),
@@ -2267,7 +2267,7 @@ mod tests {
     #[test]
     fn interrupted_turn_materializes_persisted_journal_output() {
         let temp = tempfile::tempdir().unwrap();
-        let store = StateStore::new(&MiyuPaths {
+        let store = StateStore::new(&GQYPaths {
             root_dir: temp.path().to_path_buf(),
             config_dir: temp.path().join("config"),
             config_file: temp.path().join("config/config.jsonc"),
@@ -2276,7 +2276,7 @@ mod tests {
             cache_dir: temp.path().join("cache"),
             state_dir: temp.path().join("state"),
             pictures_dir: temp.path().join("pictures"),
-            fish_hook_file: temp.path().join("fish/miyu.fish"),
+            fish_hook_file: temp.path().join("fish/gqy.fish"),
             bash_hook_file: temp.path().join("shell/bash-hook.sh"),
             zsh_hook_file: temp.path().join("shell/zsh-hook.zsh"),
             scripts_dir: temp.path().join("config/scripts"),
@@ -2390,7 +2390,7 @@ mod tests {
     #[test]
     fn recover_stale_running() {
         let temp = tempfile::tempdir().unwrap();
-        let store = StateStore::new(&MiyuPaths {
+        let store = StateStore::new(&GQYPaths {
             root_dir: temp.path().to_path_buf(),
             config_dir: temp.path().join("config"),
             config_file: temp.path().join("config/config.jsonc"),
@@ -2399,7 +2399,7 @@ mod tests {
             cache_dir: temp.path().join("cache"),
             state_dir: temp.path().join("state"),
             pictures_dir: temp.path().join("pictures"),
-            fish_hook_file: temp.path().join("fish/miyu.fish"),
+            fish_hook_file: temp.path().join("fish/gqy.fish"),
             bash_hook_file: temp.path().join("shell/bash-hook.sh"),
             zsh_hook_file: temp.path().join("shell/zsh-hook.zsh"),
             scripts_dir: temp.path().join("config/scripts"),
@@ -2575,7 +2575,7 @@ mod tests {
     #[test]
     fn undo_removes_last_turn() {
         let temp = tempfile::tempdir().unwrap();
-        let store = StateStore::new(&MiyuPaths {
+        let store = StateStore::new(&GQYPaths {
             root_dir: temp.path().to_path_buf(),
             config_dir: temp.path().join("config"),
             config_file: temp.path().join("config/config.jsonc"),
@@ -2584,7 +2584,7 @@ mod tests {
             cache_dir: temp.path().join("cache"),
             state_dir: temp.path().join("state"),
             pictures_dir: temp.path().join("pictures"),
-            fish_hook_file: temp.path().join("fish/miyu.fish"),
+            fish_hook_file: temp.path().join("fish/gqy.fish"),
             bash_hook_file: temp.path().join("shell/bash-hook.sh"),
             zsh_hook_file: temp.path().join("shell/zsh-hook.zsh"),
             scripts_dir: temp.path().join("config/scripts"),
@@ -2606,8 +2606,8 @@ mod tests {
         assert_eq!(turns[0].turn_id, "turn_1");
     }
 
-    fn test_paths(root: &Path) -> MiyuPaths {
-        MiyuPaths {
+    fn test_paths(root: &Path) -> GQYPaths {
+        GQYPaths {
             root_dir: root.to_path_buf(),
             config_dir: root.join("config"),
             config_file: root.join("config/config.jsonc"),
@@ -2616,7 +2616,7 @@ mod tests {
             cache_dir: root.join("cache"),
             state_dir: root.join("state"),
             pictures_dir: root.join("pictures"),
-            fish_hook_file: root.join("fish/miyu.fish"),
+            fish_hook_file: root.join("fish/gqy.fish"),
             bash_hook_file: root.join("shell/bash-hook.sh"),
             zsh_hook_file: root.join("shell/zsh-hook.zsh"),
             scripts_dir: root.join("config/scripts"),
@@ -2801,16 +2801,16 @@ mod tests {
         let temp = tempfile::tempdir().unwrap();
         let store = StateStore::new(&test_paths(temp.path())).unwrap();
         // Migrated/default rows start persona-less and are claimed on adoption.
-        store.adopt_sessions_for_persona("miyu").unwrap();
+        store.adopt_sessions_for_persona("gqy").unwrap();
         let default_id = store.session_id();
         let default = store.session_record(&default_id).unwrap().unwrap();
-        assert_eq!(default.persona, "miyu");
+        assert_eq!(default.persona, "gqy");
 
         store.start_turn("t1", "hello", std::process::id()).unwrap();
         store.complete_turn("t1", "hi", None).unwrap();
 
         let created = store
-            .create_session("miyu", "旅行计划", "user", None)
+            .create_session("gqy", "旅行计划", "user", None)
             .unwrap();
         store.switch_session(&created.session_id).unwrap();
         assert_eq!(&*store.session_id(), created.session_id.as_str());
@@ -2821,7 +2821,7 @@ mod tests {
         let reopened = StateStore::new(&test_paths(temp.path())).unwrap();
         assert_eq!(&*reopened.session_id(), created.session_id.as_str());
 
-        let listed = store.list_sessions("miyu").unwrap();
+        let listed = store.list_sessions("gqy").unwrap();
         assert_eq!(listed.len(), 2);
         let default_overview = listed
             .iter()
@@ -2831,12 +2831,12 @@ mod tests {
         assert_eq!(default_overview.last_user_content.as_deref(), Some("hello"));
 
         assert!(store
-            .find_session_by_name("miyu", "旅行计划")
+            .find_session_by_name("gqy", "旅行计划")
             .unwrap()
             .is_some());
         store.rename_session(&created.session_id, "新名字").unwrap();
         assert!(store
-            .find_session_by_name("miyu", "旅行计划")
+            .find_session_by_name("gqy", "旅行计划")
             .unwrap()
             .is_none());
 
@@ -2844,7 +2844,7 @@ mod tests {
         // Deleting a session cascades its turns away.
         store.delete_session(&default_id).unwrap();
         assert!(store.session_record(&default_id).unwrap().is_none());
-        assert_eq!(store.list_sessions("miyu").unwrap().len(), 1);
+        assert_eq!(store.list_sessions("gqy").unwrap().len(), 1);
 
         // A dangling pointer self-heals back to a default session.
         store.delete_session(&created.session_id).unwrap();
@@ -2858,16 +2858,16 @@ mod tests {
     #[test]
     fn persona_reset_clears_active_local_and_onebot_contexts_only() {
         let (_temp, store) = test_store();
-        store.adopt_sessions_for_persona("miyu").unwrap();
+        store.adopt_sessions_for_persona("gqy").unwrap();
         let current = store.session_id().to_string();
-        let local = store.create_session("miyu", "local", "user", None).unwrap();
+        let local = store.create_session("gqy", "local", "user", None).unwrap();
         let second = store
-            .create_session("miyu", "second", "user", None)
+            .create_session("gqy", "second", "user", None)
             .unwrap();
         let other_persona = store
             .create_session("other", "other", "user", None)
             .unwrap();
-        let qq = store.create_session("miyu", "qq", "user", None).unwrap();
+        let qq = store.create_session("gqy", "qq", "user", None).unwrap();
         store
             .bind_platform_session(
                 &PlatformSessionBindingKey {
@@ -2876,16 +2876,16 @@ mod tests {
                     conversation_kind: "group".to_string(),
                     conversation_id: "42".to_string(),
                     participant_id: None,
-                    persona: "miyu".to_string(),
+                    persona: "gqy".to_string(),
                 },
                 &qq.session_id,
             )
             .unwrap();
         let subagent = store
-            .create_session("miyu", "child", "subagent", Some(&local.session_id))
+            .create_session("gqy", "child", "subagent", Some(&local.session_id))
             .unwrap();
         let second_child = store
-            .create_session("miyu", "second-child", "subagent", Some(&second.session_id))
+            .create_session("gqy", "second-child", "subagent", Some(&second.session_id))
             .unwrap();
 
         let sessions = [
@@ -2906,7 +2906,7 @@ mod tests {
             pinned.complete_turn(&turn_id, "after", None).unwrap();
         }
 
-        let targets = store.persona_reset_session_ids("miyu", "onebot").unwrap();
+        let targets = store.persona_reset_session_ids("gqy", "onebot").unwrap();
         assert!(targets.contains(&current));
         assert!(targets.contains(&local.session_id));
         assert!(targets.contains(&qq.session_id));
@@ -2916,7 +2916,7 @@ mod tests {
         assert!(targets.contains(&second_child.session_id));
         assert!(!targets.contains(&other_persona.session_id));
 
-        let cleared = store.reset_persona_contexts("miyu", "onebot").unwrap();
+        let cleared = store.reset_persona_contexts("gqy", "onebot").unwrap();
         assert_eq!(cleared, targets);
         for session_id in [
             &current,
@@ -2932,7 +2932,7 @@ mod tests {
             assert_eq!(store.pinned(session_id).load_turns().unwrap().len(), 1);
         }
         assert_eq!(
-            store.platform_session_bindings("miyu", "onebot").unwrap()[0].session_id,
+            store.platform_session_bindings("gqy", "onebot").unwrap()[0].session_id,
             qq.session_id
         );
     }
@@ -2965,45 +2965,45 @@ mod tests {
     #[test]
     fn platform_bindings_survive_rename_and_isolate_personas() {
         let (_temp, store) = test_store();
-        let miyu_session = store
-            .create_session("miyu", "old display name", "user", None)
+        let gqy_session = store
+            .create_session("gqy", "old display name", "user", None)
             .unwrap();
         let other_session = store
             .create_session("other", "another display name", "user", None)
             .unwrap();
-        let miyu_key = platform_binding_key("20000", None, "miyu");
+        let gqy_key = platform_binding_key("20000", None, "gqy");
         let other_key = platform_binding_key("20000", None, "other");
 
         store
-            .bind_platform_session(&miyu_key, &miyu_session.session_id)
+            .bind_platform_session(&gqy_key, &gqy_session.session_id)
             .unwrap();
         store
             .bind_platform_session(&other_key, &other_session.session_id)
             .unwrap();
         store
-            .rename_session(&miyu_session.session_id, "new display name")
+            .rename_session(&gqy_session.session_id, "new display name")
             .unwrap();
 
         assert_eq!(
-            store.find_platform_session_binding(&miyu_key).unwrap(),
-            Some(miyu_session.session_id.clone())
+            store.find_platform_session_binding(&gqy_key).unwrap(),
+            Some(gqy_session.session_id.clone())
         );
         // `None` and an empty participant are the same database identity.
-        let empty_participant_key = platform_binding_key("20000", Some(""), "miyu");
+        let empty_participant_key = platform_binding_key("20000", Some(""), "gqy");
         assert_eq!(
             store
                 .find_platform_session_binding(&empty_participant_key)
                 .unwrap(),
-            Some(miyu_session.session_id.clone())
+            Some(gqy_session.session_id.clone())
         );
         assert_eq!(
             store.find_platform_session_binding(&other_key).unwrap(),
             Some(other_session.session_id)
         );
 
-        store.delete_session(&miyu_session.session_id).unwrap();
+        store.delete_session(&gqy_session.session_id).unwrap();
         assert_eq!(
-            store.find_platform_session_binding(&miyu_key).unwrap(),
+            store.find_platform_session_binding(&gqy_key).unwrap(),
             None
         );
     }
@@ -3073,18 +3073,18 @@ mod tests {
     fn local_session_listing_excludes_platform_owned_history() {
         let (_temp, store) = test_store();
         let local = store
-            .create_session("miyu", "shared name", "user", None)
+            .create_session("gqy", "shared name", "user", None)
             .unwrap();
         let platform = store
-            .create_session("miyu", "shared name", "user", None)
+            .create_session("gqy", "shared name", "user", None)
             .unwrap();
-        let key = platform_binding_key("20000", None, "miyu");
+        let key = platform_binding_key("20000", None, "gqy");
         store
             .bind_platform_session(&key, &platform.session_id)
             .unwrap();
 
         let all_ids = store
-            .list_sessions("miyu")
+            .list_sessions("gqy")
             .unwrap()
             .into_iter()
             .map(|overview| overview.record.session_id)
@@ -3093,7 +3093,7 @@ mod tests {
         assert!(all_ids.contains(&platform.session_id));
 
         let local_ids = store
-            .list_local_sessions("miyu")
+            .list_local_sessions("gqy")
             .unwrap()
             .into_iter()
             .map(|overview| overview.record.session_id)
@@ -3104,7 +3104,7 @@ mod tests {
         assert!(store.is_platform_session(&platform.session_id).unwrap());
         assert_eq!(
             store
-                .find_local_session_by_name("miyu", "SHARED NAME")
+                .find_local_session_by_name("gqy", "SHARED NAME")
                 .unwrap()
                 .unwrap()
                 .session_id,
@@ -3115,11 +3115,11 @@ mod tests {
     #[test]
     fn platform_binding_overwrite_and_conflict_are_atomic() {
         let (_temp, store) = test_store();
-        let session_a = store.create_session("miyu", "a", "user", None).unwrap();
-        let session_b = store.create_session("miyu", "b", "user", None).unwrap();
-        let session_c = store.create_session("miyu", "c", "user", None).unwrap();
-        let key_a = platform_binding_key("group-a", None, "miyu");
-        let key_b = platform_binding_key("group-b", None, "miyu");
+        let session_a = store.create_session("gqy", "a", "user", None).unwrap();
+        let session_b = store.create_session("gqy", "b", "user", None).unwrap();
+        let session_c = store.create_session("gqy", "c", "user", None).unwrap();
+        let key_a = platform_binding_key("group-a", None, "gqy");
+        let key_b = platform_binding_key("group-b", None, "gqy");
 
         store
             .bind_platform_session(&key_a, &session_a.session_id)
@@ -3157,7 +3157,7 @@ mod tests {
         let (temp, store) = test_store();
         let second_store = StateStore::new(&test_paths(temp.path())).unwrap();
         let session = store
-            .create_session("miyu", "shared target", "user", None)
+            .create_session("gqy", "shared target", "user", None)
             .unwrap();
         let barrier = Arc::new(std::sync::Barrier::new(3));
         let handles = [store.clone(), second_store]
@@ -3166,7 +3166,7 @@ mod tests {
             .map(|(store, conversation_id)| {
                 let barrier = barrier.clone();
                 let session_id = session.session_id.clone();
-                let key = platform_binding_key(conversation_id, None, "miyu");
+                let key = platform_binding_key(conversation_id, None, "gqy");
                 std::thread::spawn(move || {
                     barrier.wait();
                     let result = store.bind_platform_session(&key, &session_id);
@@ -3201,9 +3201,9 @@ mod tests {
     fn concurrent_platform_claim_converges_on_one_session() {
         let (temp, store) = test_store();
         let second_store = StateStore::new(&test_paths(temp.path())).unwrap();
-        let session_a = store.create_session("miyu", "a", "user", None).unwrap();
-        let session_b = store.create_session("miyu", "b", "user", None).unwrap();
-        let key = platform_binding_key("same-group", None, "miyu");
+        let session_a = store.create_session("gqy", "a", "user", None).unwrap();
+        let session_b = store.create_session("gqy", "b", "user", None).unwrap();
+        let key = platform_binding_key("same-group", None, "gqy");
         let barrier = Arc::new(std::sync::Barrier::new(3));
         let handles = [
             (store.clone(), session_a.session_id.clone()),
@@ -3236,7 +3236,7 @@ mod tests {
     #[test]
     fn platform_session_creation_is_bound_atomically() {
         let (_temp, store) = test_store();
-        let key = platform_binding_key("atomic-group", None, "miyu");
+        let key = platform_binding_key("atomic-group", None, "gqy");
         let (platform, created) = store
             .create_or_get_platform_session(&key, "platform")
             .unwrap();
@@ -3246,7 +3246,7 @@ mod tests {
             Some(platform.session_id.clone())
         );
         assert!(!store
-            .list_local_sessions("miyu")
+            .list_local_sessions("gqy")
             .unwrap()
             .iter()
             .any(|entry| entry.record.session_id == platform.session_id));
@@ -3273,18 +3273,18 @@ mod tests {
 
         // Pinned stores represent independent persona sessions but share the
         // external-conversation plugin scope.
-        let miyu_session = store.create_session("miyu", "miyu", "user", None).unwrap();
+        let gqy_session = store.create_session("gqy", "gqy", "user", None).unwrap();
         let other_session = store
             .create_session("other", "other", "user", None)
             .unwrap();
-        let miyu_store = store.pinned(&miyu_session.session_id);
+        let gqy_store = store.pinned(&gqy_session.session_id);
         let other_store = store.pinned(&other_session.session_id);
-        let from_miyu: Option<Vec<String>> =
-            miyu_store.plugin_get_json(&scope, "recent_images").unwrap();
+        let from_gqy: Option<Vec<String>> =
+            gqy_store.plugin_get_json(&scope, "recent_images").unwrap();
         let from_other: Option<Vec<String>> = other_store
             .plugin_get_json(&scope, "recent_images")
             .unwrap();
-        assert_eq!(from_miyu, Some(replacement.clone()));
+        assert_eq!(from_gqy, Some(replacement.clone()));
         assert_eq!(from_other, Some(replacement));
 
         store.plugin_put_json(&scope, "mode", &"image").unwrap();
@@ -3440,10 +3440,10 @@ mod tests {
     fn wiping_the_persona_takes_the_subagent_rows_with_it() {
         let temp = tempfile::tempdir().unwrap();
         let store = StateStore::new(&test_paths(temp.path())).unwrap();
-        store.adopt_sessions_for_persona("miyu").unwrap();
+        store.adopt_sessions_for_persona("gqy").unwrap();
         let parent = store.session_id();
         let audit = store
-            .create_session("miyu", "深挖", "subagent", Some(&parent))
+            .create_session("gqy", "深挖", "subagent", Some(&parent))
             .unwrap();
         store
             .record_subagent_usage(&audit.session_id, None, None, None, 400, 100, 500, 200)
@@ -3452,7 +3452,7 @@ mod tests {
 
         // Subagent usage lives on the session row, not in `turns` — clearing
         // the turns alone left every Σ still carrying it.
-        store.reset_persona_contexts("miyu", "onebot").unwrap();
+        store.reset_persona_contexts("gqy", "onebot").unwrap();
         assert_eq!(
             store.session_cumulative_token_totals().unwrap(),
             TurnTokens::default()
@@ -3463,7 +3463,7 @@ mod tests {
     fn a_subagents_tokens_land_in_the_launching_sessions_total() {
         let temp = tempfile::tempdir().unwrap();
         let store = StateStore::new(&test_paths(temp.path())).unwrap();
-        store.adopt_sessions_for_persona("miyu").unwrap();
+        store.adopt_sessions_for_persona("gqy").unwrap();
         let parent = store.session_id();
 
         let turn_id = "turn_parent_1";
@@ -3495,7 +3495,7 @@ mod tests {
         );
 
         let audit = store
-            .create_session("miyu", "深挖", "subagent", Some(&parent))
+            .create_session("gqy", "深挖", "subagent", Some(&parent))
             .unwrap();
         store
             .record_subagent_usage(&audit.session_id, None, None, None, 400, 100, 500, 200)
@@ -3525,10 +3525,10 @@ mod tests {
     fn a_subagent_run_recorded_before_the_cache_column_stays_out_of_the_rate() {
         let temp = tempfile::tempdir().unwrap();
         let store = StateStore::new(&test_paths(temp.path())).unwrap();
-        store.adopt_sessions_for_persona("miyu").unwrap();
+        store.adopt_sessions_for_persona("gqy").unwrap();
         let parent = store.session_id();
         let audit = store
-            .create_session("miyu", "升级前的一次", "subagent", Some(&parent))
+            .create_session("gqy", "升级前的一次", "subagent", Some(&parent))
             .unwrap();
         // Exactly what the v19 migration leaves behind: usage recorded, cache
         // unknown (NULL). Counting its prompt with no hits to match turned a
@@ -3550,10 +3550,10 @@ mod tests {
     fn an_estimated_subagent_run_never_reaches_the_cache_denominator() {
         let temp = tempfile::tempdir().unwrap();
         let store = StateStore::new(&test_paths(temp.path())).unwrap();
-        store.adopt_sessions_for_persona("miyu").unwrap();
+        store.adopt_sessions_for_persona("gqy").unwrap();
         let parent = store.session_id();
         let audit = store
-            .create_session("miyu", "估算的一次", "subagent", Some(&parent))
+            .create_session("gqy", "估算的一次", "subagent", Some(&parent))
             .unwrap();
         // The provider reported nothing, so only the char estimate is known:
         // it inflates the total but must not pretend to be measured prompt.
@@ -3570,10 +3570,10 @@ mod tests {
     fn subagent_audit_sessions_are_hidden_and_expire() {
         let temp = tempfile::tempdir().unwrap();
         let store = StateStore::new(&test_paths(temp.path())).unwrap();
-        store.adopt_sessions_for_persona("miyu").unwrap();
+        store.adopt_sessions_for_persona("gqy").unwrap();
         let parent = store.session_id();
         let audit = store
-            .create_session("miyu", "探索代码库", "subagent", Some(&parent))
+            .create_session("gqy", "探索代码库", "subagent", Some(&parent))
             .unwrap();
         let pinned = store.pinned(&audit.session_id);
         pinned
@@ -3597,7 +3597,7 @@ mod tests {
 
         // Hidden from the user-facing session list.
         assert!(store
-            .list_sessions("miyu")
+            .list_sessions("gqy")
             .unwrap()
             .iter()
             .all(|overview| overview.record.session_id != audit.session_id));
@@ -3724,15 +3724,15 @@ mod tests {
         let (temp, store) = test_store();
         store.init_files().unwrap();
         let user = store
-            .create_session("miyu", "real", USER_SESSION_KIND, None)
+            .create_session("gqy", "real", USER_SESSION_KIND, None)
             .unwrap();
         let ask = store
-            .create_session("miyu", "一次性对话", ASK_SESSION_KIND, None)
+            .create_session("gqy", "一次性对话", ASK_SESSION_KIND, None)
             .unwrap();
 
         // Never listed, never findable by name — only the client holding the
         // freshly minted id can address it.
-        let listed = store.list_sessions("miyu").unwrap();
+        let listed = store.list_sessions("gqy").unwrap();
         assert!(listed
             .iter()
             .any(|overview| overview.record.session_id == user.session_id));
@@ -3740,7 +3740,7 @@ mod tests {
             .iter()
             .all(|overview| overview.record.session_id != ask.session_id));
         assert!(store
-            .find_local_session_by_name("miyu", "一次性对话")
+            .find_local_session_by_name("gqy", "一次性对话")
             .unwrap()
             .is_none());
 
@@ -3766,13 +3766,13 @@ mod tests {
         store.init_files().unwrap();
         let terminal = store.session_id().to_string();
         let repl = store
-            .create_session("miyu", "repl lane", USER_SESSION_KIND, None)
+            .create_session("gqy", "repl lane", USER_SESSION_KIND, None)
             .unwrap();
 
-        assert!(store.repl_session("miyu").unwrap().is_none());
-        store.set_repl_session("miyu", &repl.session_id).unwrap();
+        assert!(store.repl_session("gqy").unwrap().is_none());
+        store.set_repl_session("gqy", &repl.session_id).unwrap();
         assert_eq!(
-            store.repl_session("miyu").unwrap().as_deref(),
+            store.repl_session("gqy").unwrap().as_deref(),
             Some(repl.session_id.as_str())
         );
         // Moving the REPL lane must not drag the terminal lane along.
@@ -3781,7 +3781,7 @@ mod tests {
         // Deleted: the pointer goes stale rather than returning a session
         // the REPL must not land on.
         store.delete_session(&repl.session_id).unwrap();
-        assert!(store.repl_session("miyu").unwrap().is_none());
+        assert!(store.repl_session("gqy").unwrap().is_none());
     }
 
     #[test]
@@ -3904,7 +3904,7 @@ mod tests {
             .unwrap();
 
         let target_record = store
-            .create_session("miyu", "qq:10000:private:42", "user", None)
+            .create_session("gqy", "qq:10000:private:42", "user", None)
             .unwrap();
         let target = store.pinned(&target_record.session_id);
         target
@@ -3914,7 +3914,7 @@ mod tests {
         target
             .enqueue_prompt("qq_queue", "queued", "queued", &[])
             .unwrap();
-        let binding = platform_binding_key("42", None, "miyu");
+        let binding = platform_binding_key("42", None, "gqy");
         store
             .bind_platform_session(&binding, &target_record.session_id)
             .unwrap();
@@ -4089,7 +4089,7 @@ mod tests {
         assert_eq!(store.load_queued_prompts().unwrap().len(), 1);
         drop(store);
 
-        let paths = MiyuPaths {
+        let paths = GQYPaths {
             root_dir: temp.path().to_path_buf(),
             config_dir: temp.path().join("config"),
             config_file: temp.path().join("config/config.jsonc"),
@@ -4098,7 +4098,7 @@ mod tests {
             cache_dir: temp.path().join("cache"),
             state_dir: temp.path().join("state"),
             pictures_dir: temp.path().join("pictures"),
-            fish_hook_file: temp.path().join("fish/miyu.fish"),
+            fish_hook_file: temp.path().join("fish/gqy.fish"),
             bash_hook_file: temp.path().join("shell/bash-hook.sh"),
             zsh_hook_file: temp.path().join("shell/zsh-hook.zsh"),
             scripts_dir: temp.path().join("config/scripts"),

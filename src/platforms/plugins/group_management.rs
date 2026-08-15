@@ -141,7 +141,7 @@ impl GroupManagementPlugin {
         let settings = settings(&context)?;
         let query_enabled = settings.enable_tool || settings.enable_kick_tool;
         if context.conversation.kind != ConversationKind::Group {
-            // 群聊之外只给 Miyu 管理员留跨群查询入口（group_id 必填）
+            // 群聊之外只给 GQY 管理员留跨群查询入口（group_id 必填）
             if query_enabled && context.is_admin {
                 self.register_history_query(registry, context);
             }
@@ -266,7 +266,7 @@ impl GroupManagementPlugin {
     ) {
         registry.register(ToolSpec::new(
             "qq_group_manage_history_query",
-            "Query QQ group management records (mute/kick/title). view=events lists individual actions newest-first; view=stats aggregates per member (ban_count, kick_count, total mute duration). Miyu admins may pass group_id to query another group; group_id is required outside that group's chat.",
+            "Query QQ group management records (mute/kick/title). view=events lists individual actions newest-first; view=stats aggregates per member (ban_count, kick_count, total mute duration). GQY admins may pass group_id to query another group; group_id is required outside that group's chat.",
             history_query_schema(),
             move |args| {
                 let context = context.clone();
@@ -467,7 +467,7 @@ impl GroupManagementPlugin {
             match context.group_member_fresh(user_id).await {
                 Ok(None) => {
                     tracing::warn!(
-                        target: "miyu::qq",
+                        target: "gqy::qq",
                         user_id,
                         error = %error,
                         "{}",
@@ -778,7 +778,7 @@ async fn validate_target(
     protect_managers: bool,
 ) -> Result<PlatformGroupMember> {
     if user_id == context.conversation.account_id {
-        bail!("不能对 Miyu 自身执行该操作");
+        bail!("不能对 GQY 自身执行该操作");
     }
     // Fresh lookup on purpose: this gate exists to stop kicks/mutes aimed at
     // members who already left, and a cached roster cannot answer that.
@@ -984,7 +984,7 @@ fn append_event(context: &PlatformTurnContext, event: &ManagementEvent, max: usi
 }
 
 /// 解析查询目标群：群聊内默认当前群；带 group_id 且非当前群时要求
-/// Miyu 管理员；群聊之外（私聊/CLI）group_id 必填且仅限管理员。
+/// GQY 管理员；群聊之外（私聊/CLI）group_id 必填且仅限管理员。
 fn resolve_query_scope(
     args: &Value,
     context: &PlatformTurnContext,
@@ -1010,7 +1010,7 @@ fn resolve_query_scope(
         return Ok(current);
     }
     if !context.is_admin {
-        bail!("跨群查询仅限 Miyu 管理员");
+        bail!("跨群查询仅限 GQY 管理员");
     }
     Ok(PlatformPluginScopeKey {
         conversation_kind: "group".to_string(),
@@ -1288,7 +1288,7 @@ async fn record_real_context(
     duration: Option<u64>,
 ) -> Result<()> {
     let mut text = format!(
-        "[System:群管理行为]\n操作：{action}\n执行者：Miyu（{}）\n对象：{}（{}）",
+        "[System:群管理行为]\n操作：{action}\n执行者：GQY（{}）\n对象：{}（{}）",
         context.conversation.account_id,
         member.display_name(),
         member.user_id
@@ -1344,7 +1344,7 @@ fn history_query_schema() -> Value {
             "sort_by": { "type": "string", "enum": ["time", "ban_count", "kick_count", "total_duration", "last_action_at"], "description": "events 视图按时间排；stats 视图默认按 ban_count。" },
             "sort_order": { "type": "string", "enum": ["asc", "desc"], "default": "desc" },
             "limit": { "type": "integer", "minimum": 1, "maximum": 100 },
-            "group_id": { "type": "string", "description": "跨群查询的目标群号；仅 Miyu 管理员可用，群聊之外调用时必填。" }
+            "group_id": { "type": "string", "description": "跨群查询的目标群号；仅 GQY 管理员可用，群聊之外调用时必填。" }
         },
         "additionalProperties": false
     })

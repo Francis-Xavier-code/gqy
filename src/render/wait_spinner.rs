@@ -448,7 +448,7 @@ mod tests {
     #[test]
     fn detects_sub_phase_row_growth_before_tick() {
         let mut spinner = make_spinner(
-            "~ Linux 游戏兼容性调查×1 运行中",
+            "~ 游戏兼容性调查×1 运行中",
             Some("↳ Black Myth: Wukong"),
             SpinnerStyle::Braille,
         );

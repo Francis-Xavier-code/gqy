@@ -240,7 +240,7 @@ fn mutate_as_admin(
                     mutate(&context.state_store, user_id, mutation)
                 })
         })?
-        .context("active judgement skip management requires a current Miyu administrator")
+        .context("active judgement skip management requires a current GQY administrator")
 }
 
 fn qq_id(arguments: &Value) -> Result<i64> {
@@ -279,7 +279,7 @@ async fn run_tool(
         Ok(message) => (message, true),
         Err(error) => {
             tracing::warn!(
-                target: "miyu::qq",
+                target: "gqy::qq",
                 error = %error,
                 sender_id = %context.sender_id,
                 "active judgement skip tool request failed"
@@ -345,7 +345,7 @@ pub(super) fn register_tools(registry: &mut ToolRegistry, context: Arc<PlatformT
 mod tests {
     use super::*;
     use crate::config::AppConfig;
-    use crate::paths::MiyuPaths;
+    use crate::paths::GQYPaths;
     use crate::platforms::access_control::{global_grant_key, AccessPermission};
     use crate::platforms::plugins::PlatformPluginRegistry;
     use crate::platforms::{
@@ -376,12 +376,12 @@ mod tests {
         }
 
         fn bot_display_name<'a>(&'a self) -> BoxFuture<'a, Result<String>> {
-            Box::pin(async { Ok("Miyu".to_string()) })
+            Box::pin(async { Ok("GQY".to_string()) })
         }
     }
 
-    fn test_paths(root: &std::path::Path) -> MiyuPaths {
-        MiyuPaths {
+    fn test_paths(root: &std::path::Path) -> GQYPaths {
+        GQYPaths {
             root_dir: root.to_path_buf(),
             config_dir: root.join("config"),
             config_file: root.join("config/config.jsonc"),
@@ -390,7 +390,7 @@ mod tests {
             cache_dir: root.join("cache"),
             state_dir: root.join("state"),
             pictures_dir: root.join("pictures"),
-            fish_hook_file: root.join("fish/miyu.fish"),
+            fish_hook_file: root.join("fish/gqy.fish"),
             bash_hook_file: root.join("shell/bash-hook.sh"),
             zsh_hook_file: root.join("shell/zsh-hook.zsh"),
             scripts_dir: root.join("config/scripts"),
@@ -399,7 +399,7 @@ mod tests {
     }
 
     fn test_context(
-        paths: &MiyuPaths,
+        paths: &GQYPaths,
         state: StateStore,
         adapter: Arc<RecordingAdapter>,
         static_admin: bool,

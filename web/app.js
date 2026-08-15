@@ -320,7 +320,7 @@
 
   const state = {
     backgroundJobs: new Map(),
-    jobsStripOpen: localStorage.getItem("miyu.web.jobsStripOpen") === "1",
+    jobsStripOpen: localStorage.getItem("gqy.web.jobsStripOpen") === "1",
     bootId: null,
     latestEventId: 0,
     lastEventId: 0,
@@ -330,9 +330,9 @@
     queuedPrompts: [],
     models: [],
     persona: {
-      name: "Miyu",
-      avatar_url: "/assets/miyu-logo.png",
-      board_image_url: "/assets/miyuwallpaper.png",
+      name: "GQY",
+      avatar_url: "/assets/gqy-logo.png",
+      board_image_url: "/assets/gqywallpaper.png",
       board_title: DEFAULT_BOARD_TITLE,
       board_subtitle: DEFAULT_BOARD_SUBTITLE,
       starter_prompts: DEFAULT_STARTER_PROMPTS
@@ -515,7 +515,7 @@
     }
     const themeColor = document.querySelector('meta[name="theme-color"]');
     if (themeColor) themeColor.content = selected === "graphite" ? "#171821" : "#f6f0e2";
-    if (persist) safeStorageSet("miyu.web.theme", selected);
+    if (persist) safeStorageSet("gqy.web.theme", selected);
   }
 
   /*
@@ -537,7 +537,7 @@
       // 探测不到 matugen 输出时,「壁纸取色」整个选项不显示。
       if (button.dataset.schemeChoice === "matugen") button.hidden = state.matugenAvailable !== true;
     });
-    if (persist) safeStorageSet("miyu.web.colorScheme", requested);
+    if (persist) safeStorageSet("gqy.web.colorScheme", requested);
   }
 
   async function probeMatugenTheme() {
@@ -548,7 +548,7 @@
       state.matugenAvailable = false;
     }
     // 无持久化记录时:matugen 可用则维持现状(matugen),否则窗边。默认值不写入存储。
-    setColorScheme(safeStorageGet("miyu.web.colorScheme") || (state.matugenAvailable ? "matugen" : "madobe"), false);
+    setColorScheme(safeStorageGet("gqy.web.colorScheme") || (state.matugenAvailable ? "matugen" : "madobe"), false);
   }
 
   /* 仅 WebUI 的本地显示偏好(localStorage,不写入 config) */
@@ -563,7 +563,7 @@
       button.classList.toggle("active", active);
       button.setAttribute("aria-pressed", String(active));
     });
-    if (persist) safeStorageSet("miyu.web.chatFontSize", selected);
+    if (persist) safeStorageSet("gqy.web.chatFontSize", selected);
   }
 
   function setReasoningExpanded(value, persist = true) {
@@ -573,7 +573,7 @@
     document.querySelectorAll(".reasoning-block").forEach((block) => {
       block.open = state.reasoningExpanded;
     });
-    if (persist) safeStorageSet("miyu.web.reasoningExpanded", String(state.reasoningExpanded));
+    if (persist) safeStorageSet("gqy.web.reasoningExpanded", String(state.reasoningExpanded));
   }
 
   function setToolExpanded(value, persist = true) {
@@ -584,7 +584,7 @@
       card.classList.toggle("collapsed", !state.toolExpanded);
       card.querySelector(".tool-head")?.setAttribute("aria-expanded", String(state.toolExpanded));
     });
-    if (persist) safeStorageSet("miyu.web.toolExpanded", String(state.toolExpanded));
+    if (persist) safeStorageSet("gqy.web.toolExpanded", String(state.toolExpanded));
   }
 
   function thinkingVariantLabel(variant, short = false) {
@@ -892,7 +892,7 @@
     if (elements.sidebarExpandButton) elements.sidebarExpandButton.hidden = !state.sidebarCollapsed;
     if (elements.sidebarCollapseButton) elements.sidebarCollapseButton.hidden = state.sidebarCollapsed;
     if (state.sidebarCollapsed) closeSidebar();
-    if (!automatic) safeStorageSet("miyu.web.sidebarCollapsed", String(state.sidebarCollapsed));
+    if (!automatic) safeStorageSet("gqy.web.sidebarCollapsed", String(state.sidebarCollapsed));
     syncArtifactLayout?.();
   }
 
@@ -1000,7 +1000,7 @@
   }
 
   function normalizePersona(value) {
-    const name = String(value?.name || "").trim() || "Miyu";
+    const name = String(value?.name || "").trim() || "GQY";
     const avatarUrl = typeof value?.avatar_url === "string" && value.avatar_url ? value.avatar_url : null;
     const boardImageUrl = typeof value?.board_image_url === "string" && value.board_image_url
       ? value.board_image_url
@@ -1902,9 +1902,9 @@
   const PLUGIN_LABELS = {
     weather: "天气", web: "网络搜索", web_images: "图片搜索", deep_research: "深度研究", deep_diagnose: "深度诊断",
     vision: "识图", exchange_rate: "汇率", xuanxue: "玄学", image_generation: "生图", print_image: "打印图片",
-    memes: "表情包", knowledge_base: "知识库", archlinux: "Arch Linux", man: "在线手册", moegirl: "萌娘百科",
-    hash_codec: "哈希与编解码", calculator: "计算器", package_advisor: "AUR 审查",
-    deep_research_linux_game_compatibility: "Linux 游戏兼容", diagnostics: "系统诊断", api_quota: "大模型额度查询", memory: "记忆"
+    memes: "表情包", knowledge_base: "知识库", brew: "Homebrew", man: "在线手册", moegirl: "萌娘百科",
+    hash_codec: "哈希与编解码", calculator: "计算器", package_advisor: "Homebrew 审查",
+    deep_research_linux_game_compatibility: "游戏兼容", diagnostics: "系统诊断", api_quota: "大模型额度查询", memory: "记忆"
   };
 
   const SECRET_PLUGIN_PATHS = new Map([
@@ -2200,7 +2200,7 @@
     active.className = "config-input";
     const defaultOption = document.createElement("option");
     defaultOption.value = "";
-    defaultOption.textContent = kind === "personas" ? "Miyu 默认人格" : "不使用用户身份";
+    defaultOption.textContent = kind === "personas" ? "GQY 默认人格" : "不使用用户身份";
     active.appendChild(defaultOption);
     for (const promptDocument of documents) {
       const option = document.createElement("option");
@@ -2499,7 +2499,7 @@
     try {
       response = await fetch(path, { ...options, headers, credentials: "same-origin" });
     } catch (_) {
-      throw new ApiError("无法连接 Miyu WebUI", 0);
+      throw new ApiError("无法连接 GQY WebUI", 0);
     }
     if (!response.ok) throw new ApiError(await readErrorMessage(response), response.status);
     return response;
@@ -3837,7 +3837,7 @@
     request.open("POST", `/api/attachments?session_id=${encodeURIComponent(item.sessionId)}`);
     request.setRequestHeader("Accept", "application/json");
     request.setRequestHeader("Content-Type", item.file.type || "application/octet-stream");
-    request.setRequestHeader("X-Miyu-Filename", encodeURIComponent(item.file.name));
+    request.setRequestHeader("X-GQY-Filename", encodeURIComponent(item.file.name));
     request.upload.addEventListener("progress", (event) => {
       if (!event.lengthComputable || item.request !== request) return;
       item.progress = Math.min(99, Math.round((event.loaded / event.total) * 100));
@@ -5311,7 +5311,7 @@
     const imageMime = !mime || mime.startsWith("image/");
     const width = validAssetDimension(source.width);
     const height = validAssetDimension(source.height);
-    const alt = String(source.alt || "").trim() || "Miyu 生成的图片";
+    const alt = String(source.alt || "").trim() || "GQY 生成的图片";
     const hideCaption = Boolean(source.hide_caption);
 
     const figure = document.createElement("figure");
@@ -5385,7 +5385,7 @@
   /*
    * display.reasoning 只决定后端产生什么(摘要/完整/不产生);
    * WebUI 是否渲染仅以「有没有思考内容」为准,hidden 时若仍收到文本则不渲染(保底)。
-   * 默认展开/收起由本地偏好 miyu.web.reasoningExpanded 决定,与 summary/full 无关。
+   * 默认展开/收起由本地偏好 gqy.web.reasoningExpanded 决定,与 summary/full 无关。
    */
   function reasoningHidden() {
     return state.display?.reasoning === "hidden";
@@ -6403,7 +6403,7 @@
     return `${Math.round(milliseconds / 1_000)} s`;
   }
 
-  // 主题与工具显示名共享 ≥6 字符前缀时去重(如「Linux 游戏兼容性调查」+「Linux 游戏兼容性: xxx」)
+  // 主题与工具显示名共享 ≥6 字符前缀时去重(如「游戏兼容性调查」+「游戏兼容性: xxx」)
   function dedupeToolSubject(title, subject) {
     const t = String(title || "").trim();
     const s = String(subject || "").trim();
@@ -6524,7 +6524,7 @@
     if (n === "trash_path") return "trash-2";
     if (n === "load_tools") return "package";
     if (n.includes("skill")) return "puzzle";
-    if (n.startsWith("aur_") || n.startsWith("archlinux") || n.startsWith("archwiki") || n === "install_aur_package") return "arch";
+    if (n.startsWith("brew_") || n === "install_brew_package" || n === "review_brew_package") return "beer";
     if (n.startsWith("online_man")) return "package";
     if (n === "usage_query") return "chart-column";
     if (["draw_tarot_card", "draw_zhouyi_hexagram", "draw_fortune_lot"].includes(n)) return "sparkles";
@@ -7440,7 +7440,7 @@
       toggle.replaceChildren(toggleMarker, toggleText);
       toggle.addEventListener("click", () => {
         state.jobsStripOpen = !state.jobsStripOpen;
-        localStorage.setItem("miyu.web.jobsStripOpen", state.jobsStripOpen ? "1" : "0");
+        localStorage.setItem("gqy.web.jobsStripOpen", state.jobsStripOpen ? "1" : "0");
         renderJobsStrip();
       });
       fragment.appendChild(toggle);
@@ -8093,7 +8093,7 @@
     elements.timeline.hidden = true;
     elements.emptyState.hidden = true;
     elements.blockedState.hidden = false;
-    elements.blockedTitle.textContent = unauthorized ? "登录 Miyu" : "无法载入 Miyu WebUI";
+    elements.blockedTitle.textContent = unauthorized ? "登录 GQY" : "无法载入 GQY WebUI";
     elements.blockedMessage.textContent = unauthorized ? "输入访问密码以继续。" : message || "本地服务暂时无法访问";
     elements.loginForm.hidden = !unauthorized;
     elements.retryBootstrapButton.hidden = unauthorized;
@@ -9350,7 +9350,7 @@
           window.cancelAnimationFrame(resizeFrame);
           applyResize();
         }
-        safeStorageSet("miyu.web.artifactWidthRatio.v2", String(state.artifactWidthRatio));
+        safeStorageSet("gqy.web.artifactWidthRatio.v2", String(state.artifactWidthRatio));
         elements.artifactResizeHandle.removeEventListener("pointermove", move);
         elements.artifactResizeHandle.removeEventListener("pointerup", finish);
         elements.artifactResizeHandle.removeEventListener("pointercancel", finish);
@@ -9540,18 +9540,18 @@
   function initialize() {
     renderIconSlots();
     if (window.location.hash.includes("console")) consoleOpen();
-    setTheme(safeStorageGet("miyu.web.theme") || "graphite", false);
-    const storedScheme = safeStorageGet("miyu.web.colorScheme");
+    setTheme(safeStorageGet("gqy.web.theme") || "graphite", false);
+    const storedScheme = safeStorageGet("gqy.web.colorScheme");
     if (storedScheme) setColorScheme(storedScheme, false);
     probeMatugenTheme();
-    setChatFontSize(safeStorageGet("miyu.web.chatFontSize") || "15px", false);
-    setReasoningExpanded(safeStorageGet("miyu.web.reasoningExpanded") === "true", false);
-    setToolExpanded(safeStorageGet("miyu.web.toolExpanded") === "true", false);
-    const artifactRatio = Number(safeStorageGet("miyu.web.artifactWidthRatio.v2"));
+    setChatFontSize(safeStorageGet("gqy.web.chatFontSize") || "15px", false);
+    setReasoningExpanded(safeStorageGet("gqy.web.reasoningExpanded") === "true", false);
+    setToolExpanded(safeStorageGet("gqy.web.toolExpanded") === "true", false);
+    const artifactRatio = Number(safeStorageGet("gqy.web.artifactWidthRatio.v2"));
     if (Number.isFinite(artifactRatio) && artifactRatio >= 0.25 && artifactRatio <= 0.9) {
       state.artifactWidthRatio = artifactRatio;
     }
-    setSidebarCollapsed(safeStorageGet("miyu.web.sidebarCollapsed") === "true");
+    setSidebarCollapsed(safeStorageGet("gqy.web.sidebarCollapsed") === "true");
     syncArtifactLayout();
     setSettingsView("interface");
     bindEvents();

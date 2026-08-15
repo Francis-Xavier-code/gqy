@@ -45,14 +45,14 @@ const WORKER_ADDRESS_SPACE_LIMIT: u64 = 2 * 1024 * 1024 * 1024;
 const MAX_REQUEST_FRAME_BYTES: usize = 512 * 1024;
 const MAX_ERROR_FRAME_BYTES: usize = 64 * 1024;
 const MAX_RESPONSE_IMAGES: usize = 1;
-const WORKER_ENV: &str = "MIYU_INTERNAL_RENDERER_WORKER";
+const WORKER_ENV: &str = "GQY_INTERNAL_RENDERER_WORKER";
 const WORKER_ARG: &str = "__renderer-worker";
 const DEFAULT_BODY_FONT: &str = "Noto Sans CJK SC";
 const DEFAULT_CODE_FONT: &str = "Noto Sans Mono CJK SC";
 const DEFAULT_EMOJI_FONT: &str = "Noto Color Emoji";
 const CJK_FONT_FILE: &str = "NotoSansCJK-Regular.ttc";
 const EMOJI_FONT_FILE: &str = "NotoColorEmoji.ttf";
-const RENDERER_FONTS_ENV: &str = "MIYU_RENDERER_FONTS_DIR";
+const RENDERER_FONTS_ENV: &str = "GQY_RENDERER_FONTS_DIR";
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub(crate) struct RenderConfig {
@@ -246,7 +246,7 @@ impl Drop for WorkerSlot {
 
 impl WorkerProcess {
     async fn spawn() -> Result<Self> {
-        let executable = std::env::current_exe().context("locating the Miyu executable")?;
+        let executable = std::env::current_exe().context("locating the GQY executable")?;
         let mut command = tokio::process::Command::new(executable);
         command
             .arg(WORKER_ARG)
@@ -398,10 +398,10 @@ fn renderer_fonts_dir() -> Result<PathBuf> {
     }
     #[cfg(debug_assertions)]
     candidates.push(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("assets/fonts"));
-    candidates.push(PathBuf::from("/usr/share/miyu/fonts"));
+    candidates.push(PathBuf::from("/usr/share/gqy/fonts"));
     if let Ok(executable) = std::env::current_exe() {
         if let Some(prefix) = executable.parent().and_then(std::path::Path::parent) {
-            candidates.push(prefix.join("share/miyu/fonts"));
+            candidates.push(prefix.join("share/gqy/fonts"));
         }
         if let Some(workspace) = executable
             .parent()
@@ -411,7 +411,7 @@ fn renderer_fonts_dir() -> Result<PathBuf> {
             candidates.push(workspace.join("assets/fonts"));
         }
     }
-    // 兜底:发行版 noto-fonts-cjk 的标准安装路径。miyu 专用字体目录缺失
+    // 兜底:发行版 noto-fonts-cjk 的标准安装路径。gqy 专用字体目录缺失
     // (比如误装了不带字体的 release 资产包)时,长文转图靠系统字体继续工作。
     candidates.push(PathBuf::from("/usr/share/fonts/noto-cjk"));
     for candidate in &candidates {
@@ -425,7 +425,7 @@ fn renderer_fonts_dir() -> Result<PathBuf> {
         .collect::<Vec<_>>()
         .join(", ");
     bail!(
-        "renderer font is missing; install {CJK_FONT_FILE} in /usr/share/miyu/fonts or set {RENDERER_FONTS_ENV} (searched: {searched})"
+        "renderer font is missing; install {CJK_FONT_FILE} in /usr/share/gqy/fonts or set {RENDERER_FONTS_ENV} (searched: {searched})"
     )
 }
 
@@ -2859,7 +2859,7 @@ mod tests {
 
     #[test]
     fn renders_supported_markdown_and_unicode_to_nonempty_png() {
-        let markdown = r#"# Miyu 长回复 🚀
+        let markdown = r#"# GQY 长回复 🚀
 
 普通中文段落，包含 **粗体**、*斜体*、`inline code` 和 [链接文字](https://example.com)。
 

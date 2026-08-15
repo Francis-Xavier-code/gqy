@@ -4,7 +4,7 @@ use super::types::{
 };
 use super::PlatformTurnContext;
 use crate::config::AppConfig;
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use crate::state::PlatformSessionBinding;
 use crate::tools::ToolRegistry;
 use anyhow::Result;
@@ -74,7 +74,7 @@ pub(crate) struct PlatformTurnInput {
 
 pub(crate) struct PlatformPersonaResetContext<'a> {
     pub(crate) config: &'a AppConfig,
-    pub(crate) paths: &'a MiyuPaths,
+    pub(crate) paths: &'a GQYPaths,
     pub(crate) bindings: &'a [PlatformSessionBinding],
 }
 
@@ -130,7 +130,7 @@ pub(super) async fn require_ai_confirmation(
             "success": false,
             "confirmation_required": true,
             "confirmation_token": token,
-            "message": "当前请求者不是 Miyu 管理员或 QQ 群主/群管理员。请在本轮中再次调用同一个工具，显式携带 confirmation_token，并保持目标和其他参数不变。",
+            "message": "当前请求者不是 GQY 管理员或 QQ 群主/群管理员。请在本轮中再次调用同一个工具，显式携带 confirmation_token，并保持目标和其他参数不变。",
             "action": action,
         })
         .to_string(),
@@ -258,7 +258,7 @@ pub(crate) trait PlatformPlugin: Send + Sync {
     /// reply-queue limits. Implementations must keep this hook lightweight.
     fn observe_ingress<'a>(
         &'a self,
-        _paths: &'a MiyuPaths,
+        _paths: &'a GQYPaths,
         _config: &'a AppConfig,
         _event: &'a PlatformInboundEvent,
     ) -> BoxFuture<'a, Result<()>> {
@@ -455,7 +455,7 @@ impl PlatformPluginRegistry {
 
     pub(crate) async fn observe_ingress(
         &self,
-        paths: &MiyuPaths,
+        paths: &GQYPaths,
         config: &AppConfig,
         event: &PlatformInboundEvent,
     ) {
@@ -672,7 +672,7 @@ impl PlatformPluginRegistry {
         for plugin in self.enabled_plugins(context) {
             if let Err(error) = plugin.before_turn(context, input).await {
                 tracing::warn!(
-                    target: "miyu::qq",
+                    target: "gqy::qq",
                     plugin = plugin.descriptor().id,
                     error = %error,
                     "{}",

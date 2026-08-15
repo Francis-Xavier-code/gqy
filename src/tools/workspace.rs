@@ -48,7 +48,7 @@ mod tests {
 
     #[tokio::test]
     async fn effective_workdir_returns_scoped_workspace() {
-        let workspace = PathBuf::from("/tmp/miyu-turn-workspace");
+        let workspace = PathBuf::from("/tmp/gqy-turn-workspace");
         let seen = with_workspace(workspace.clone(), async { effective_workdir() }).await;
         assert_eq!(seen, workspace);
     }
@@ -62,7 +62,7 @@ mod tests {
 
     #[tokio::test]
     async fn workspace_visible_inside_select_nested_future() {
-        let workspace = PathBuf::from("/tmp/miyu-select-workspace");
+        let workspace = PathBuf::from("/tmp/gqy-select-workspace");
         let seen = with_workspace(workspace.clone(), async {
             let work = async { effective_workdir() };
             tokio::pin!(work);
@@ -111,7 +111,7 @@ pub fn current_platform_sender() -> Option<String> {
     PLATFORM_SENDER.try_with(|sender| sender.clone()).ok().flatten()
 }
 
-/// 本回合的发起来源(dsh goal 权限模型的 Miyu 化:不扫会话事件,发起方
+/// 本回合的发起来源(dsh goal 权限模型的 GQY 化:不扫会话事件,发起方
 /// 在起回合时如实声明)。
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
@@ -141,7 +141,7 @@ pub fn current_turn_origin() -> TurnOrigin {
 }
 
 tokio::task_local! {
-    /// 工具桥递归深度:回合内 run_command 起的脚本经 `miyu tool-call` 打回
+    /// 工具桥递归深度:回合内 run_command 起的脚本经 `gqy tool-call` 打回
     /// daemon 再执行工具,若那个工具又是 run_command……深度护栏防无限套娃。
     static BRIDGE_DEPTH: u32;
 }

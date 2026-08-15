@@ -1,6 +1,6 @@
 use super::{ToolRegistry, ToolSpec};
 use crate::i18n::agent_text as t;
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -21,18 +21,18 @@ pub type TodoList = Arc<Mutex<Vec<Todo>>>;
 // registry 后所有会话共享同一份(串味实锤);现在每次调用按当前回合的
 // 会话加载/回存,纯函数 todo_write/todo_update 与其测试原样保留。
 
-fn todos_path(paths: &MiyuPaths, session: &str) -> PathBuf {
+fn todos_path(paths: &GQYPaths, session: &str) -> PathBuf {
     paths.state_dir.join("todos").join(format!("{session}.json"))
 }
 
-fn load_todos(paths: &MiyuPaths, session: &str) -> Vec<Todo> {
+fn load_todos(paths: &GQYPaths, session: &str) -> Vec<Todo> {
     std::fs::read_to_string(todos_path(paths, session))
         .ok()
         .and_then(|raw| serde_json::from_str(&raw).ok())
         .unwrap_or_default()
 }
 
-fn save_todos(paths: &MiyuPaths, session: &str, todos: &[Todo]) -> Result<()> {
+fn save_todos(paths: &GQYPaths, session: &str, todos: &[Todo]) -> Result<()> {
     let path = todos_path(paths, session);
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
@@ -48,7 +48,7 @@ fn session_for_call() -> Result<String> {
 }
 
 fn run_scoped(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     args: Value,
     apply: fn(Value, TodoList) -> Result<String>,
 ) -> Result<String> {
@@ -60,7 +60,7 @@ fn run_scoped(
     Ok(output)
 }
 
-pub fn register(registry: &mut ToolRegistry, paths: MiyuPaths) {
+pub fn register(registry: &mut ToolRegistry, paths: GQYPaths) {
     let update_paths = paths.clone();
     registry.register(ToolSpec::new(
         "todowrite",

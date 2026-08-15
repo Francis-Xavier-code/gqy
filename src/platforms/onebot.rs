@@ -1,6 +1,6 @@
 //! OneBot v11 bridge (NapCat / QQ).
 //!
-//! NapCat connects to Miyu as a reverse-WebSocket client
+//! NapCat connects to GQY as a reverse-WebSocket client
 //! (`GET /ws` on the existing web server; `/onebot/v11/ws` remains an
 //! alias). Inbound `message`
 //! events run agent turns via the platform-neutral core in the parent
@@ -629,7 +629,7 @@ impl PreparedQqListener {
                         )
                         .await
                         {
-                            tracing::error!(target: "miyu::qq", error = %error, "{}", t("Tencent QQ listener stopped", "腾讯 QQ 监听器已停止"));
+                            tracing::error!(target: "gqy::qq", error = %error, "{}", t("Tencent QQ listener stopped", "腾讯 QQ 监听器已停止"));
                         }
                     })
                 });
@@ -645,10 +645,10 @@ impl PreparedQqListener {
         if previous_port != self.desired_port {
             match self.desired_port {
                 Some(port) => {
-                    tracing::info!(target: "miyu::qq", port, path = "/ws", "{}", t("Tencent QQ listener ready", "腾讯 QQ 监听器已就绪"))
+                    tracing::info!(target: "gqy::qq", port, path = "/ws", "{}", t("Tencent QQ listener ready", "腾讯 QQ 监听器已就绪"))
                 }
                 None => {
-                    tracing::info!(target: "miyu::qq", "{}", t("Tencent QQ listener disabled", "腾讯 QQ 监听器已禁用"))
+                    tracing::info!(target: "gqy::qq", "{}", t("Tencent QQ listener disabled", "腾讯 QQ 监听器已禁用"))
                 }
             }
         }
@@ -766,7 +766,7 @@ pub(crate) async fn wake_conversation_for_job(
         // carries who said what — the protocol offers no third role and drops
         // `name`, so identity can only live in the text — but the log is
         // additive: each turn appends what arrived since the last one, and
-        // earlier turns replay verbatim. Miyu's own turns become real
+        // earlier turns replay verbatim. GQY's own turns become real
         // assistant messages instead of one `[你]` line in a rolling window.
         suppress_session_history: false,
         group_context: (context.conversation.kind == ConversationKind::Group)
@@ -792,9 +792,9 @@ pub(crate) async fn onebot_ws(
     }
     if !connection_authorized(&headers, &config.access_token, peer) {
         if config.access_token.trim().is_empty() {
-            tracing::warn!(target: "miyu::qq", %peer, reason = "non_loopback_without_token", "{}", t("OneBot client rejected", "OneBot 客户端已拒绝"));
+            tracing::warn!(target: "gqy::qq", %peer, reason = "non_loopback_without_token", "{}", t("OneBot client rejected", "OneBot 客户端已拒绝"));
         } else {
-            tracing::warn!(target: "miyu::qq", %peer, reason = "bad_token", "{}", t("OneBot client rejected", "OneBot 客户端已拒绝"));
+            tracing::warn!(target: "gqy::qq", %peer, reason = "bad_token", "{}", t("OneBot client rejected", "OneBot 客户端已拒绝"));
         }
         return StatusCode::UNAUTHORIZED.into_response();
     }
@@ -898,7 +898,7 @@ async fn connection_loop(
         .lock()
         .unwrap()
         .register(self_id, handle.clone());
-    tracing::info!(target: "miyu::qq", self_id, generation, "{}", t("OneBot client connected", "OneBot 客户端已连接"));
+    tracing::info!(target: "gqy::qq", self_id, generation, "{}", t("OneBot client connected", "OneBot 客户端已连接"));
 
     let (mut sink, mut stream) = socket.split();
     let writer = tokio::spawn(async move {
@@ -936,7 +936,7 @@ async fn connection_loop(
                 .unwrap()
                 .is_current(bound_self_id, generation)
         {
-            tracing::info!(target: "miyu::qq",
+            tracing::info!(target: "gqy::qq",
                 self_id,
                 generation,
                 "{}",
@@ -965,7 +965,7 @@ async fn connection_loop(
                     handle.clone(),
                 );
                 if !bound {
-                    tracing::info!(target: "miyu::qq",
+                    tracing::info!(target: "gqy::qq",
                     self_id = bound_self_id,
                     generation,
                     "{}",
@@ -981,14 +981,14 @@ async fn connection_loop(
                     .lock()
                     .unwrap()
                     .remove_account(bound_self_id);
-                tracing::info!(target: "miyu::qq",
+                tracing::info!(target: "gqy::qq",
                     self_id = bound_self_id,
                     generation,
                     "{}",
                     t("OneBot connection identity bound from event", "已从事件绑定 OneBot 连接身份")
                 );
             } else if bound_self_id != event_self_id {
-                tracing::warn!(target: "miyu::qq",
+                tracing::warn!(target: "gqy::qq",
                     expected = bound_self_id,
                     received = event_self_id,
                     "{}",
@@ -1016,7 +1016,7 @@ async fn connection_loop(
                                 .await;
                         }
                         Err(error) => tracing::warn!(
-                            target: "miyu::qq",
+                            target: "gqy::qq",
                             error = %error,
                             "{}",
                             t(
@@ -1030,7 +1030,7 @@ async fn connection_loop(
             let connection_permit = match permits.clone().try_acquire_owned() {
                 Ok(permit) => permit,
                 Err(_) => {
-                    tracing::warn!(target: "miyu::qq",
+                    tracing::warn!(target: "gqy::qq",
                         self_id = bound_self_id,
                         "{}",
                         t("OneBot connection event queue is full; dropping a message", "OneBot 连接事件队列已满，丢弃消息")
@@ -1048,7 +1048,7 @@ async fn connection_loop(
             let connection_permit = match permits.clone().try_acquire_owned() {
                 Ok(permit) => permit,
                 Err(_) => {
-                    tracing::warn!(target: "miyu::qq",
+                    tracing::warn!(target: "gqy::qq",
                         self_id = bound_self_id,
                         "{}",
                         t("OneBot connection concurrency is full; dropping a recall notice", "OneBot 连接并发已满，丢弃撤回通知")
@@ -1101,7 +1101,7 @@ async fn connection_loop(
             .remove_account(bound_self_id);
     }
     writer.abort();
-    tracing::info!(target: "miyu::qq",
+    tracing::info!(target: "gqy::qq",
         self_id = bound_self_id,
         generation,
         "{}",
@@ -1550,7 +1550,7 @@ async fn resolve_group_name(
         Ok(data) => data,
         Err(error) => {
             tracing::warn!(
-                target: "miyu::qq",
+                target: "gqy::qq",
                 error = %error,
                 self_id,
                 group_id,
@@ -1562,7 +1562,7 @@ async fn resolve_group_name(
     };
     let Some(name) = data_group_name(&data) else {
         tracing::warn!(
-            target: "miyu::qq",
+            target: "gqy::qq",
             self_id,
             group_id,
             "{}",
@@ -1611,7 +1611,7 @@ async fn resolve_mentioned_users(
                 if user_id == self_id.to_string() {
                     return PlatformMention {
                         user_id,
-                        display_name: Some("Miyu".to_string()),
+                        display_name: Some("GQY".to_string()),
                     };
                 }
                 let key = (self_id, group_id, user_id.clone());
@@ -2084,7 +2084,7 @@ async fn handle_group_management_notice(state: DaemonState, conn: ConnectionHand
     match platform_turn_context(&state, conn, target, &event, config, Some(inbound.clone())) {
         Ok(context) => context.observe_inbound(&inbound).await,
         Err(error) => {
-            tracing::warn!(target: "miyu::qq", error = %error, "{}", t("OneBot group notice observer initialization failed", "OneBot 群通知观察器初始化失败"))
+            tracing::warn!(target: "gqy::qq", error = %error, "{}", t("OneBot group notice observer initialization failed", "OneBot 群通知观察器初始化失败"))
         }
     }
 }
@@ -2104,16 +2104,16 @@ async fn handle_friend_add_request(state: DaemonState, conn: ConnectionHandle, e
         .filter(|flag| !flag.is_empty())
         .map(str::to_string);
     let Some(flag) = flag else {
-        tracing::warn!(target: "miyu::qq", "{}", t("OneBot friend request is missing flag", "OneBot 好友请求缺少 flag"));
+        tracing::warn!(target: "gqy::qq", "{}", t("OneBot friend request is missing flag", "OneBot 好友请求缺少 flag"));
         return;
     };
     if self_id == 0 || user_id == 0 {
-        tracing::warn!(target: "miyu::qq", self_id, user_id, "{}", t("OneBot friend request has invalid ids", "OneBot 好友请求包含无效 QQ 号"));
+        tracing::warn!(target: "gqy::qq", self_id, user_id, "{}", t("OneBot friend request has invalid ids", "OneBot 好友请求包含无效 QQ 号"));
         return;
     }
     if !friend_request_allowed(config, &state.state_store, self_id, user_id) {
         tracing::info!(
-            target: "miyu::qq",
+            target: "gqy::qq",
             self_id,
             user_id,
             "{}",
@@ -2129,14 +2129,14 @@ async fn handle_friend_add_request(state: DaemonState, conn: ConnectionHandle, e
         .await
     {
         Ok(_) => tracing::info!(
-            target: "miyu::qq",
+            target: "gqy::qq",
             self_id,
             user_id,
             "{}",
             t("OneBot friend request accepted", "OneBot 好友请求已通过")
         ),
         Err(error) => tracing::warn!(
-            target: "miyu::qq",
+            target: "gqy::qq",
             self_id,
             user_id,
             error = %error,
@@ -2181,7 +2181,7 @@ async fn handle_message_recall(state: DaemonState, conn: ConnectionHandle, event
     ) {
         Ok(context) => context,
         Err(error) => {
-            tracing::warn!(target: "miyu::qq", error = %error, "{}", t("OneBot recall observer initialization failed", "OneBot 撤回观察器初始化失败"));
+            tracing::warn!(target: "gqy::qq", error = %error, "{}", t("OneBot recall observer initialization failed", "OneBot 撤回观察器初始化失败"));
             return;
         }
     };
@@ -2240,7 +2240,7 @@ async fn handle_message_with_activity(
     let mut parsed = parse_message(event.get("message"), event.get("raw_message"), self_id);
     if let Some(reason) = parsed.rejected_reason {
         tracing::warn!(
-            target: "miyu::qq",
+            target: "gqy::qq",
             self_id,
             sender_id = user_id,
             conversation_kind = target.kind(),
@@ -2288,7 +2288,7 @@ async fn handle_message_with_activity(
                     .filter(|info| message_info_matches_target(info, target));
                 if info.is_none() {
                     tracing::warn!(
-                        target: "miyu::qq",
+                        target: "gqy::qq",
                         quoted_message_id,
                         "{}",
                         t("OneBot quoted-message metadata was missing or mismatched", "OneBot 引用消息元数据缺失或不匹配")
@@ -2306,7 +2306,7 @@ async fn handle_message_with_activity(
             }
             Err(error) => {
                 tracing::warn!(
-                    target: "miyu::qq",
+                    target: "gqy::qq",
                     error = %error,
                     quoted_message_id,
                     "{}",
@@ -2329,13 +2329,13 @@ async fn handle_message_with_activity(
     ) {
         Ok(context) => Arc::new(context),
         Err(error) => {
-            tracing::warn!(target: "miyu::qq", error = %error, "{}", t("OneBot platform runtime initialization failed", "OneBot 平台运行时初始化失败"));
+            tracing::warn!(target: "gqy::qq", error = %error, "{}", t("OneBot platform runtime initialization failed", "OneBot 平台运行时初始化失败"));
             return;
         }
     };
 
     // Classify group traffic before charging rate limits. Busy groups often
-    // produce many messages that do not wake Miyu and must not starve actual
+    // produce many messages that do not wake GQY and must not starve actual
     // mentions or prefix commands.
     // Built-in commands own only their registered names. Other prefixed input
     // remains ordinary chat after plugins have had a chance to claim it.
@@ -2356,7 +2356,7 @@ async fn handle_message_with_activity(
         match resolve_onebot_session(&state, &context, target, &event) {
             Ok(session_id) => Some(session_id),
             Err(error) => {
-                tracing::warn!(target: "miyu::qq", error = %error, "{}", t("resolving the QQ session failed", "解析 QQ 会话失败"));
+                tracing::warn!(target: "gqy::qq", error = %error, "{}", t("resolving the QQ session failed", "解析 QQ 会话失败"));
                 if matches!(target, Target::Private { .. }) {
                     let _ = context
                         .send_bypass_plugins(OutboundMessage::text(
@@ -2460,7 +2460,7 @@ async fn handle_message_with_activity(
             .await
             {
                 Ok(()) => tracing::info!(
-                    target: "miyu::qq",
+                    target: "gqy::qq",
                     session_id,
                     sender_id = user_id,
                     message_id = %inbound_event.message_id,
@@ -2468,7 +2468,7 @@ async fn handle_message_with_activity(
                     t("OneBot message queued as a follow-up to the active turn", "OneBot 消息已加入当前回合的后续队列")
                 ),
                 Err(error) => tracing::warn!(
-                    target: "miyu::qq",
+                    target: "gqy::qq",
                     session_id,
                     sender_id = user_id,
                     error = %error,
@@ -2509,7 +2509,7 @@ async fn handle_message_with_activity(
                         // 新消息重新起算(链式覆盖)。
                         context.confirm_supersede(&inbound_event).await;
                         tracing::info!(
-                            target: "miyu::qq",
+                            target: "gqy::qq",
                             session_id,
                             sender_id = user_id,
                             message_id = %inbound_event.message_id,
@@ -2518,7 +2518,7 @@ async fn handle_message_with_activity(
                         )
                     }
                     Err(error) => tracing::warn!(
-                        target: "miyu::qq",
+                        target: "gqy::qq",
                         session_id,
                         sender_id = user_id,
                         error = %error,
@@ -2566,7 +2566,7 @@ async fn handle_message_with_activity(
             // whoever runs the bot.
             Err(super::SessionTurnAcquireError::Full) => {
                 tracing::debug!(
-                    target: "miyu::qq",
+                    target: "gqy::qq",
                     session_id = ?session_id,
                     sender_id = user_id,
                     message_id = %inbound_event.message_id,
@@ -2619,7 +2619,7 @@ async fn handle_message_with_activity(
     }
 
     tracing::info!(
-        target: "miyu::qq",
+        target: "gqy::qq",
         self_id,
         sender_id = user_id,
         conversation_kind = target.kind(),
@@ -2643,9 +2643,9 @@ async fn handle_message_with_activity(
             execute_builtin_command(&state, &context, target, &event, command).await
         {
             if let Err(error) = context.send_bypass_plugins(response).await {
-                tracing::warn!(target: "miyu::qq", error = %error, "{}", t("OneBot built-in command response failed", "OneBot 内置命令响应失败"));
+                tracing::warn!(target: "gqy::qq", error = %error, "{}", t("OneBot built-in command response failed", "OneBot 内置命令响应失败"));
             } else {
-                tracing::info!(target: "miyu::qq", self_id, sender_id = user_id, "{}", t("OneBot built-in command response sent", "OneBot 内置命令响应已发送"));
+                tracing::info!(target: "gqy::qq", self_id, sender_id = user_id, "{}", t("OneBot built-in command response sent", "OneBot 内置命令响应已发送"));
             }
         }
         return;
@@ -2666,7 +2666,7 @@ async fn handle_message_with_activity(
         RateDecision::Allow => {}
         RateDecision::DropSilently => {
             tracing::info!(
-                target: "miyu::qq",
+                target: "gqy::qq",
                 self_id,
                 sender_id = user_id,
                 conversation_kind = target.kind(),
@@ -2680,7 +2680,7 @@ async fn handle_message_with_activity(
         RateDecision::DropWithNotice => {
             let notice_sent = sends_rate_limit_notice(target);
             tracing::info!(
-                target: "miyu::qq",
+                target: "gqy::qq",
                 self_id,
                 sender_id = user_id,
                 conversation_kind = target.kind(),
@@ -2708,9 +2708,9 @@ async fn handle_message_with_activity(
     // Platform commands are independent of the LLM group wake trigger.
     if let Some(response) = plugin_command_response {
         if let Err(error) = context.send_bypass_plugins(response).await {
-            tracing::warn!(target: "miyu::qq", error = %error, "{}", t("OneBot plugin command response failed", "OneBot 插件命令响应失败"));
+            tracing::warn!(target: "gqy::qq", error = %error, "{}", t("OneBot plugin command response failed", "OneBot 插件命令响应失败"));
         } else {
-            tracing::info!(target: "miyu::qq", self_id, sender_id = user_id, "{}", t("OneBot plugin command response sent", "OneBot 插件命令响应已发送"));
+            tracing::info!(target: "gqy::qq", self_id, sender_id = user_id, "{}", t("OneBot plugin command response sent", "OneBot 插件命令响应已发送"));
         }
         return;
     }
@@ -2733,12 +2733,12 @@ async fn handle_message_with_activity(
     match turn {
         Ok(Some(dispatch)) => match deliver_dispatch(&state, &context, dispatch).await {
             Err(error) => {
-                tracing::warn!(target: "miyu::qq", error = %error, "{}", t("OneBot reply delivery failed", "OneBot 回复投递失败"));
+                tracing::warn!(target: "gqy::qq", error = %error, "{}", t("OneBot reply delivery failed", "OneBot 回复投递失败"));
                 context.after_turn_aborted().await;
             }
             Ok(true) => {
                 tracing::info!(
-                    target: "miyu::qq",
+                    target: "gqy::qq",
                     self_id,
                     sender_id = user_id,
                     conversation_kind = target.kind(),
@@ -2755,7 +2755,7 @@ async fn handle_message_with_activity(
             }
         }
         Err(error) => {
-            tracing::warn!(target: "miyu::qq", error = %error, "{}", t("OneBot message handling failed", "OneBot 消息处理失败"));
+            tracing::warn!(target: "gqy::qq", error = %error, "{}", t("OneBot message handling failed", "OneBot 消息处理失败"));
             context.after_turn_aborted().await;
             if matches!(target, Target::Private { .. }) {
                 let _ = context
@@ -2800,7 +2800,7 @@ async fn execute_builtin_command(
             } else {
                 match resolve_onebot_session(state, context, target, event) {
                     Err(error) => {
-                        tracing::warn!(target: "miyu::qq", error = %error, "{}", t("resolving the QQ session for reset failed", "解析待重置的 QQ 会话失败"));
+                        tracing::warn!(target: "gqy::qq", error = %error, "{}", t("resolving the QQ session for reset failed", "解析待重置的 QQ 会话失败"));
                         t(
                             "The conversation could not be reset. Check the daemon logs for details.",
                             "无法重置当前会话，请查看 daemon 日志。",
@@ -2815,7 +2815,7 @@ async fn execute_builtin_command(
                             Ok(()) => match context.after_session_reset().await {
                                 Ok(()) => {
                                 tracing::info!(
-                                    target: "miyu::qq",
+                                    target: "gqy::qq",
                                     session_id = %session_id,
                                     sender_id = %context.sender_id,
                                     "{}",
@@ -2829,7 +2829,7 @@ async fn execute_builtin_command(
                                 }
                                 Err(error) => {
                                     tracing::warn!(
-                                        target: "miyu::qq",
+                                        target: "gqy::qq",
                                         session_id = %session_id,
                                         error = %error,
                                         "{}",
@@ -2848,12 +2848,12 @@ async fn execute_builtin_command(
                             )
                             .to_string(),
                             Err(PlatformSessionResetError::Unavailable) => t(
-                                "The Miyu core is unavailable, so the conversation was not reset.",
-                                "Miyu 核心当前不可用，会话未重置。",
+                                "The GQY core is unavailable, so the conversation was not reset.",
+                                "GQY 核心当前不可用，会话未重置。",
                             )
                             .to_string(),
                             Err(PlatformSessionResetError::Internal(error)) => {
-                                tracing::warn!(target: "miyu::qq", session_id = %session_id, error = %error, "{}", t("resetting the QQ conversation failed", "重置 QQ 会话失败"));
+                                tracing::warn!(target: "gqy::qq", session_id = %session_id, error = %error, "{}", t("resetting the QQ conversation failed", "重置 QQ 会话失败"));
                                 t(
                                     "The conversation could not be reset. Check the daemon logs for details.",
                                     "无法重置当前会话，请查看 daemon 日志。",
@@ -2881,8 +2881,8 @@ async fn execute_builtin_command(
                     )
                     .to_string(),
                     Err(PlatformPersonaResetError::Busy) => t(
-                        "Miyu is busy. Try again shortly.",
-                        "Miyu 正忙，请稍后重试。",
+                        "GQY is busy. Try again shortly.",
+                        "GQY 正忙，请稍后重试。",
                     )
                     .to_string(),
                     Err(PlatformPersonaResetError::Unavailable) => t(
@@ -2891,7 +2891,7 @@ async fn execute_builtin_command(
                     )
                     .to_string(),
                     Err(PlatformPersonaResetError::Internal(error)) => {
-                        tracing::warn!(target: "miyu::qq", %error, "{}", t("wiping the QQ persona state failed", "抹除 QQ 人格状态失败"));
+                        tracing::warn!(target: "gqy::qq", %error, "{}", t("wiping the QQ persona state failed", "抹除 QQ 人格状态失败"));
                         t(
                             "The wipe could not be completed. Check the daemon logs for details.",
                             "抹除未能完成，请查看 daemon 日志。",
@@ -2916,7 +2916,7 @@ async fn execute_builtin_command(
                 {
                     Ok(()) => t("Long-term memory erased.", "长期记忆已清空。").to_string(),
                     Err(error) => {
-                        tracing::warn!(target: "miyu::qq", %error, "{}", t("resetting platform memory failed", "平台记忆清空失败"));
+                        tracing::warn!(target: "gqy::qq", %error, "{}", t("resetting platform memory failed", "平台记忆清空失败"));
                         t(
                             "The memory reset could not be completed. Check the daemon logs for details.",
                             "记忆清空未能完成，请查看 daemon 日志。",
@@ -2936,7 +2936,7 @@ async fn execute_builtin_command(
             } else {
                 match resolve_onebot_session(state, context, target, event) {
                     Err(error) => {
-                        tracing::warn!(target: "miyu::qq", error = %error, "{}", t("resolving the QQ session for stop failed", "解析待停止的 QQ 会话失败"));
+                        tracing::warn!(target: "gqy::qq", error = %error, "{}", t("resolving the QQ session for stop failed", "解析待停止的 QQ 会话失败"));
                         t(
                             "The current conversation could not be stopped. Check the daemon logs for details.",
                             "无法停止当前会话，请查看 daemon 日志。",
@@ -2949,7 +2949,7 @@ async fn execute_builtin_command(
                         let cancelled = cancel_session_runs(state, &session_id);
                         let _session_turn = ticket.acquire().await.ok();
                         tracing::info!(
-                            target: "miyu::qq",
+                            target: "gqy::qq",
                             session_id = %session_id,
                             sender_id = %context.sender_id,
                             cancelled,
@@ -3024,8 +3024,8 @@ fn execute_models_command(state: &DaemonState, target: Target, argument: Option<
     };
     if manager.admin_busy {
         return t(
-            "Miyu is busy with another admin operation. Try again shortly.",
-            "Miyu 正忙于其他管理操作，请稍后再试。",
+            "GQY is busy with another admin operation. Try again shortly.",
+            "GQY 正忙于其他管理操作，请稍后再试。",
         )
         .to_string();
     }
@@ -3054,7 +3054,7 @@ fn execute_models_command(state: &DaemonState, target: Target, argument: Option<
     next_config.platforms.upsert_model_route(route);
     if let Err(error) = next_config.save(&state.paths) {
         tracing::warn!(
-            target: "miyu::qq",
+            target: "gqy::qq",
             error = %error,
             "{}",
             t(
@@ -3271,7 +3271,7 @@ async fn merge_quoted_message_images(
             }
             Err(error) => {
                 tracing::warn!(
-                    target: "miyu::qq",
+                    target: "gqy::qq",
                     error = %error,
                     image_file = %file,
                     "{}",
@@ -3302,7 +3302,7 @@ async fn resolve_current_message_images(conn: &ConnectionHandle, parsed: &mut In
             }
             Err(error) => {
                 tracing::warn!(
-                    target: "miyu::qq",
+                    target: "gqy::qq",
                     error = %error,
                     image_file = %file,
                     "{}",
@@ -3470,7 +3470,7 @@ async fn enqueue_tool_followup(
     .await
     .unwrap_or_else(|error| {
         tracing::warn!(
-            target: "miyu::qq",
+            target: "gqy::qq",
             error = %error,
             message_id = %current_message_id,
             "{}",
@@ -3629,7 +3629,7 @@ async fn build_and_run_turn(
         Ok(added) => {
             if added > 0 {
                 tracing::info!(
-                    target: "miyu::qq",
+                    target: "gqy::qq",
                     quoted_message_id = parsed.reply_to_message_id.as_deref().unwrap_or_default(),
                     images = added,
                     "{}",
@@ -3640,7 +3640,7 @@ async fn build_and_run_turn(
         }
         Err(error) => {
             tracing::warn!(
-                target: "miyu::qq",
+                target: "gqy::qq",
                 error = %error,
                 quoted_message_id = parsed.reply_to_message_id.as_deref().unwrap_or_default(),
                 "{}",
@@ -3657,7 +3657,7 @@ async fn build_and_run_turn(
     let images = prepared_images.attachments;
     if attempted_images > 0 {
         tracing::info!(
-            target: "miyu::qq",
+            target: "gqy::qq",
             attempted = attempted_images,
             prepared = images.len(),
             failed = failed_images,
@@ -3788,7 +3788,7 @@ async fn build_and_run_turn(
         // carries who said what — the protocol offers no third role and drops
         // `name`, so identity can only live in the text — but the log is
         // additive: each turn appends what arrived since the last one, and
-        // earlier turns replay verbatim. Miyu's own turns become real
+        // earlier turns replay verbatim. GQY's own turns become real
         // assistant messages instead of one `[你]` line in a rolling window.
         suppress_session_history: false,
         group_context: (context.conversation.kind == ConversationKind::Group)
@@ -4986,7 +4986,7 @@ impl PlatformAdapter for OneBotAdapter {
                 },
                 Err(error) => {
                     tracing::debug!(
-                        target: "miyu::qq",
+                        target: "gqy::qq",
                         error = %error,
                         self_id = self.self_id,
                         group_id,
@@ -5583,7 +5583,7 @@ fn partial_send_error(error: anyhow::Error, receipt: SendReceipt) -> anyhow::Err
 /// Sends carrying base64 images need far longer than a plain text call: a
 /// 2 MiB picture is ~2.9 MB of JSON that NapCat has to receive, decode and
 /// upload to QQ. Timing out early is worse than waiting — the message is
-/// still delivered, but Miyu treats the send as failed and posts the plain
+/// still delivered, but GQY treats the send as failed and posts the plain
 /// text fallback, so the group gets the picture *and* the text.
 ///
 /// Size-scaling the budget only moved the cliff, and it moved it unevenly: the
@@ -5658,7 +5658,7 @@ async fn deliver_dispatch(
             context.after_turn_aborted().await;
             if context.conversation.kind == ConversationKind::Group {
                 tracing::info!(
-                    target: "miyu::qq",
+                    target: "gqy::qq",
                     error = %message,
                     "{}",
                     t("suppressed an internal OneBot group error", "已抑制 OneBot 群聊内部错误")
@@ -5694,7 +5694,7 @@ async fn deliver_dispatch(
                                 matched_delivered_image = true;
                             }
                             tracing::debug!(
-                                target: "miyu::qq",
+                                target: "gqy::qq",
                                 asset_id,
                                 "{}",
                                 if already_delivered {
@@ -5721,7 +5721,7 @@ async fn deliver_dispatch(
                     Ok(None) => {
                         unresolved_image_count += 1;
                         tracing::warn!(
-                            target: "miyu::qq",
+                            target: "gqy::qq",
                             asset_id,
                             "{}",
                             t(
@@ -5746,11 +5746,11 @@ async fn deliver_dispatch(
             }
             if segments.is_empty() {
                 if outcome.final_reply_already_sent {
-                    tracing::info!(target: "miyu::qq", "\n{readable}");
+                    tracing::info!(target: "gqy::qq", "\n{readable}");
                     return Ok(true);
                 }
                 tracing::info!(
-                    target: "miyu::qq",
+                    target: "gqy::qq",
                     "{}",
                     t("suppressed an empty OneBot model reply", "已抑制空的 OneBot 模型回复")
                 );
@@ -5762,7 +5762,7 @@ async fn deliver_dispatch(
                     segments,
                 ))
                 .await?;
-            tracing::info!(target: "miyu::qq", "\n{readable}");
+            tracing::info!(target: "gqy::qq", "\n{readable}");
         }
     }
     Ok(true)
@@ -5779,7 +5779,7 @@ fn text_segment(text: &str) -> Value {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::paths::MiyuPaths;
+    use crate::paths::GQYPaths;
 
     /// issue #29:唤醒合成事件必须继承发起者身份,不能伪装成机器人自己。
     #[test]
@@ -5801,8 +5801,8 @@ mod tests {
         assert_eq!(wake_sender_user_id(None, group, 999), 999);
     }
 
-    fn test_paths(root: &std::path::Path) -> MiyuPaths {
-        MiyuPaths {
+    fn test_paths(root: &std::path::Path) -> GQYPaths {
+        GQYPaths {
             root_dir: root.to_path_buf(),
             config_dir: root.join("config"),
             config_file: root.join("config/config.jsonc"),
@@ -6062,10 +6062,10 @@ mod tests {
     #[test]
     fn named_mention_survives_after_the_qq_wake_prefix_is_removed() {
         let config = config_with(|config| {
-            config.group_chats.trigger_keywords = vec!["miyu".to_string()];
+            config.group_chats.trigger_keywords = vec!["gqy".to_string()];
         });
         let message = json!([
-            { "type": "text", "data": { "text": "miyu，他是谁 " } },
+            { "type": "text", "data": { "text": "gqy，他是谁 " } },
             { "type": "at", "data": { "qq": "8" } }
         ]);
         let parsed = parse_message(Some(&message), None, 10_000);
@@ -6708,7 +6708,7 @@ mod tests {
         let replied_message = PlatformMessageInfo {
             message_id: "previous".into(),
             sender_id: "10000".into(),
-            sender_display_name: "Miyu".into(),
+            sender_display_name: "GQY".into(),
             timestamp: 1,
             text: "previous reply".into(),
             reply_to_message_id: None,
@@ -7070,7 +7070,7 @@ mod tests {
                 .group_chats
                 .non_whitelist_rate_limit
                 .max_messages = 0;
-            manager.config.platforms.qq.group_chats.trigger_keywords = vec!["miyu".to_string()];
+            manager.config.platforms.qq.group_chats.trigger_keywords = vec!["gqy".to_string()];
         }
         assert!(state
             .platforms
@@ -7104,7 +7104,7 @@ mod tests {
         assert!(frames.try_recv().is_err());
 
         let mut triggered = base;
-        triggered["message"] = json!([{ "type": "text", "data": { "text": "miyu hello" } }]);
+        triggered["message"] = json!([{ "type": "text", "data": { "text": "gqy hello" } }]);
         let task = tokio::spawn(handle_message(
             state,
             handle,
@@ -7779,11 +7779,11 @@ mod tests {
             custom.config.active_persona_scope()
         );
 
-        config.platforms.qq.conversations[0].persona = crate::config::PlatformPersonaOverride::Miyu;
-        let miyu = platform_turn_context(&state, connection, target, &event, config, None).unwrap();
-        assert!(miyu.config.prompt.active_persona.is_empty());
-        let miyu_session = resolve_onebot_session(&state, &miyu, target, &event).unwrap();
-        assert_ne!(custom_session, miyu_session);
+        config.platforms.qq.conversations[0].persona = crate::config::PlatformPersonaOverride::GQY;
+        let gqy = platform_turn_context(&state, connection, target, &event, config, None).unwrap();
+        assert!(gqy.config.prompt.active_persona.is_empty());
+        let gqy_session = resolve_onebot_session(&state, &gqy, target, &event).unwrap();
+        assert_ne!(custom_session, gqy_session);
     }
 
     #[tokio::test]
@@ -7810,7 +7810,7 @@ mod tests {
             .unwrap()
             .len();
 
-        // QQ group roles never grant Miyu command administration.
+        // QQ group roles never grant GQY command administration.
         let denied = tokio::spawn(handle_message(
             state.clone(),
             connection.clone(),
@@ -7929,7 +7929,7 @@ mod tests {
         std::fs::create_dir_all(&generated_skill).unwrap();
         std::fs::write(
             generated_skill.join("SKILL.md"),
-            "---\ngenerated_by: miyu\n---\n",
+            "---\ngenerated_by: gqy\n---\n",
         )
         .unwrap();
 
@@ -8251,12 +8251,12 @@ mod tests {
             json!({
                 "status": "ok",
                 "retcode": 0,
-                "data": { "nickname": "Miyu" },
+                "data": { "nickname": "GQY" },
                 "echo": echo,
             }),
         );
         let data = caller.await.unwrap().unwrap();
-        assert_eq!(data["nickname"], "Miyu");
+        assert_eq!(data["nickname"], "GQY");
         assert!(handle.pending.lock().unwrap().is_empty());
     }
 
@@ -8305,7 +8305,7 @@ mod tests {
 
     /// Regression: a picture is megabytes of base64 JSON that NapCat has to
     /// receive, decode and upload to QQ. Any budget short of the backstop made
-    /// Miyu treat a delivered image as failed and post the text fallback on top
+    /// GQY treat a delivered image as failed and post the text fallback on top
     /// of it. Size scaling was not enough — the old `div_ceil` step handed a
     /// 0.99 MiB payload the same 30s as a 64 KiB one.
     #[test]
@@ -8360,7 +8360,7 @@ mod tests {
                 "message_type": "private",
                 "message_id": 1,
                 "target_id": 20000,
-                "sender": { "user_id": 10000, "nickname": "Miyu" },
+                "sender": { "user_id": 10000, "nickname": "GQY" },
                 "message": [{ "type": "text", "data": { "text": "hello" } }],
             }),
             10000,
@@ -8943,7 +8943,7 @@ mod tests {
         let temp = tempfile::tempdir().unwrap();
         let path = temp.path().join("sample.txt");
         tokio::fs::write(&path, b"hello").await.unwrap();
-        let (handle, mut frames) = test_connection(Some("http://miyu.test:8300".to_string()));
+        let (handle, mut frames) = test_connection(Some("http://gqy.test:8300".to_string()));
         let adapter = test_adapter(handle.clone(), Target::Private { user_id: 42 });
         let upload = tokio::spawn(async move { adapter.upload_file(&path, None).await });
 
@@ -8952,7 +8952,7 @@ mod tests {
         assert!(first["params"]["file"]
             .as_str()
             .unwrap()
-            .starts_with("http://miyu.test:8300/api/platform-assets/"));
+            .starts_with("http://gqy.test:8300/api/platform-assets/"));
         route_api_response(
             &handle,
             json!({
@@ -9092,7 +9092,7 @@ mod tests {
         let forward = OutboundMessage {
             body: OutboundBody::Forward(vec![ForwardNode {
                 user_id: "10000".to_string(),
-                display_name: "Miyu".to_string(),
+                display_name: "GQY".to_string(),
                 segments: vec![OutboundSegment::Markdown("**long**".to_string())],
             }]),
             response_target: Some(ResponseTarget {
@@ -9256,7 +9256,7 @@ mod tests {
         let message = OutboundMessage {
             body: OutboundBody::Forward(vec![ForwardNode {
                 user_id: "10000".to_string(),
-                display_name: "Miyu".to_string(),
+                display_name: "GQY".to_string(),
                 segments: vec![OutboundSegment::Text("forward".to_string())],
             }]),
             response_target: Some(ResponseTarget {

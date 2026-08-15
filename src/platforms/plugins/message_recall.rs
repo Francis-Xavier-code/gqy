@@ -166,7 +166,7 @@ impl MessageRecallPlugin {
                 return failure_response(
                     "permission_denied",
                     false,
-                    "私聊中只能撤回 Miyu 自己发送的消息",
+                    "私聊中只能撤回 GQY 自己发送的消息",
                     json!({ "message_id": id }),
                 );
             }
@@ -174,7 +174,7 @@ impl MessageRecallPlugin {
                 return failure_response(
                     "permission_denied",
                     false,
-                    "Miyu 不是当前群的管理员，无法撤回群友消息",
+                    "GQY 不是当前群的管理员，无法撤回群友消息",
                     json!({ "message_id": id }),
                 );
             }
@@ -194,7 +194,7 @@ impl MessageRecallPlugin {
         }
         if let Err(error) = context.delete_message(id).await {
             tracing::warn!(
-                target: "miyu::qq",
+                target: "gqy::qq",
                 error = %error,
                 message_id = %id,
                 target_source = target.source.as_str(),
@@ -206,7 +206,7 @@ impl MessageRecallPlugin {
                 &error,
                 id,
                 target.source,
-                if own_message { "miyu" } else { "group_member" },
+                if own_message { "gqy" } else { "group_member" },
             );
         }
         if own_message {
@@ -226,7 +226,7 @@ impl MessageRecallPlugin {
             json!({
                 "message_id": id,
                 "sender_id": info.sender_id,
-                "target_kind": if own_message { "miyu" } else { "group_member" },
+                "target_kind": if own_message { "gqy" } else { "group_member" },
                 "reason": reason,
                 "target_source": target.source.as_str()
             }),

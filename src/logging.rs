@@ -1,5 +1,5 @@
 use crate::i18n::text as t;
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use anyhow::{Context, Result};
 use tracing::level_filters::LevelFilter;
 use tracing_appender::non_blocking::WorkerGuard;
@@ -9,7 +9,7 @@ use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::Layer;
 
-const LOG_ENV: &str = "MIYU_LOG";
+const LOG_ENV: &str = "GQY_LOG";
 const LOG_FILE_LIMIT: usize = 8;
 const LOG_BUFFERED_LINES_LIMIT: usize = 1_024;
 
@@ -17,7 +17,7 @@ pub struct LoggingGuard {
     _worker: Option<WorkerGuard>,
 }
 
-pub fn init(paths: &MiyuPaths, cli_debug: bool) -> Result<LoggingGuard> {
+pub fn init(paths: &GQYPaths, cli_debug: bool) -> Result<LoggingGuard> {
     let env_value = std::env::var(LOG_ENV).ok();
     let (level, invalid_env) = selected_level(cli_debug, env_value.as_deref());
     if level == LevelFilter::OFF {
@@ -31,7 +31,7 @@ pub fn init(paths: &MiyuPaths, cli_debug: bool) -> Result<LoggingGuard> {
 
     let appender = RollingFileAppender::builder()
         .rotation(Rotation::DAILY)
-        .filename_prefix("miyu")
+        .filename_prefix("gqy")
         .filename_suffix("log")
         .max_log_files(LOG_FILE_LIMIT)
         .build(&logs_dir)
@@ -42,8 +42,8 @@ pub fn init(paths: &MiyuPaths, cli_debug: bool) -> Result<LoggingGuard> {
         .finish(appender);
     let targets = Targets::new()
         .with_default(LevelFilter::OFF)
-        .with_target("miyu", level)
-        .with_target("miyu::qq", qq_level(level, cli_debug, env_value.is_some()));
+        .with_target("gqy", level)
+        .with_target("gqy::qq", qq_level(level, cli_debug, env_value.is_some()));
     let fmt_layer = tracing_subscriber::fmt::layer()
         .with_ansi(false)
         .with_target(true)

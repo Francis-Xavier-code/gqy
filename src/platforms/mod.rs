@@ -30,7 +30,7 @@ use crate::config::{
 };
 use crate::i18n::{text_for, Locale};
 use crate::ipc::ImageAttachment;
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use crate::state::{PlatformSessionBindingKey, StateStore};
 use crate::web::{random_id, validate_content, ActorCommand, DaemonState, IpcRunGuard, RunInfo};
 use anyhow::{anyhow, bail, Context, Result};
@@ -628,7 +628,7 @@ pub(crate) struct PlatformTurnContext {
     pub(crate) sender_display_name: String,
     pub(crate) is_admin: bool,
     pub(crate) config: AppConfig,
-    pub(crate) paths: MiyuPaths,
+    pub(crate) paths: GQYPaths,
     pub(crate) state_store: StateStore,
     adapter: Arc<dyn PlatformAdapter>,
     plugins: Arc<plugins::PlatformPluginRegistry>,
@@ -652,7 +652,7 @@ impl PlatformTurnContext {
         sender_display_name: String,
         is_admin: bool,
         config: AppConfig,
-        paths: MiyuPaths,
+        paths: GQYPaths,
         state_store: StateStore,
         adapter: Arc<dyn PlatformAdapter>,
         plugins: Arc<plugins::PlatformPluginRegistry>,
@@ -972,14 +972,14 @@ impl PlatformTurnContext {
                     self.record_partial_delivery(&error);
                 match (partially_delivered, prepared.fallback) {
                     (true, _) => {
-                        // `miyu::qq` and not the module default: these are
+                        // `gqy::qq` and not the module default: these are
                         // delivery outcomes an operator reads next to the
                         // "回复已投递" lines, and every other target is filtered
-                        // to ERROR unless MIYU_LOG says otherwise (see
+                        // to ERROR unless GQY_LOG says otherwise (see
                         // `logging::init`), which kept this whole branch
                         // invisible in the QQ log.
                         tracing::warn!(
-                            target: "miyu::qq",
+                            target: "gqy::qq",
                             error = %error,
                             "{}",
                             crate::i18n::text(
@@ -990,7 +990,7 @@ impl PlatformTurnContext {
                         Err((error, response_target_delivered))
                     }
                     (false, Some(fallback)) => {
-                        tracing::warn!(target: "miyu::qq", error = %error, "{}", crate::i18n::text("transformed platform message failed; sending fallback", "转换后的平台消息发送失败；正在发送回退消息"));
+                        tracing::warn!(target: "gqy::qq", error = %error, "{}", crate::i18n::text("transformed platform message failed; sending fallback", "转换后的平台消息发送失败；正在发送回退消息"));
                         match self.adapter.send(fallback.clone()).await {
                             Ok(receipt) => Ok((fallback, receipt, false)),
                             Err(error) => {
@@ -1035,7 +1035,7 @@ impl PlatformTurnContext {
                 }
                 Err(error) => {
                     let _ = self.record_partial_delivery(&error);
-                    tracing::warn!(target: "miyu::qq", error = %error, "{}", crate::i18n::text("platform plugin follow-up send failed", "平台插件后续消息发送失败"));
+                    tracing::warn!(target: "gqy::qq", error = %error, "{}", crate::i18n::text("platform plugin follow-up send failed", "平台插件后续消息发送失败"));
                 }
             }
         }
@@ -1712,7 +1712,7 @@ async fn flush_intermediate_reply(
         .await
     {
         Ok(_) => tracing::info!(
-            target: "miyu::qq",
+            target: "gqy::qq",
             chars = visible.chars().count(),
             "{}",
             crate::i18n::text(
@@ -1721,7 +1721,7 @@ async fn flush_intermediate_reply(
             )
         ),
         Err(error) => tracing::warn!(
-            target: "miyu::qq",
+            target: "gqy::qq",
             error = %error,
             "{}",
             crate::i18n::text(
@@ -2033,7 +2033,7 @@ pub(crate) async fn run_platform_turn(
     {
         let mut manager = state.manager.lock().unwrap();
         if manager.admin_busy {
-            bail!("Miyu is busy with another operation");
+            bail!("GQY is busy with another operation");
         }
         manager.active_runs.insert(
             run_id.clone(),
@@ -2088,7 +2088,7 @@ pub(crate) async fn run_platform_turn(
         .is_err()
     {
         crate::web::finish_run(&state.manager, &run_id, None);
-        bail!("Miyu core worker is unavailable");
+        bail!("GQY core worker is unavailable");
     }
     // Cancels the run if this task dies before the turn settles.
     let mut run_guard = IpcRunGuard {
@@ -2120,7 +2120,7 @@ pub(crate) async fn run_platform_turn(
                 }
                 Ok(Err(broadcast::error::RecvError::Closed)) => {
                     break TurnDispatch::Failed(
-                        crate::i18n::text("Miyu core stopped", "Miyu 核心已停止").to_string(),
+                        crate::i18n::text("GQY core stopped", "GQY 核心已停止").to_string(),
                     );
                 }
             }
@@ -2161,7 +2161,7 @@ pub(crate) async fn run_platform_turn(
             }
             "tool.started" => {
                 let readable = format_platform_tool_started_log(&run_id, &data);
-                tracing::info!(target: "miyu::qq", "\n{readable}");
+                tracing::info!(target: "gqy::qq", "\n{readable}");
             }
             "tool.image" => {
                 if let Some(id) = data
@@ -2174,7 +2174,7 @@ pub(crate) async fn run_platform_turn(
             }
             "tool.finished" => {
                 let readable = format_platform_tool_finished_log(&run_id, &data);
-                tracing::info!(target: "miyu::qq", "\n{readable}");
+                tracing::info!(target: "gqy::qq", "\n{readable}");
                 let suppression_start = platform_context
                     .as_ref()
                     .and_then(|context| context.take_final_reply_suppression_start(text.len()));
@@ -2451,7 +2451,7 @@ pub(crate) async fn download_capped(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::paths::MiyuPaths;
+    use crate::paths::GQYPaths;
     use futures_util::future::BoxFuture;
     use std::path::PathBuf;
     use std::sync::atomic::{AtomicUsize, Ordering as AtomicOrdering};
@@ -2549,7 +2549,7 @@ mod tests {
         }
 
         fn bot_display_name<'a>(&'a self) -> BoxFuture<'a, Result<String>> {
-            Box::pin(async { Ok("Miyu".to_string()) })
+            Box::pin(async { Ok("GQY".to_string()) })
         }
 
         fn group_members<'a>(&'a self) -> BoxFuture<'a, Result<Vec<PlatformGroupMember>>> {
@@ -2575,12 +2575,12 @@ mod tests {
         }
 
         fn bot_display_name<'a>(&'a self) -> BoxFuture<'a, Result<String>> {
-            Box::pin(async { Ok("Miyu".to_string()) })
+            Box::pin(async { Ok("GQY".to_string()) })
         }
     }
 
-    fn test_paths(root: &std::path::Path) -> MiyuPaths {
-        MiyuPaths {
+    fn test_paths(root: &std::path::Path) -> GQYPaths {
+        GQYPaths {
             root_dir: root.to_path_buf(),
             config_dir: root.join("config"),
             config_file: root.join("config/config.jsonc"),
@@ -2589,7 +2589,7 @@ mod tests {
             cache_dir: root.join("cache"),
             state_dir: root.join("state"),
             pictures_dir: root.join("pictures"),
-            fish_hook_file: root.join("fish/miyu.fish"),
+            fish_hook_file: root.join("fish/gqy.fish"),
             bash_hook_file: root.join("shell/bash-hook.sh"),
             zsh_hook_file: root.join("shell/zsh-hook.zsh"),
             scripts_dir: root.join("config/scripts"),
@@ -3480,7 +3480,7 @@ mod tests {
         let state = DaemonState::for_test(test_paths(daemon_temp.path()), 8300).unwrap();
         let session = state
             .state_store
-            .create_session("miyu", "queued platform test", "user", None)
+            .create_session("gqy", "queued platform test", "user", None)
             .unwrap();
         state
             .state_store
@@ -3548,8 +3548,8 @@ mod tests {
     #[test]
     fn platform_tool_payload_pretty_prints_small_json() {
         assert_eq!(
-            format_platform_tool_payload_for(r#"{"query":"Miyu","limit":2}"#, Locale::Zh),
-            "{\n  \"limit\": 2,\n  \"query\": \"Miyu\"\n}"
+            format_platform_tool_payload_for(r#"{"query":"GQY","limit":2}"#, Locale::Zh),
+            "{\n  \"limit\": 2,\n  \"query\": \"GQY\"\n}"
         );
     }
 
@@ -3586,14 +3586,14 @@ mod tests {
                 "tool_id": "run_123_tool_2",
                 "name": "web_search",
                 "display_name": "网页搜索",
-                "arguments": "{\"query\":\"Miyu\"}"
+                "arguments": "{\"query\":\"GQY\"}"
             }),
             Locale::Zh,
         );
         assert!(started.starts_with("【工具：web_search】\n运行：run_123"));
         assert!(started.contains("调用 ID：run_123_tool_2"));
         assert!(started.contains("显示名称：网页搜索"));
-        assert!(started.contains("\"query\": \"Miyu\""));
+        assert!(started.contains("\"query\": \"GQY\""));
 
         let finished = format_platform_tool_finished_log_for(
             "run_123",

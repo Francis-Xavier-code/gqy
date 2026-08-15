@@ -2,11 +2,11 @@ use super::{ToolRegistry, ToolSpec};
 use crate::config::AppConfig;
 use crate::i18n::agent_text as t;
 use crate::memory::{MemoryAccess, MemoryStore};
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use anyhow::{bail, Result};
 use serde_json::{json, Value};
 
-pub fn register(registry: &mut ToolRegistry, config: AppConfig, paths: MiyuPaths) {
+pub fn register(registry: &mut ToolRegistry, config: AppConfig, paths: GQYPaths) {
     register_with_context(
         registry,
         config,
@@ -20,7 +20,7 @@ pub fn register(registry: &mut ToolRegistry, config: AppConfig, paths: MiyuPaths
 pub(crate) fn register_with_context(
     registry: &mut ToolRegistry,
     config: AppConfig,
-    paths: MiyuPaths,
+    paths: GQYPaths,
     access: MemoryAccess,
     writer_principal: Option<String>,
     writer_display_name: String,
@@ -76,7 +76,7 @@ pub(crate) fn register_with_context(
     ).writes());
 }
 
-pub fn register_readonly(registry: &mut ToolRegistry, config: AppConfig, paths: MiyuPaths) {
+pub fn register_readonly(registry: &mut ToolRegistry, config: AppConfig, paths: GQYPaths) {
     register_readonly_with_context(
         registry,
         config,
@@ -90,7 +90,7 @@ pub fn register_readonly(registry: &mut ToolRegistry, config: AppConfig, paths: 
 pub(crate) fn register_readonly_with_context(
     registry: &mut ToolRegistry,
     config: AppConfig,
-    paths: MiyuPaths,
+    paths: GQYPaths,
     access: MemoryAccess,
     writer_principal: Option<String>,
     writer_display_name: String,
@@ -98,7 +98,7 @@ pub(crate) fn register_readonly_with_context(
     if !config.memory_config().enabled {
         return;
     }
-    // 不再按 on_overflow 门控:compact 体制下 CLI `miyu pop` 照样把弹出
+    // 不再按 on_overflow 门控:compact 体制下 CLI `gqy pop` 照样把弹出
     // 轮归档进外溢库,没有这把工具模型就永远找不回它们(验收三轮:pop
     // 去留之争的答案是"补检索",不是删命令)。
     if config.memory_config().evicted_context_enabled {
@@ -271,7 +271,7 @@ fn to_utc_rfc3339(value: chrono::DateTime<chrono::Utc>) -> String {
 async fn search_evicted_context(
     args: Value,
     config: AppConfig,
-    paths: MiyuPaths,
+    paths: GQYPaths,
     access: MemoryAccess,
     writer_principal: Option<String>,
     writer_display_name: String,
@@ -294,7 +294,7 @@ async fn search_evicted_context(
 async fn recall_past_events(
     args: Value,
     config: AppConfig,
-    paths: MiyuPaths,
+    paths: GQYPaths,
     access: MemoryAccess,
     writer_principal: Option<String>,
     writer_display_name: String,
@@ -312,7 +312,7 @@ async fn recall_past_events(
 async fn remember_fact(
     args: Value,
     config: AppConfig,
-    paths: MiyuPaths,
+    paths: GQYPaths,
     access: MemoryAccess,
     writer_principal: Option<String>,
     writer_display_name: String,
@@ -341,7 +341,7 @@ async fn remember_fact(
 async fn recall_memories(
     args: Value,
     config: AppConfig,
-    paths: MiyuPaths,
+    paths: GQYPaths,
     access: MemoryAccess,
     writer_principal: Option<String>,
     writer_display_name: String,
@@ -412,9 +412,9 @@ mod tests {
     use std::collections::BTreeSet;
     use std::path::PathBuf;
 
-    fn test_paths() -> MiyuPaths {
-        let root = PathBuf::from("/tmp/miyu-memory-tool-test");
-        MiyuPaths {
+    fn test_paths() -> GQYPaths {
+        let root = PathBuf::from("/tmp/gqy-memory-tool-test");
+        GQYPaths {
             root_dir: root.to_path_buf(),
             config_dir: root.join("config"),
             config_file: root.join("config/config.jsonc"),

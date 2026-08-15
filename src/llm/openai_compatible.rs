@@ -6,7 +6,7 @@ use crate::config::{AppConfig, ProviderConfig};
 use crate::default_models::OPENCODE_ZEN_BASE_URL;
 use crate::i18n::text as t;
 use crate::models_cache::{self, ModelReasoningInfo, ReasoningSetting, ReasoningVariant};
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use anyhow::{bail, Context, Result};
 use futures_util::{Stream, StreamExt};
 use reqwest::Client;
@@ -522,11 +522,11 @@ pub(crate) struct ThinkingVariantPreferences {
     provider_renames: Vec<(String, String)>,
 }
 
-fn thinking_variant_preferences_file(paths: &MiyuPaths) -> PathBuf {
+fn thinking_variant_preferences_file(paths: &GQYPaths) -> PathBuf {
     paths.state_dir.join("thinking-variants.json")
 }
 
-fn lock_thinking_variant_preferences(paths: &MiyuPaths) -> Result<File> {
+fn lock_thinking_variant_preferences(paths: &GQYPaths) -> Result<File> {
     let lock_path = paths.state_dir.join("thinking-variants.lock");
     let lock = OpenOptions::new()
         .create(true)
@@ -551,16 +551,16 @@ fn lock_thinking_variant_preferences(paths: &MiyuPaths) -> Result<File> {
     Ok(lock)
 }
 
-fn load_thinking_variant_preferences(paths: &MiyuPaths) -> ThinkingVariantPreferences {
+fn load_thinking_variant_preferences(paths: &GQYPaths) -> ThinkingVariantPreferences {
     ThinkingVariantPreferences::load(paths)
 }
 
 impl ThinkingVariantPreferences {
-    pub(crate) fn load(paths: &MiyuPaths) -> Self {
+    pub(crate) fn load(paths: &GQYPaths) -> Self {
         Self::load_for_update(paths).unwrap_or_default()
     }
 
-    fn load_for_update(paths: &MiyuPaths) -> Result<Self> {
+    fn load_for_update(paths: &GQYPaths) -> Result<Self> {
         let path = thinking_variant_preferences_file(paths);
         match std::fs::read_to_string(&path) {
             Ok(text) => serde_json::from_str(&text).with_context(|| {
@@ -608,7 +608,7 @@ impl ThinkingVariantPreferences {
         !self.changes.is_empty() || !self.provider_renames.is_empty()
     }
 
-    pub(crate) fn save(&self, paths: &MiyuPaths) -> Result<()> {
+    pub(crate) fn save(&self, paths: &GQYPaths) -> Result<()> {
         if self.changes.is_empty() && self.provider_renames.is_empty() {
             return Ok(());
         }
@@ -713,7 +713,7 @@ struct ResponsesContinuationHealth {
 }
 
 impl ResponsesContinuationHealth {
-    fn for_provider(paths: &MiyuPaths, provider: &ProviderConfig) -> Self {
+    fn for_provider(paths: &GQYPaths, provider: &ProviderConfig) -> Self {
         let store = crate::llm::provider_capabilities::store_path(&paths.cache_dir);
         let unsupported = crate::llm::provider_capabilities::continuation_unsupported(
             &store,
@@ -960,7 +960,7 @@ fn endpoint_client(provider: &ProviderConfig) -> Result<Client> {
     Ok(client)
 }
 
-fn llm_endpoints(config: &AppConfig, paths: &MiyuPaths) -> Result<Vec<LlmEndpoint>> {
+fn llm_endpoints(config: &AppConfig, paths: &GQYPaths) -> Result<Vec<LlmEndpoint>> {
     let mut endpoints = Vec::new();
     let mut errors = Vec::new();
     for choice in config.active_provider_model_choices() {
@@ -1027,7 +1027,7 @@ impl OpenAiCompatibleClient {
         }
     }
 
-    pub fn from_config(config: &AppConfig, paths: &MiyuPaths) -> Result<Self> {
+    pub fn from_config(config: &AppConfig, paths: &GQYPaths) -> Result<Self> {
         super::cache_log::configure(paths, &config.cache);
         let endpoints = llm_endpoints(config, paths)?;
         let first = endpoints
@@ -1057,7 +1057,7 @@ impl OpenAiCompatibleClient {
     /// the shared endpoint scheduler, exactly like the main model pool.
     pub fn from_choices(
         config: &AppConfig,
-        paths: &MiyuPaths,
+        paths: &GQYPaths,
         choices: &[crate::config::ProviderModelChoice],
     ) -> Result<Self> {
         super::cache_log::configure(paths, &config.cache);
@@ -1116,7 +1116,7 @@ impl OpenAiCompatibleClient {
         Ok(client)
     }
 
-    pub fn new(provider: &ProviderConfig, config: &AppConfig, paths: &MiyuPaths) -> Result<Self> {
+    pub fn new(provider: &ProviderConfig, config: &AppConfig, paths: &GQYPaths) -> Result<Self> {
         if provider.default_model.trim().is_empty() {
             bail!(
                 "{}: {}",
@@ -1314,7 +1314,7 @@ impl OpenAiCompatibleClient {
         }
     }
 
-    fn restore_saved_thinking_variants(&mut self, paths: &MiyuPaths) {
+    fn restore_saved_thinking_variants(&mut self, paths: &GQYPaths) {
         crate::llm::request_log::install_dir(paths.logs_dir());
         let preferences = load_thinking_variant_preferences(paths);
         let selections = self
@@ -1330,7 +1330,7 @@ impl OpenAiCompatibleClient {
         self.restore_thinking_variants(&selections);
     }
 
-    pub fn save_thinking_variants(&self, paths: &MiyuPaths) -> Result<()> {
+    pub fn save_thinking_variants(&self, paths: &GQYPaths) -> Result<()> {
         let mut preferences = load_thinking_variant_preferences(paths);
         for (provider_id, model) in self.endpoint_model_preferences() {
             let key = thinking_variant_key(&provider_id, &model);
@@ -8003,8 +8003,8 @@ mod tests {
         }
     }
 
-    fn test_paths(root: &std::path::Path) -> MiyuPaths {
-        MiyuPaths {
+    fn test_paths(root: &std::path::Path) -> GQYPaths {
+        GQYPaths {
             root_dir: root.to_path_buf(),
             config_dir: root.join("config"),
             config_file: root.join("config/config.jsonc"),
@@ -8013,7 +8013,7 @@ mod tests {
             cache_dir: root.join("cache"),
             state_dir: root.join("state"),
             pictures_dir: root.join("pictures"),
-            fish_hook_file: root.join("fish/miyu.fish"),
+            fish_hook_file: root.join("fish/gqy.fish"),
             bash_hook_file: root.join("shell/bash-hook.sh"),
             zsh_hook_file: root.join("shell/zsh-hook.zsh"),
             scripts_dir: root.join("config/scripts"),

@@ -619,7 +619,7 @@ fn apply_v8_artifact_assets(conn: &Connection) -> Result<()> {
 /// The account scope is deliberately separate from the platform account id:
 /// `*` represents a grant shared by every account on a platform, while a
 /// concrete id leaves room for narrower policies later without changing the
-/// schema. Miyu currently writes only the global scope for QQ.
+/// schema. GQY currently writes only the global scope for QQ.
 fn apply_v9_platform_access_control(conn: &Connection) -> Result<()> {
     conn.execute_batch(
         "CREATE TABLE IF NOT EXISTS platform_access_grants (
@@ -1101,7 +1101,7 @@ mod tests {
         assert_eq!(user_version(&conn).unwrap(), LATEST_VERSION);
         conn.execute(
             "INSERT INTO sessions (session_id, persona, name, created_at, updated_at)
-             VALUES ('platform-session', 'miyu', 'platform', 'now', 'now')",
+             VALUES ('platform-session', 'gqy', 'platform', 'now', 'now')",
             [],
         )
         .unwrap();
@@ -1109,7 +1109,7 @@ mod tests {
             "INSERT INTO platform_session_bindings (
                 platform, account_id, conversation_kind, conversation_id,
                 persona, session_id, created_at, updated_at
-             ) VALUES ('onebot', '10000', 'private', '20000', 'miyu',
+             ) VALUES ('onebot', '10000', 'private', '20000', 'gqy',
                        'platform-session', 'now', 'now')",
             [],
         )
@@ -1121,7 +1121,7 @@ mod tests {
                 "INSERT INTO platform_session_bindings (
                     platform, account_id, conversation_kind, conversation_id,
                     persona, session_id, created_at, updated_at
-                 ) VALUES ('onebot', '10000', 'private', 'other', 'miyu',
+                 ) VALUES ('onebot', '10000', 'private', 'other', 'gqy',
                            'platform-session', 'now', 'now')",
                 [],
             )

@@ -1,6 +1,6 @@
 use super::{ToolProgress, ToolRegistry, ToolSpec};
 use crate::i18n::agent_text as t;
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use anyhow::{bail, Context, Result};
 use serde_json::{json, Value};
 use std::io::Write;
@@ -10,7 +10,7 @@ use std::path::{Component, Path};
 
 pub(super) const MAX_ARTIFACT_BYTES: usize = 20 * 1024 * 1024;
 
-pub fn register_webui(registry: &mut ToolRegistry, paths: &MiyuPaths, session_id: &str) {
+pub fn register_webui(registry: &mut ToolRegistry, paths: &GQYPaths, session_id: &str) {
     let root = paths.data_dir.join("artifacts");
     register_create(registry, root.clone(), session_id);
     register_present(registry);
@@ -18,7 +18,7 @@ pub fn register_webui(registry: &mut ToolRegistry, paths: &MiyuPaths, session_id
     super::apply_patch::register_artifact(registry, root, session_id);
 }
 
-pub fn managed_manifest(paths: &MiyuPaths, session_id: &str) -> Result<String> {
+pub fn managed_manifest(paths: &GQYPaths, session_id: &str) -> Result<String> {
     let root = paths.data_dir.join("artifacts");
     validate_session_id(session_id)?;
     let session_dir = root.join(session_id);
@@ -79,8 +79,8 @@ fn register_create(registry: &mut ToolRegistry, root: PathBuf, session_id: &str)
     registry.register(ToolSpec::new_with_progress(
         "create_artifact",
         t(
-            "Create or update a completed deliverable in Miyu's managed Artifact workspace and display it in the WebUI. Use this for reports, documents, standalone code, HTML, JSON, CSV, and other files the user should inspect. Do not use it for routine project source edits.",
-            "在 Miyu 托管的 Artifact 工作区创建或更新已完成的交付物，并展示到 WebUI。适用于报告、文档、独立代码、HTML、JSON、CSV 等需要用户查看的文件；不要用于普通项目源码修改。",
+            "Create or update a completed deliverable in GQY's managed Artifact workspace and display it in the WebUI. Use this for reports, documents, standalone code, HTML, JSON, CSV, and other files the user should inspect. Do not use it for routine project source edits.",
+            "在 GQY 托管的 Artifact 工作区创建或更新已完成的交付物，并展示到 WebUI。适用于报告、文档、独立代码、HTML、JSON、CSV 等需要用户查看的文件；不要用于普通项目源码修改。",
         ),
         json!({
             "type": "object",
@@ -380,7 +380,7 @@ mod tests {
     #[test]
     fn artifact_manifest_lists_names_without_file_contents() {
         let temp = tempfile::tempdir().unwrap();
-        let paths = MiyuPaths {
+        let paths = GQYPaths {
             root_dir: temp.path().to_path_buf(),
             config_dir: temp.path().join("config"),
             config_file: temp.path().join("config/config.jsonc"),

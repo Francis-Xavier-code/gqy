@@ -22,7 +22,7 @@ const COLLECTOR_QUEUE_CAPACITY: usize = 32;
 
 struct CollectionJob {
     config: crate::config::AppConfig,
-    paths: crate::paths::MiyuPaths,
+    paths: crate::paths::GQYPaths,
     state: crate::state::StateStore,
     conversation: crate::platforms::PlatformConversation,
     message_id: String,
@@ -386,7 +386,7 @@ async fn save_current_message_meme(
 
 async fn delete_referenced_meme(context: Arc<PlatformTurnContext>) -> Result<String> {
     if !context.is_admin || context.conversation.kind != ConversationKind::Group {
-        bail!("only configured Miyu administrators can delete collected memes");
+        bail!("only configured GQY administrators can delete collected memes");
     }
     let reply_id = context
         .inbound_event()
