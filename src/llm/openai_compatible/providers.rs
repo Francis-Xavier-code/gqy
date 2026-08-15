@@ -674,7 +674,7 @@ pub(crate) struct ChatStreamChoice {
 #[derive(Debug, Default, Deserialize)]
 pub(crate) struct ChatChoiceMessage {
     #[serde(default, deserialize_with = "null_as_default")]
-    content: Option<String>,
+    pub(crate) content: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
     pub(crate) reasoning_content: Option<String>,
     #[serde(default, deserialize_with = "null_as_default")]
@@ -688,7 +688,7 @@ pub(crate) struct ChatChoiceMessage {
     #[serde(default, deserialize_with = "null_as_default")]
     pub(crate) reasoning_details: Option<serde_json::Value>,
     #[serde(default, deserialize_with = "null_as_default")]
-    tool_calls: Vec<ToolCallDelta>,
+    pub(crate) tool_calls: Vec<ToolCallDelta>,
 }
 
 pub(crate) fn null_as_default<'de, D, T>(deserializer: D) -> std::result::Result<T, D::Error>
@@ -770,21 +770,21 @@ pub(crate) struct ResponsesStreamResponse {
 #[derive(Debug, Deserialize)]
 pub(crate) struct ResponsesIncompleteDetails {
     #[serde(default, deserialize_with = "null_as_default")]
-    reason: Option<String>,
+    pub(crate) reason: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct ResponsesUsage {
     #[serde(default)]
-    input_tokens: u64,
+    pub(crate) input_tokens: u64,
     #[serde(default)]
-    output_tokens: u64,
+    pub(crate) output_tokens: u64,
     #[serde(default)]
-    total_tokens: u64,
+    pub(crate) total_tokens: u64,
     #[serde(default)]
-    input_tokens_details: Option<ResponsesInputTokenDetails>,
+    pub(crate) input_tokens_details: Option<ResponsesInputTokenDetails>,
     #[serde(default)]
-    output_tokens_details: Option<ResponsesOutputTokenDetails>,
+    pub(crate) output_tokens_details: Option<ResponsesOutputTokenDetails>,
 }
 
 #[derive(Debug, Deserialize)]
