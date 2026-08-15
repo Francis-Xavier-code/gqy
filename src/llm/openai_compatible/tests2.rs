@@ -1,7 +1,10 @@
 //! tests2 — 自 src/llm/openai_compatible.rs 外移。
 #![cfg(test)]
 
+use super::tests3::*;
 use super::*;
+use std::net::TcpListener;
+use std::sync::atomic::AtomicUsize;
 
 #[test]
 fn anthropic_stream_emits_reasoning_content_and_usage() {

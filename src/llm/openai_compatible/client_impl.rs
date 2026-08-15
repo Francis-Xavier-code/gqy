@@ -37,7 +37,7 @@ impl OpenAiCompatibleClient {
     }
 
     pub fn from_config(config: &AppConfig, paths: &GQYPaths) -> Result<Self> {
-        super::cache_log::configure(paths, &config.cache);
+        crate::llm::cache_log::configure(paths, &config.cache);
         let endpoints = llm_endpoints(config, paths)?;
         let first = endpoints
             .first()
@@ -69,7 +69,7 @@ impl OpenAiCompatibleClient {
         paths: &GQYPaths,
         choices: &[crate::config::ProviderModelChoice],
     ) -> Result<Self> {
-        super::cache_log::configure(paths, &config.cache);
+        crate::llm::cache_log::configure(paths, &config.cache);
         let mut endpoints = Vec::new();
         let mut errors = Vec::new();
         for choice in choices {
