@@ -544,8 +544,8 @@ pub(crate) fn block_margins(kind: BlockKind, font_size: u32) -> (u32, u32) {
 
 #[derive(Default)]
 pub(crate) struct ColumnPlan {
-    placements: Vec<Placement>,
-    used_height: u32,
+    pub(crate) placements: Vec<Placement>,
+    pub(crate) used_height: u32,
 }
 
 pub(crate) struct Placement {
@@ -612,13 +612,13 @@ pub(crate) fn plan_columns_with_height(
             let column = columns
                 .last_mut()
                 .ok_or_else(|| anyhow!("renderer column planner lost its active column"))?;
-            let margin = if first_fragment && column.used_height > 0 {
+            let margin: u32 = if first_fragment && column.used_height > 0 {
                 block.margin_before
             } else {
                 0
             };
             let remaining = block.total_height.saturating_sub(source_start);
-            let available = usable_height
+            let available: u32 = usable_height
                 .saturating_sub(column.used_height)
                 .saturating_sub(margin);
 

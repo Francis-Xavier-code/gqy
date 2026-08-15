@@ -368,7 +368,7 @@ pub(crate) async fn handle_message_with_activity(
             // the apology itself cost a message at the exact moment the
             // conversation was already saturated. The log keeps it visible to
             // whoever runs the bot.
-            Err(super::SessionTurnAcquireError::Full) => {
+            Err(crate::platforms::SessionTurnAcquireError::Full) => {
                 tracing::debug!(
                     target: "gqy::qq",
                     session_id = ?session_id,
@@ -382,7 +382,7 @@ pub(crate) async fn handle_message_with_activity(
                 );
                 return;
             }
-            Err(super::SessionTurnAcquireError::Closed) => return,
+            Err(crate::platforms::SessionTurnAcquireError::Closed) => return,
         },
         None => None,
     };

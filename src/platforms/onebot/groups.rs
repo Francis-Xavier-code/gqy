@@ -162,7 +162,7 @@ pub(crate) fn platform_turn_context_with_activity(
     event: &Value,
     mut config: crate::config::AppConfig,
     inbound_event: Option<PlatformInboundEvent>,
-    activity: Option<super::MessageActivityHandle>,
+    activity: Option<crate::platforms::MessageActivityHandle>,
 ) -> Result<PlatformTurnContext> {
     let self_id = event.get("self_id").and_then(Value::as_i64).unwrap_or(0);
     let user_id = event.get("user_id").and_then(Value::as_i64).unwrap_or(0);
@@ -363,11 +363,11 @@ pub(crate) fn append_resolved_quoted_image(parsed: &mut InboundMessage, data: &V
 }
 
 pub(crate) struct PreparedInboundImages {
-    attachments: Vec<Option<ImageAttachment>>,
-    attempted: usize,
-    failed: usize,
-    duplicates: usize,
-    total_bytes: usize,
+    pub(crate) attachments: Vec<Option<ImageAttachment>>,
+    pub(crate) attempted: usize,
+    pub(crate) failed: usize,
+    pub(crate) duplicates: usize,
+    pub(crate) total_bytes: usize,
 }
 
 pub(crate) async fn prepare_inbound_images(

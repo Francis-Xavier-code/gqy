@@ -118,7 +118,7 @@ pub(crate) struct GroupNameCacheEntry {
 
 #[derive(Default)]
 pub(crate) struct GroupNameCache {
-    entries: HashMap<(i64, i64), GroupNameCacheEntry>,
+    pub(crate) entries: HashMap<(i64, i64), GroupNameCacheEntry>,
 }
 
 impl GroupNameCache {
@@ -439,10 +439,10 @@ impl ConnectionRegistry {
 #[derive(Clone)]
 pub(crate) struct ConnectionHandle {
     out_tx: mpsc::UnboundedSender<String>,
-    pending: Arc<Mutex<HashMap<String, oneshot::Sender<Value>>>>,
-    bot_name: Arc<Mutex<Option<String>>>,
-    asset_base_url: Option<String>,
-    assets: crate::platforms::assets::AssetLeaseStore,
+    pub(crate) pending: Arc<Mutex<HashMap<String, oneshot::Sender<Value>>>>,
+    pub(crate) bot_name: Arc<Mutex<Option<String>>>,
+    pub(crate) asset_base_url: Option<String>,
+    pub(crate) assets: crate::platforms::assets::AssetLeaseStore,
     shutdown: watch::Sender<bool>,
 }
 
@@ -527,7 +527,7 @@ pub(crate) fn sanitize_api_detail(detail: &str) -> String {
 
 #[derive(Clone, Default)]
 pub(crate) struct QqListenerManager {
-    inner: Arc<Mutex<QqListenerState>>,
+    pub(crate) inner: Arc<Mutex<QqListenerState>>,
 }
 
 #[derive(Default)]
@@ -664,7 +664,10 @@ pub(crate) fn qq_listener_router(state: DaemonState) -> Router {
     Router::new()
         .route("/ws", get(onebot_ws))
         .route("/onebot/v11/ws", get(onebot_ws))
-        .route("/api/platform-assets/{token}", get(super::platform_asset))
+        .route(
+            "/api/platform-assets/{token}",
+            get(crate::platforms::assets::platform_asset),
+        )
         .with_state(state)
 }
 
@@ -1161,9 +1164,9 @@ impl Target {
 
 #[derive(Clone)]
 pub(crate) struct InboundMessageActivity {
-    handle: super::MessageActivityHandle,
-    position: PlatformMessagePosition,
-    received_at: Instant,
+    pub(crate) handle: crate::platforms::MessageActivityHandle,
+    pub(crate) position: PlatformMessagePosition,
+    pub(crate) received_at: Instant,
 }
 
 pub(crate) fn observe_message_activity(
@@ -1260,10 +1263,10 @@ pub(crate) fn sends_rate_limit_notice(target: Target) -> bool {
 }
 
 pub(crate) struct Admission {
-    allowed: bool,
-    rate_key: Option<String>,
-    rate_limit: PlatformRateLimit,
-    use_non_whitelist_text_models: bool,
+    pub(crate) allowed: bool,
+    pub(crate) rate_key: Option<String>,
+    pub(crate) rate_limit: PlatformRateLimit,
+    pub(crate) use_non_whitelist_text_models: bool,
 }
 
 pub(crate) fn admission_for(

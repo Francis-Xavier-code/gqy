@@ -37,7 +37,7 @@ mod compact;
 pub use compact::*;
 mod conversation;
 pub use conversation::*;
-mod overflow;
+pub(crate) mod overflow;
 pub use overflow::*;
 mod agent_impl;
 pub use agent_impl::*;

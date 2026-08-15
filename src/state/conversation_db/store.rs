@@ -168,13 +168,13 @@ impl ConversationDb {
                  SELECT session_id FROM sessions
                  WHERE kind = ?1
                    AND datetime(updated_at) < datetime('now', '-' || ?2 || ' hours'))",
-            params![super::ASK_SESSION_KIND, hours],
+            params![crate::state::ASK_SESSION_KIND, hours],
         )?;
         let deleted = tx.execute(
             "DELETE FROM sessions
              WHERE kind = ?1
                AND datetime(updated_at) < datetime('now', '-' || ?2 || ' hours')",
-            params![super::ASK_SESSION_KIND, hours],
+            params![crate::state::ASK_SESSION_KIND, hours],
         )?;
         tx.commit()?;
         Ok(deleted)

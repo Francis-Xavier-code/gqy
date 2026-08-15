@@ -24,15 +24,16 @@ pub(crate) const REPLY_WATERMARK_KEY: &str = "reply_ingress_watermark";
 pub(crate) const CONTEXT_IMAGE_LOOKBACK_MESSAGES: usize = 200;
 pub(crate) const MAX_CONTEXT_IMAGES_PER_MESSAGE: usize = 4;
 
-pub(super) struct RealContextPlugin {
-    settings_cache: Mutex<
+pub(crate) struct RealContextPlugin {
+    pub(crate) settings_cache: Mutex<
         Option<(
             Option<PlatformPluginInstanceConfig>,
             Arc<RealContextPluginSettings>,
         )>,
     >,
-    runtime: Mutex<RuntimeState>,
-    global_judge_gate: DynamicGate,
-    reaction_expirations: Mutex<HashMap<(String, String, String), tokio::task::AbortHandle>>,
-    affection_updates: affection::AffectionUpdateQueue,
+    pub(crate) runtime: Mutex<RuntimeState>,
+    pub(crate) global_judge_gate: DynamicGate,
+    pub(crate) reaction_expirations:
+        Mutex<HashMap<(String, String, String), tokio::task::AbortHandle>>,
+    pub(crate) affection_updates: affection::AffectionUpdateQueue,
 }

@@ -524,7 +524,7 @@ fn undo_removes_last_turn() {
     assert_eq!(turns[0].turn_id, "turn_1");
 }
 
-fn test_paths(root: &Path) -> GQYPaths {
+pub(crate) fn test_paths(root: &Path) -> GQYPaths {
     GQYPaths {
         root_dir: root.to_path_buf(),
         config_dir: root.join("config"),

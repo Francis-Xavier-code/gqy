@@ -263,11 +263,11 @@ pub(crate) fn parse_message(
 
 pub(crate) struct OneBotAdapter {
     conn: ConnectionHandle,
-    registry: Arc<Mutex<ConnectionRegistry>>,
+    pub(crate) registry: Arc<Mutex<ConnectionRegistry>>,
     http: reqwest::Client,
-    self_id: i64,
+    pub(crate) self_id: i64,
     target: Target,
-    max_reply_chars: usize,
+    pub(crate) max_reply_chars: usize,
 }
 
 pub(crate) fn onebot_id_value(value: &str) -> Value {
@@ -1348,7 +1348,7 @@ pub(crate) async fn deliver_dispatch(
     Ok(true)
 }
 
-pub(crate) fn final_reply_text(outcome: &crate::web::TurnOutcome) -> String {
+pub(crate) fn final_reply_text(outcome: &crate::platforms::TurnOutcome) -> String {
     crate::platforms::adapters::cut_suppressed_ranges(
         &outcome.text,
         &outcome.suppressed_reply_ranges,
