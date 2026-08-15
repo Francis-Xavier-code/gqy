@@ -1,6 +1,7 @@
 //! tests2 — 自 src/state/mod.rs 外移。
 #![cfg(test)]
 
+use super::tests::*;
 use super::*;
 
 #[test]
@@ -893,7 +894,7 @@ fn clearing_pinned_session_content_is_isolated_and_preserves_usage_and_binding()
 
 /// Returns (non-summary fold ids, all visible ids) mirroring what the
 /// compactor passes for a full fold of the current history.
-fn visible_snapshot(store: &StateStore) -> (Vec<String>, Vec<String>) {
+pub(crate) fn visible_snapshot(store: &StateStore) -> (Vec<String>, Vec<String>) {
     let turns = store.load_visible_turns().unwrap();
     let fold_ids = turns
         .iter()

@@ -1,6 +1,8 @@
 //! tests3 — 自 src/state/mod.rs 外移。
 #![cfg(test)]
 
+use super::tests::*;
+use super::tests2::*;
 use super::*;
 
 #[test]
