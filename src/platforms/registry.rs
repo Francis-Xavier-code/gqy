@@ -10,15 +10,6 @@ use super::*;
 // later platforms (Telegram, QQ official, WeChat) add submodules and
 // reuse everything here without touching the web core.
 
-mod access_control;
-mod assets;
-pub(crate) mod avatar;
-pub(crate) mod commands;
-pub(crate) mod onebot;
-pub(crate) mod plugins;
-mod tool;
-mod types;
-
 pub(crate) use types::{
     BotGroupRole, BotSendAvailability, ConversationKind, ForwardNode, OutboundBody,
     OutboundMessage, OutboundOrigin, OutboundSegment, PartialSendError, PlatformAdapter,
