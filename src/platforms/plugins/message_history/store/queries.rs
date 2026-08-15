@@ -104,7 +104,10 @@ pub(crate) fn query_activity_ranking(
     })
 }
 
-pub(crate) fn delete_history(conn: &mut Connection, request: DeleteRequest) -> Result<DeleteReport> {
+pub(crate) fn delete_history(
+    conn: &mut Connection,
+    request: DeleteRequest,
+) -> Result<DeleteReport> {
     let cutoff = match request.mode {
         DeleteMode::All => None,
         DeleteMode::KeepDays(days) => Some(
@@ -450,4 +453,3 @@ pub(crate) fn truncate_utf8(value: &str, max_bytes: usize) -> String {
     }
     value[..end].to_string()
 }
-

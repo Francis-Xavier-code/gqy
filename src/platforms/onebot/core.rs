@@ -1265,7 +1265,12 @@ pub(crate) struct Admission {
     use_non_whitelist_text_models: bool,
 }
 
-pub(crate) fn admission_for(config: &OneBotConfig, target: Target, self_id: i64, user_id: i64) -> Admission {
+pub(crate) fn admission_for(
+    config: &OneBotConfig,
+    target: Target,
+    self_id: i64,
+    user_id: i64,
+) -> Admission {
     admission_for_access(config, None, target, self_id, user_id)
 }
 
@@ -1405,4 +1410,3 @@ pub(crate) fn apply_admission_text_model_pool(
         .map(<[_]>::to_vec);
     config.active_provider_models = models;
 }
-

@@ -275,7 +275,11 @@ pub(crate) struct PackageStats {
     bytes: u64,
 }
 
-pub(crate) fn validate_package_tree(path: &Path, depth: usize, stats: &mut PackageStats) -> Result<()> {
+pub(crate) fn validate_package_tree(
+    path: &Path,
+    depth: usize,
+    stats: &mut PackageStats,
+) -> Result<()> {
     if depth > MAX_SKILL_PACKAGE_DEPTH {
         bail!("skill package exceeds the directory depth limit");
     }
@@ -521,4 +525,3 @@ pub(crate) fn create_private_directory_chain(base: &Path, directory: &Path) -> R
     }
     Ok(())
 }
-

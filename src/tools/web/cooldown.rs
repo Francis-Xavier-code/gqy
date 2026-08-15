@@ -125,4 +125,3 @@ pub(crate) fn cooldown_for_error(error: &str) -> Option<Duration> {
     }
     None
 }
-

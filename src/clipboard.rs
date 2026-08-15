@@ -82,7 +82,10 @@ pub(crate) fn write_image_cache_file(
 
 /// macOS 剪贴板图片:pbpaste -tiff 取 TIFF,再用系统自带 sips 转 PNG。
 pub fn read_clipboard_image() -> Result<Option<ClipboardImage>> {
-    if !clipboard_classes()?.iter().any(|class| is_image_class(class)) {
+    if !clipboard_classes()?
+        .iter()
+        .any(|class| is_image_class(class))
+    {
         return Ok(None);
     }
     let tiff = Command::new("pbpaste")
@@ -156,7 +159,9 @@ pub enum ClipboardContent {
 
 pub fn read_clipboard() -> Result<ClipboardContent> {
     let classes = clipboard_classes()?;
-    let has_file_url = classes.iter().any(|c| c.contains("furl") || c.contains("file-url"));
+    let has_file_url = classes
+        .iter()
+        .any(|c| c.contains("furl") || c.contains("file-url"));
     let has_image = classes.iter().any(|class| is_image_class(class));
     let has_text = classes
         .iter()

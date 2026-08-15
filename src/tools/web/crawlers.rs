@@ -538,4 +538,3 @@ pub(crate) async fn resolve_sogou_url(client: &reqwest::Client, href: &str) -> S
 }
 
 // ── Multi-engine fallback dispatcher ────────────────────────────
-

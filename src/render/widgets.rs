@@ -119,7 +119,11 @@ pub(crate) fn style_summary_text(text: &str, style: SummaryStyle) -> String {
     }
 }
 
-pub(crate) fn write_activity_summary(writer: &mut impl Write, text: &str, style: SummaryStyle) -> Result<()> {
+pub(crate) fn write_activity_summary(
+    writer: &mut impl Write,
+    text: &str,
+    style: SummaryStyle,
+) -> Result<()> {
     writeln!(writer, "{}", style_summary_text(text, style))?;
     writeln!(writer)?;
     Ok(())
@@ -315,9 +319,9 @@ pub(crate) fn tool_subject(name: &str, arguments: &str) -> Option<String> {
         "scientific_calculator" => string_arg(&args, &["expression", "operation"]),
         "set_alarm" => string_arg(&args, &["label", "time"]),
         "cancel_alarm" => string_arg(&args, &["id"]),
-        "brew_get_package_info"
-        | "review_brew_package"
-        | "install_brew_package" => string_arg(&args, &["package_name", "package"]),
+        "brew_get_package_info" | "review_brew_package" | "install_brew_package" => {
+            string_arg(&args, &["package_name", "package"])
+        }
         "online_man_get_page" => {
             let page = string_arg(&args, &["name"])?;
             let section = string_arg(&args, &["section"]);
@@ -704,7 +708,11 @@ impl MarkdownLineRenderer {
         if self.in_math_block {
             // 流结束仍未闭合:按原样回放,不吞内容。
             self.in_math_block = false;
-            let opener = if self.math_closer == "$$" { "$$" } else { "\\[" };
+            let opener = if self.math_closer == "$$" {
+                "$$"
+            } else {
+                "\\["
+            };
             let mut output = format!("\x1b[36m{opener}\x1b[0m\n");
             for line in std::mem::take(&mut self.math_buffer) {
                 output.push_str(&format!("\x1b[36m{line}\x1b[0m\n"));
@@ -857,9 +865,7 @@ pub(crate) fn render_inline(text: &str) -> String {
                     && (double
                         || (!tex.starts_with(' ')
                             && !tex.ends_with(' ')
-                            && !chars
-                                .get(end + 1)
-                                .is_some_and(|next| next.is_ascii_digit())));
+                            && !chars.get(end + 1).is_some_and(|next| next.is_ascii_digit())));
                 if accept {
                     output.push_str(PRIMARY_STYLE);
                     output.push_str(&math::unicode_math(&tex));
@@ -1436,4 +1442,3 @@ pub(crate) fn highlight_code_line(lang: &str, line: &str) -> String {
     }
     output
 }
-

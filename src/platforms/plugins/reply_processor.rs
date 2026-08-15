@@ -392,7 +392,9 @@ impl PlatformPlugin for ReplyProcessorPlugin {
                 // system prompt invalidates the whole history prefix. As a
                 // fossilized tail block it appends instead; the agent skips it
                 // when the identical text is already visible in the replay.
-                input.turn_system_context.push(Self::context_notice(&notices));
+                input
+                    .turn_system_context
+                    .push(Self::context_notice(&notices));
             }
             Ok(())
         })

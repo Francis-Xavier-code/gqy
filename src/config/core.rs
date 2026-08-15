@@ -687,7 +687,9 @@ pub(crate) fn validate_qq_group_management_plugin_config(
     Ok(())
 }
 
-pub(crate) fn validate_qq_message_recall_plugin_config(instance: &PlatformPluginInstanceConfig) -> Result<()> {
+pub(crate) fn validate_qq_message_recall_plugin_config(
+    instance: &PlatformPluginInstanceConfig,
+) -> Result<()> {
     let settings = QqMessageRecallPluginSettings::from_instance(instance)?;
     if settings.max_reason_length > 10_000
         || settings.max_messages_per_conversation == 0
@@ -700,7 +702,9 @@ pub(crate) fn validate_qq_message_recall_plugin_config(instance: &PlatformPlugin
     Ok(())
 }
 
-pub(crate) fn validate_qq_meme_collector_plugin_config(instance: &PlatformPluginInstanceConfig) -> Result<()> {
+pub(crate) fn validate_qq_meme_collector_plugin_config(
+    instance: &PlatformPluginInstanceConfig,
+) -> Result<()> {
     let settings = QqMemeCollectorPluginSettings::from_instance(instance)?;
     if !settings.collect_probability.is_finite()
         || !(0.0..=1.0).contains(&settings.collect_probability)
@@ -1335,7 +1339,9 @@ pub(crate) const DEPRECATED_REAL_CONTEXT_SETTINGS: &[&str] = &[
     "continuation_window_minutes",
 ];
 
-pub(crate) fn migrate_real_context_settings_map(settings: &mut serde_json::Map<String, serde_json::Value>) {
+pub(crate) fn migrate_real_context_settings_map(
+    settings: &mut serde_json::Map<String, serde_json::Value>,
+) {
     if !settings.contains_key("group_member_search_max_results") {
         if let Some(value) = settings.get("group_member_page_size").cloned() {
             settings.insert("group_member_search_max_results".to_string(), value);
@@ -1413,4 +1419,3 @@ pub(crate) fn mutate_real_context_settings(
     mutate(&mut settings);
     merge_real_context_settings(instance, &settings);
 }
-

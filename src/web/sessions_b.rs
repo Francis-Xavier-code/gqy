@@ -130,7 +130,12 @@ pub(crate) async fn handle_ipc_connection(
                 Some(session_id) => session_id,
                 None if dev => {
                     store
-                        .create_session(crate::state::DEV_PERSONA, "", crate::state::USER_SESSION_KIND, None)
+                        .create_session(
+                            crate::state::DEV_PERSONA,
+                            "",
+                            crate::state::USER_SESSION_KIND,
+                            None,
+                        )
                         .map_err(|error| anyhow::anyhow!(safe_error_message(&error)))?
                         .session_id
                 }
@@ -139,10 +144,17 @@ pub(crate) async fn handle_ipc_connection(
             let target = ipc::SessionRef::Id { id: session_id };
             let session_id = match resolve_available_local_session_ref(&state, &target) {
                 Ok(record) => record.session_id,
-                Err(_) if dev => store
-                    .create_session(crate::state::DEV_PERSONA, "", crate::state::USER_SESSION_KIND, None)
-                    .map_err(|error| anyhow::anyhow!(safe_error_message(&error)))?
-                    .session_id,
+                Err(_) if dev => {
+                    store
+                        .create_session(
+                            crate::state::DEV_PERSONA,
+                            "",
+                            crate::state::USER_SESSION_KIND,
+                            None,
+                        )
+                        .map_err(|error| anyhow::anyhow!(safe_error_message(&error)))?
+                        .session_id
+                }
                 Err(_) => store.session_id().to_string(),
             };
             let _ = store.set_repl_session(&persona, &session_id);
@@ -492,8 +504,17 @@ pub(crate) async fn handle_ipc_connection(
             session_id,
             origin_tty,
         } => {
-            handle_ipc_turn(&state, &mut stream, content, mode, images, cwd, session_id, origin_tty)
-                .await?;
+            handle_ipc_turn(
+                &state,
+                &mut stream,
+                content,
+                mode,
+                images,
+                cwd,
+                session_id,
+                origin_tty,
+            )
+            .await?;
         }
         IpcCommand::QueueTurnUpdate {
             run_id,
@@ -690,7 +711,12 @@ pub(crate) async fn handle_session_command(
                 .collect();
             Ok(json!({ "current": &*current, "sessions": sessions }))
         }
-        IpcCommand::CreateSession { name, switch, kind, mode } => {
+        IpcCommand::CreateSession {
+            name,
+            switch,
+            kind,
+            mode,
+        } => {
             // Whitelisted: `ask` is the only non-user kind a client may mint,
             // and it is deliberately unswitchable — subagent audit sessions and
             // anything else stay daemon-internal.
@@ -907,4 +933,3 @@ pub(crate) async fn handle_session_command(
         _ => Err("unsupported session command".to_string()),
     }
 }
-

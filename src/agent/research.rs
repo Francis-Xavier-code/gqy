@@ -237,7 +237,9 @@ impl UsageAccumulator {
             .saturating_add(usage.completion_tokens);
         let total = usage.effective_total_tokens();
         self.total_tokens = self.total_tokens.saturating_add(total);
-        self.cache_read_tokens = self.cache_read_tokens.saturating_add(usage.cache_read_tokens);
+        self.cache_read_tokens = self
+            .cache_read_tokens
+            .saturating_add(usage.cache_read_tokens);
         self.cache_write_tokens = self
             .cache_write_tokens
             .saturating_add(usage.cache_write_tokens);
@@ -343,7 +345,10 @@ pub(crate) fn live_user_index(messages: &[ChatMessage], replay_start: usize) -> 
 /// 已拼装消息里最近一条以 `prefix` 开头的 user 侧文本(倒序首个)。
 /// 不检查 transient 标志:回放化石反序列化后该标志会丢(serde skip),
 /// 而以 `<runtime ` 开头的用户输入不存在——按内容前缀即可唯一识别。
-pub(crate) fn last_fossil_with_prefix<'a>(messages: &'a [ChatMessage], prefix: &str) -> Option<&'a str> {
+pub(crate) fn last_fossil_with_prefix<'a>(
+    messages: &'a [ChatMessage],
+    prefix: &str,
+) -> Option<&'a str> {
     messages.iter().rev().find_map(|message| {
         if message.role != "user" {
             return None;
@@ -460,7 +465,10 @@ pub(crate) fn estimate_tool_definition_tokens(definitions: &[crate::llm::ToolDef
 /// Deterministic footprint extraction at tool-execution time: the only point
 /// where tool arguments still exist (completed turns don't persist them).
 /// Stub-mode lazy tools wrap real args in an `arguments` shell — unwrap it.
-pub(crate) fn tool_call_footprint(name: &str, arguments: &str) -> Option<crate::state::ToolFootprint> {
+pub(crate) fn tool_call_footprint(
+    name: &str,
+    arguments: &str,
+) -> Option<crate::state::ToolFootprint> {
     let mut args: serde_json::Value = serde_json::from_str(arguments).ok()?;
     if let Some(inner) = args.get("arguments") {
         if inner.is_object() {
@@ -637,10 +645,7 @@ pub(crate) fn truncate_middle_chars(text: &str, head: usize, tail: usize) -> Str
         return text.to_string();
     }
     let head_str: String = text.chars().take(head).collect();
-    let tail_str: String = text
-        .chars()
-        .skip(total.saturating_sub(tail))
-        .collect();
+    let tail_str: String = text.chars().skip(total.saturating_sub(tail)).collect();
     format!(
         "{head_str}\n[...省略{}字符...]\n{tail_str}",
         total - head - tail
@@ -707,7 +712,11 @@ pub(crate) fn derive_tool_flow(
     let mut rounds: Vec<crate::state::ToolFlowRound> = Vec::new();
     for message in &messages[live_start.min(messages.len())..] {
         if message.role == "assistant" {
-            if let Some(calls) = message.tool_calls.as_ref().filter(|calls| !calls.is_empty()) {
+            if let Some(calls) = message
+                .tool_calls
+                .as_ref()
+                .filter(|calls| !calls.is_empty())
+            {
                 rounds.push(crate::state::ToolFlowRound {
                     assistant_content: chat_message_text(message).unwrap_or_default(),
                     assistant_reasoning: message
@@ -842,7 +851,9 @@ pub(crate) fn turn_context_tokens(turn: &crate::state::Turn) -> usize {
     overflow::estimate_messages_tokens(&messages)
 }
 
-pub(crate) fn followup_assistant_replay_content(followup: &crate::state::TurnFollowup) -> Option<&str> {
+pub(crate) fn followup_assistant_replay_content(
+    followup: &crate::state::TurnFollowup,
+) -> Option<&str> {
     followup
         .preceding_assistant_content
         .as_deref()
@@ -855,7 +866,10 @@ pub(crate) fn followup_assistant_replay_content(followup: &crate::state::TurnFol
         })
 }
 
-pub(crate) fn interrupted_turn_replay_messages(agent: &Agent, turn: &crate::state::Turn) -> Vec<ChatMessage> {
+pub(crate) fn interrupted_turn_replay_messages(
+    agent: &Agent,
+    turn: &crate::state::Turn,
+) -> Vec<ChatMessage> {
     let mut messages = Vec::new();
     messages.push(ChatMessage::turn_context(
         "<interrupted-turn-recovery>上一轮回复已中断。以下内容是中断前已经持久化的模型输出和工具进度；不要重新执行已经完成的工具，基于这些内容继续处理当前用户请求。</interrupted-turn-recovery>",
@@ -1411,4 +1425,3 @@ pub(crate) fn compact_sent_meme_report(output: &str) -> Option<String> {
         None => Some(format!("<sent_meme>发送了一个表情包：id={id}</sent_meme>")),
     }
 }
-

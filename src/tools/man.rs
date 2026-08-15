@@ -55,8 +55,10 @@ async fn search(args: Value) -> Result<String> {
     if results.is_empty() {
         Ok(format!("No man page search results for {query}"))
     } else {
-        Ok(results.join("
-"))
+        Ok(results.join(
+            "
+",
+        ))
     }
 }
 
@@ -112,7 +114,11 @@ async fn local_man_page(name: &str, section: &str) -> Option<String> {
         return None;
     }
     let text = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    if text.is_empty() { None } else { Some(text) }
+    if text.is_empty() {
+        None
+    } else {
+        Some(text)
+    }
 }
 
 async fn fetch_text(url: &str) -> Result<String> {

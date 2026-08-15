@@ -1,4 +1,3 @@
-
 mod core;
 use core::*;
 mod compact;
@@ -27,6 +26,4 @@ mod tests2;
 mod tests3;
 #[cfg(test)]
 mod tests4;
-impl Agent {
-}
-
+impl Agent {}

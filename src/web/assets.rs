@@ -325,7 +325,10 @@ pub(crate) fn real_tool_name(event_name: &str) -> &str {
     }
 }
 
-pub(crate) fn require_auth(headers: &HeaderMap, state: &DaemonState) -> std::result::Result<(), ApiError> {
+pub(crate) fn require_auth(
+    headers: &HeaderMap,
+    state: &DaemonState,
+) -> std::result::Result<(), ApiError> {
     if state
         .auth
         .is_authenticated(cookie_value(headers, AUTH_COOKIE))
@@ -339,7 +342,10 @@ pub(crate) fn require_auth(headers: &HeaderMap, state: &DaemonState) -> std::res
     }
 }
 
-pub(crate) fn require_mutation(headers: &HeaderMap, state: &DaemonState) -> std::result::Result<(), ApiError> {
+pub(crate) fn require_mutation(
+    headers: &HeaderMap,
+    state: &DaemonState,
+) -> std::result::Result<(), ApiError> {
     require_auth(headers, state)?;
     if origin_is_allowed(headers) {
         Ok(())
@@ -421,4 +427,3 @@ pub(crate) fn safe_error_message(error: impl std::fmt::Display) -> String {
 pub(crate) async fn shutdown_signal() {
     let _ = tokio::signal::ctrl_c().await;
 }
-

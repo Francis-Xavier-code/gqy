@@ -329,7 +329,10 @@ mod tests {
             .expect("补救后 pending 应保留以支持链式覆盖");
         assert!(pending.committed);
         assert_eq!(pending.targets.len(), 2);
-        assert_eq!(pending.reactions, vec![("message-2".to_string(), "289".to_string())]);
+        assert_eq!(
+            pending.reactions,
+            vec![("message-2".to_string(), "289".to_string())]
+        );
     }
 
     #[tokio::test]
@@ -374,7 +377,10 @@ mod tests {
             .expect("覆盖后 pending 应保留");
         assert!(pending.started > old_started, "补救窗口应从新消息重新起算");
         assert_eq!(pending.targets.len(), 2);
-        assert_eq!(pending.reactions, vec![("message-2".to_string(), "289".to_string())]);
+        assert_eq!(
+            pending.reactions,
+            vec![("message-2".to_string(), "289".to_string())]
+        );
     }
 
     #[tokio::test]
@@ -406,7 +412,10 @@ mod tests {
             .and_then(|session| session.pending.get(&event.sender_id))
             .expect("直触发应登记可被补救的 pending");
         assert!(pending.committed);
-        assert_eq!(pending.reactions, vec![("message-1".to_string(), "289".to_string())]);
+        assert_eq!(
+            pending.reactions,
+            vec![("message-1".to_string(), "289".to_string())]
+        );
     }
 
     #[tokio::test]
@@ -669,7 +678,13 @@ mod tests {
         let key = |images: &[crate::platforms::PlatformContextImageRef]| {
             images
                 .iter()
-                .map(|image| (image.id.clone(), image.message_id.clone(), image.image_index))
+                .map(|image| {
+                    (
+                        image.id.clone(),
+                        image.message_id.clone(),
+                        image.image_index,
+                    )
+                })
                 .collect::<Vec<_>>()
         };
         // 情形一:图多预算宽 → 收满 8 张,早停路径与全量渲染同集合
@@ -678,7 +693,10 @@ mod tests {
             .collect::<Vec<_>>();
         let full = format_history_for_turn(&many, usize::MAX, true, 8);
         assert_eq!(full.images.len(), 8);
-        assert_eq!(key(&context_image_refs(&many, usize::MAX, true, 8)), key(&full.images));
+        assert_eq!(
+            key(&context_image_refs(&many, usize::MAX, true, 8)),
+            key(&full.images)
+        );
         // 情形二:预算只装得下最新一条 → 旧消息连同其图片被排除(回滚),
         // 两条路径同样只剩最新一张
         let pair = vec![with_image("older"), with_image("newest")];
@@ -688,7 +706,10 @@ mod tests {
         let full = format_history_for_turn(&pair, tight, true, 8);
         assert_eq!(full.images.len(), 1);
         assert_eq!(full.images[0].message_id, "newest");
-        assert_eq!(key(&context_image_refs(&pair, tight, true, 8)), key(&full.images));
+        assert_eq!(
+            key(&context_image_refs(&pair, tight, true, 8)),
+            key(&full.images)
+        );
         // 情形三:预算不足以容纳任何一条 → 双方皆空(带图消息的图被完整回滚)
         let full = format_history_for_turn(&pair, 1, true, 8);
         assert!(full.images.is_empty());

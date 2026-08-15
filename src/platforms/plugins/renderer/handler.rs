@@ -491,7 +491,11 @@ pub(crate) fn inline_code_chip_ranges(glyphs: &[LayoutGlyph]) -> Vec<(f32, f32)>
 pub(crate) const INLINE_CODE_CHIP_PAD_X: f32 = 5.0;
 pub(crate) const INLINE_CODE_CHIP_INSET_RATIO: f32 = 0.10;
 
-pub(crate) fn metrics_for(kind: BlockKind, style: InlineStyle, config: &NormalizedConfig) -> Metrics {
+pub(crate) fn metrics_for(
+    kind: BlockKind,
+    style: InlineStyle,
+    config: &NormalizedConfig,
+) -> Metrics {
     let body = config.font_size as f32;
     let code = config.code_font_size as f32;
     let size = match kind {
@@ -551,7 +555,10 @@ pub(crate) struct Placement {
     y: u32,
 }
 
-pub(crate) fn plan_columns(layouts: &[LayoutBlock], config: &NormalizedConfig) -> Result<Vec<ColumnPlan>> {
+pub(crate) fn plan_columns(
+    layouts: &[LayoutBlock],
+    config: &NormalizedConfig,
+) -> Result<Vec<ColumnPlan>> {
     let usable_height = config
         .max_height
         .saturating_sub(config.padding.saturating_mul(2));
@@ -1142,7 +1149,14 @@ pub(crate) fn draw_table_cell_text(
     }
 }
 
-pub(crate) fn draw_checkbox(image: &mut RgbaImage, x: u32, y: u32, size: u32, checked: bool, color: [u8; 4]) {
+pub(crate) fn draw_checkbox(
+    image: &mut RgbaImage,
+    x: u32,
+    y: u32,
+    size: u32,
+    checked: bool,
+    color: [u8; 4],
+) {
     if size < 4 {
         return;
     }
@@ -1245,8 +1259,8 @@ pub(crate) fn draw_text_fragment(
             if bottom <= top {
                 continue;
             }
-            let global_y = i64::from(destination_y) + top as i64
-                - i64::from(placement.source_start);
+            let global_y =
+                i64::from(destination_y) + top as i64 - i64::from(placement.source_start);
             let x_base = i64::from(column_x) + i64::from(block.inset_left);
             let x0 = (x_base + (start_x - INLINE_CODE_CHIP_PAD_X).floor() as i64)
                 .max(i64::from(column_x));
@@ -1314,7 +1328,14 @@ pub(crate) fn draw_text_fragment(
     }
 }
 
-pub(crate) fn fill_rect(image: &mut RgbaImage, x: u32, y: u32, width: u32, height: u32, color: [u8; 4]) {
+pub(crate) fn fill_rect(
+    image: &mut RgbaImage,
+    x: u32,
+    y: u32,
+    width: u32,
+    height: u32,
+    color: [u8; 4],
+) {
     let end_x = x.saturating_add(width).min(image.width());
     let end_y = y.saturating_add(height).min(image.height());
     for py in y.min(end_y)..end_y {
@@ -1329,4 +1350,3 @@ pub(crate) fn fill_rect(image: &mut RgbaImage, x: u32, y: u32, width: u32, heigh
 pub(crate) fn color(rgba: [u8; 4]) -> Color {
     Color::rgba(rgba[0], rgba[1], rgba[2], rgba[3])
 }
-

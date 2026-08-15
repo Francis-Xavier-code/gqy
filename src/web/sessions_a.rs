@@ -557,11 +557,7 @@ pub(crate) fn ensure_local_current_session(state_store: &StateStore, persona: &s
         return Ok(());
     }
 
-    let target_session_id = match state_store
-        .list_local_sessions(persona)?
-        .into_iter()
-        .next()
-    {
+    let target_session_id = match state_store.list_local_sessions(persona)?.into_iter().next() {
         Some(overview) => overview.record.session_id,
         None => {
             state_store
@@ -579,9 +575,7 @@ pub(crate) fn is_available_local_session(
 ) -> Result<bool> {
     let usable = state_store
         .session_record(session_id)?
-        .is_some_and(|record| {
-            record.persona == persona && record.kind == "user"
-        });
+        .is_some_and(|record| record.persona == persona && record.kind == "user");
     Ok(usable && !state_store.is_platform_session(session_id)?)
 }
 
@@ -655,4 +649,3 @@ pub(crate) fn start_ipc_server(
     });
     Ok((lease, task))
 }
-

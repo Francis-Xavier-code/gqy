@@ -323,26 +323,28 @@ async fn spawn_background_task(
     progress: crate::tools::ToolProgress,
 ) -> Result<String> {
     let description = params.description.clone();
-    crate::tools::jobs::spawn_background_subagent(None, &description, &progress, move |job_id, log_path| {
-        async move {
+    crate::tools::jobs::spawn_background_subagent(
+        None,
+        &description,
+        &progress,
+        move |job_id, log_path| async move {
             let bridge = spawn_subagent_log_bridge(log_path.clone());
             let output = run_task_core(context, bridge, params, anchor).await;
             let state_label = match &output {
                 Ok(json) => serde_json::from_str::<Value>(json)
                     .ok()
-                    .and_then(|value| value.get("state").and_then(Value::as_str).map(str::to_string))
+                    .and_then(|value| {
+                        value
+                            .get("state")
+                            .and_then(Value::as_str)
+                            .map(str::to_string)
+                    })
                     .unwrap_or_else(|| "completed".to_string()),
                 Err(_) => "error".to_string(),
             };
             let tail = match &output {
-                Ok(json) => format!(
-                    "\n{}\n{json}\n",
-                    crate::tools::jobs::SUBAGENT_RESULT_MARKER
-                ),
-                Err(error) => format!(
-                    "\n{}\n{error}\n",
-                    crate::tools::jobs::SUBAGENT_ERROR_MARKER
-                ),
+                Ok(json) => format!("\n{}\n{json}\n", crate::tools::jobs::SUBAGENT_RESULT_MARKER),
+                Err(error) => format!("\n{}\n{error}\n", crate::tools::jobs::SUBAGENT_ERROR_MARKER),
             };
             let _ = std::fs::OpenOptions::new()
                 .append(true)
@@ -359,8 +361,8 @@ async fn spawn_background_task(
                 "timeout" => crate::tools::jobs::JobState::TimedOut,
                 _ => crate::tools::jobs::JobState::Exited { code: None },
             }
-        }
-    })
+        },
+    )
     .await
 }
 
@@ -464,7 +466,7 @@ async fn run_task_core(
                 ));
                 (
                     OpenAiCompatibleClient::from_config(&context.config, &context.paths)?
-                .with_request_scope("subagent"),
+                        .with_request_scope("subagent"),
                     main_pool_choice(&context.config),
                 )
             }
@@ -488,31 +490,31 @@ async fn run_task_core(
     // 子代理不设总时长上限:它自然结束于任务完成或步数预算;逐工具超时
     // (tool_timeout)仍然兜底单步挂死。
     let (result, stats) = match runner.run_with_resume(&prompt, resume_id.as_deref()).await {
-            Ok((result, stats)) => (result, stats),
-            Err(err) => {
-                let output = serde_json::to_string_pretty(&json!({
-                    "ok": false,
-                    "kind": "task",
-                    "subagent_type": sa_type.label(),
-                    "tier": tier.label(),
-                    "tier_notice": tier_notice,
-                    "description": description,
-                    "state": "error",
-                    "error": err.to_string(),
-                    "stats": SubagentStats::default().public(),
-                }))?;
-                record_subagent_audit(
-                    &context,
-                    &anchor,
-                    &description,
-                    &prompt,
-                    &output,
-                    None,
-                    &model_choice,
-                );
-                return Ok(output);
-            }
-        };
+        Ok((result, stats)) => (result, stats),
+        Err(err) => {
+            let output = serde_json::to_string_pretty(&json!({
+                "ok": false,
+                "kind": "task",
+                "subagent_type": sa_type.label(),
+                "tier": tier.label(),
+                "tier_notice": tier_notice,
+                "description": description,
+                "state": "error",
+                "error": err.to_string(),
+                "stats": SubagentStats::default().public(),
+            }))?;
+            record_subagent_audit(
+                &context,
+                &anchor,
+                &description,
+                &prompt,
+                &output,
+                None,
+                &model_choice,
+            );
+            return Ok(output);
+        }
+    };
 
     let state = if stats.budget_reached {
         "budget_reached"

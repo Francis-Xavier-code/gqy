@@ -2,7 +2,11 @@
 
 use super::*;
 
-pub(crate) fn valid_cached_file(path: &Path, expected_hash: &str, expected_size: usize) -> Result<bool> {
+pub(crate) fn valid_cached_file(
+    path: &Path,
+    expected_hash: &str,
+    expected_size: usize,
+) -> Result<bool> {
     if expected_size == 0 || expected_size > MAX_DOWNLOAD_BYTES {
         return Ok(false);
     }
@@ -652,7 +656,10 @@ pub(crate) fn vision_screening_available(config: &AppConfig) -> bool {
     config.plugins.web_images.vision_screening_enabled && config.plugins.vision.enabled
 }
 
-pub(crate) fn vision_provider(config: &AppConfig, _vision: &VisionPluginConfig) -> Result<ProviderConfig> {
+pub(crate) fn vision_provider(
+    config: &AppConfig,
+    _vision: &VisionPluginConfig,
+) -> Result<ProviderConfig> {
     let (provider_id, model) = config.vision_provider_choice()?;
     let mut provider = config.provider(Some(&provider_id))?.clone();
     provider.default_model = model;
@@ -669,7 +676,11 @@ pub(crate) fn vision_provider(config: &AppConfig, _vision: &VisionPluginConfig) 
     Ok(provider)
 }
 
-pub(crate) fn image_screening_prompt(query: &str, items: &[StoredImage], indices: &[usize]) -> String {
+pub(crate) fn image_screening_prompt(
+    query: &str,
+    items: &[StoredImage],
+    indices: &[usize],
+) -> String {
     let metadata = indices
         .iter()
         .enumerate()
@@ -805,7 +816,9 @@ pub(crate) async fn contact_sheet_data_url(items: &[StoredImage]) -> Result<(Str
     .context("contact sheet task failed")?
 }
 
-pub(crate) fn build_contact_sheet_data_url(paths: Vec<(usize, PathBuf)>) -> Result<(String, Vec<usize>)> {
+pub(crate) fn build_contact_sheet_data_url(
+    paths: Vec<(usize, PathBuf)>,
+) -> Result<(String, Vec<usize>)> {
     pub(crate) const TILE_WIDTH: u32 = 320;
     pub(crate) const TILE_HEIGHT: u32 = 240;
     pub(crate) const GAP: u32 = 4;
@@ -920,4 +933,3 @@ pub(crate) fn format_bytes(size: usize) -> String {
     }
     format!("{value:.1} GB")
 }
-

@@ -936,7 +936,10 @@ pub(crate) fn validate_memory_subjects(
     Ok(())
 }
 
-pub(crate) fn knowledge_ownership(batch: &OrganizationBatch, action: &KnowledgeAction) -> MemoryOwnership {
+pub(crate) fn knowledge_ownership(
+    batch: &OrganizationBatch,
+    action: &KnowledgeAction,
+) -> MemoryOwnership {
     if let Some(target) = action.target_id.and_then(|target| {
         batch
             .existing
@@ -1257,12 +1260,19 @@ pub(crate) fn now() -> String {
 
 /// RFC3339 时间戳 → 本地日期（用于关联记忆展示；解析失败返回 None）
 pub(crate) fn association_date(timestamp: &str) -> Option<String> {
-    DateTime::parse_from_rfc3339(timestamp)
-        .ok()
-        .map(|value| value.with_timezone(&chrono::Local).format("%Y-%m-%d").to_string())
+    DateTime::parse_from_rfc3339(timestamp).ok().map(|value| {
+        value
+            .with_timezone(&chrono::Local)
+            .format("%Y-%m-%d")
+            .to_string()
+    })
 }
 
-pub(crate) fn diary_content(created_at: &str, user_message: &str, assistant_message: &str) -> String {
+pub(crate) fn diary_content(
+    created_at: &str,
+    user_message: &str,
+    assistant_message: &str,
+) -> String {
     // 第一人称的互动记忆,不是工单:归属(谁说的)由注入行的 [归属=…] 标签
     // 承担,昵称是可改的不可信字段,不进正文。
     format!(
@@ -1272,4 +1282,3 @@ pub(crate) fn diary_content(created_at: &str, user_message: &str, assistant_mess
         truncate_chars(&compact_line(assistant_message), 520)
     )
 }
-

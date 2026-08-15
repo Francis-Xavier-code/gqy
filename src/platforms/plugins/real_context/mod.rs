@@ -12,10 +12,10 @@ mod runtime;
 use runtime::*;
 mod gates;
 use gates::*;
-#[cfg(test)]
-mod tests;
 mod affection;
 mod judge;
+#[cfg(test)]
+mod tests;
 
 use super::message_history::{self, store, ORIGINAL_TEXT_KEY};
 use super::{
@@ -46,8 +46,6 @@ use store::{
 #[cfg(test)]
 use store::{NewHistoryMessage, SanitizedContent};
 use tokio::sync::Notify;
-impl RealContextPlugin {
-}
+impl RealContextPlugin {}
 
-impl PlatformPlugin for RealContextPlugin {
-}
+impl PlatformPlugin for RealContextPlugin {}

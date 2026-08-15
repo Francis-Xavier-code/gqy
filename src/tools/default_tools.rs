@@ -377,7 +377,10 @@ fn paths_arg(args: &Value) -> Result<Vec<PathBuf>> {
     if paths.is_empty() {
         bail!(
             "{}",
-            t("paths must contain at least one path", "paths 至少要有一条路径")
+            t(
+                "paths must contain at least one path",
+                "paths 至少要有一条路径"
+            )
         );
     }
     Ok(paths)
@@ -619,7 +622,6 @@ async fn read_command_output(
     }
     Ok(output)
 }
-
 
 fn command_output(
     status: std::process::ExitStatus,
@@ -1196,10 +1198,7 @@ mod tests {
         assert!(!last.exists(), "失败项之后的路径仍要处理");
         let failures = data["failures"].as_array().unwrap();
         assert_eq!(failures.len(), 1);
-        assert!(failures[0]["path"]
-            .as_str()
-            .unwrap()
-            .contains("nope.txt"));
+        assert!(failures[0]["path"].as_str().unwrap().contains("nope.txt"));
         assert!(!failures[0]["error"].as_str().unwrap().is_empty());
     }
 

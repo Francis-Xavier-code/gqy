@@ -415,8 +415,13 @@ async fn process_check(
         evidence: if matches.is_empty() {
             Vec::new()
         } else {
-            vec![clip(&matches.join("
-"), 1_000)]
+            vec![clip(
+                &matches.join(
+                    "
+",
+                ),
+                1_000,
+            )]
         },
     });
     matches

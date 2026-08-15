@@ -2,7 +2,10 @@
 
 use super::*;
 
-pub(crate) fn validate_api_quota_accounts(provider: &str, config: &ApiQuotaProviderConfig) -> Result<()> {
+pub(crate) fn validate_api_quota_accounts(
+    provider: &str,
+    config: &ApiQuotaProviderConfig,
+) -> Result<()> {
     if !config.api_key.trim().is_empty() && !config.accounts.is_empty() {
         bail!("plugins.api_quota.{provider} legacy api_key could not be migrated");
     }
@@ -94,7 +97,11 @@ pub(crate) fn migrated_resource_path(paths: &GQYPaths, value: &str) -> Option<Pa
     paths.migrated_resource_path(Path::new(value.trim()))
 }
 
-pub(crate) fn fallback_resource_file(paths: &GQYPaths, namespace: &str, file_name: &str) -> PathBuf {
+pub(crate) fn fallback_resource_file(
+    paths: &GQYPaths,
+    namespace: &str,
+    file_name: &str,
+) -> PathBuf {
     if paths.resources_use_config_dir() {
         paths.config_dir.join(file_name)
     } else {
@@ -574,4 +581,3 @@ pub(crate) fn default_trim_batch_ratio() -> f32 {
 pub(crate) fn default_on_overflow() -> String {
     "compact".to_string()
 }
-

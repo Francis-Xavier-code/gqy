@@ -2,7 +2,6 @@
 
 use super::*;
 
-
 pub(crate) const TRIGGER_KEY: &str = "real_context.trigger";
 pub(crate) const MODERATION_NOTICE_KEY: &str = "real_context.moderation_notice";
 pub(crate) const REPLY_MARKED_KEY: &str = "real_context.reply_marked";
@@ -37,4 +36,3 @@ pub(super) struct RealContextPlugin {
     reaction_expirations: Mutex<HashMap<(String, String, String), tokio::task::AbortHandle>>,
     affection_updates: affection::AffectionUpdateQueue,
 }
-

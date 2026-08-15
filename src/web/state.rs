@@ -416,7 +416,10 @@ pub(crate) fn install_background_job_hook(state: &DaemonState) {
     }));
 }
 
-pub(crate) async fn handle_job_completion(state: DaemonState, completion: tools::jobs::JobCompletion) {
+pub(crate) async fn handle_job_completion(
+    state: DaemonState,
+    completion: tools::jobs::JobCompletion,
+) {
     state.events.publish(
         "job.finished",
         json!({
@@ -644,8 +647,16 @@ pub(crate) async fn stream_job_wake_to_origin_tty(
             "reasoning.title" => {
                 if matches!(reasoning_mode, crate::render::ReasoningDisplayMode::Summary) {
                     if let Some(title) = data.get("title").and_then(Value::as_str) {
-                        flush_line_buf(&mut reasoning_buf, WriteLineStyle::Reasoning, &mut chunk_out);
-                        push_rendered_line(&format!("∴ {title}"), WriteLineStyle::Reasoning, &mut chunk_out);
+                        flush_line_buf(
+                            &mut reasoning_buf,
+                            WriteLineStyle::Reasoning,
+                            &mut chunk_out,
+                        );
+                        push_rendered_line(
+                            &format!("∴ {title}"),
+                            WriteLineStyle::Reasoning,
+                            &mut chunk_out,
+                        );
                         wrote_reasoning = true;
                         reasoning_open = true;
                     }
@@ -655,17 +666,29 @@ pub(crate) async fn stream_job_wake_to_origin_tty(
                 if matches!(reasoning_mode, crate::render::ReasoningDisplayMode::Full) {
                     if let Some(delta) = data.get("delta").and_then(Value::as_str) {
                         reasoning_buf.push_str(delta);
-                        drain_line_buf(&mut reasoning_buf, WriteLineStyle::Reasoning, &mut chunk_out);
+                        drain_line_buf(
+                            &mut reasoning_buf,
+                            WriteLineStyle::Reasoning,
+                            &mut chunk_out,
+                        );
                         wrote_reasoning = true;
                         reasoning_open = true;
                     }
                 }
             }
             "reasoning.part_end" | "reasoning.reset" => {
-                flush_line_buf(&mut reasoning_buf, WriteLineStyle::Reasoning, &mut chunk_out);
+                flush_line_buf(
+                    &mut reasoning_buf,
+                    WriteLineStyle::Reasoning,
+                    &mut chunk_out,
+                );
             }
             "tool.started" => {
-                flush_line_buf(&mut reasoning_buf, WriteLineStyle::Reasoning, &mut chunk_out);
+                flush_line_buf(
+                    &mut reasoning_buf,
+                    WriteLineStyle::Reasoning,
+                    &mut chunk_out,
+                );
                 if reasoning_open {
                     chunk_out.push_str("\r\n");
                     reasoning_open = false;
@@ -684,12 +707,22 @@ pub(crate) async fn stream_job_wake_to_origin_tty(
                         .or_else(|| data.get("name"))
                         .and_then(Value::as_str)
                         .unwrap_or("工具");
-                    push_rendered_line(&format!("⚙ {name} 失败"), WriteLineStyle::Note, &mut chunk_out);
+                    push_rendered_line(
+                        &format!("⚙ {name} 失败"),
+                        WriteLineStyle::Note,
+                        &mut chunk_out,
+                    );
                 }
             }
             "assistant.delta" => {
-                flush_line_buf(&mut reasoning_buf, WriteLineStyle::Reasoning, &mut chunk_out);
-                if reasoning_open || (wrote_reasoning && content_buf.is_empty() && chunk_out.is_empty()) {
+                flush_line_buf(
+                    &mut reasoning_buf,
+                    WriteLineStyle::Reasoning,
+                    &mut chunk_out,
+                );
+                if reasoning_open
+                    || (wrote_reasoning && content_buf.is_empty() && chunk_out.is_empty())
+                {
                     chunk_out.push_str("\r\n");
                     reasoning_open = false;
                     wrote_reasoning = false;
@@ -700,7 +733,11 @@ pub(crate) async fn stream_job_wake_to_origin_tty(
                 }
             }
             "run.completed" | "run.failed" | "run.cancelled" => {
-                flush_line_buf(&mut reasoning_buf, WriteLineStyle::Reasoning, &mut chunk_out);
+                flush_line_buf(
+                    &mut reasoning_buf,
+                    WriteLineStyle::Reasoning,
+                    &mut chunk_out,
+                );
                 flush_line_buf(&mut content_buf, WriteLineStyle::Content, &mut chunk_out);
                 if record.kind != "run.completed" {
                     push_rendered_line("(跟进中断)", WriteLineStyle::Note, &mut chunk_out);
@@ -870,7 +907,11 @@ pub(crate) fn wake_local_session_for_job(
     );
     let display_content = format!(
         "[后台任务完成] {}完成 {} · {}",
-        if completion.is_subagent { "子代理" } else { "命令" },
+        if completion.is_subagent {
+            "子代理"
+        } else {
+            "命令"
+        },
         completion.job_id,
         completion.title
     );
@@ -883,13 +924,7 @@ pub(crate) fn wake_local_session_for_job(
             .active_runs
             .iter()
             .find(|(_, info)| &*info.session_id == &*session_id)
-            .map(|(run_id, info)| {
-                (
-                    run_id.clone(),
-                    info.queue_target.clone(),
-                    info.audience,
-                )
-            })
+            .map(|(run_id, info)| (run_id.clone(), info.queue_target.clone(), info.audience))
     };
     if let Some((run_id, queue_target, audience)) = queued {
         tracing::info!(
@@ -949,7 +984,11 @@ pub(crate) fn wake_local_session_for_job(
                 turn_origin: crate::tools::workspace::TurnOrigin::JobWake,
                 job_wake_label: Some(format!(
                     "{}完成 {} · {}",
-                    if completion.is_subagent { "子代理" } else { "命令" },
+                    if completion.is_subagent {
+                        "子代理"
+                    } else {
+                        "命令"
+                    },
                     completion.job_id,
                     completion.title
                 )),
@@ -991,12 +1030,7 @@ pub(crate) async fn wake_platform_session_for_job(
     session_id: &Arc<str>,
     completion: &tools::jobs::JobCompletion,
 ) {
-    let persona = state
-        .manager
-        .lock()
-        .unwrap()
-        .config
-        .active_persona_scope();
+    let persona = state.manager.lock().unwrap().config.active_persona_scope();
     let binding = state
         .state_store
         .platform_session_bindings(&persona, "onebot")
@@ -1057,7 +1091,12 @@ pub(crate) async fn wake_platform_session_for_job(
 /// keep answering messages they no longer want processed. Published before
 /// `run.cancelled` so clients still draining the event stream can clear
 /// their queue bubbles.
-pub(crate) fn drop_cancelled_queue(store: &StateStore, events: &EventHub, run_id: &str, session_id: &str) {
+pub(crate) fn drop_cancelled_queue(
+    store: &StateStore,
+    events: &EventHub,
+    run_id: &str,
+    session_id: &str,
+) {
     match store.delete_queued_prompts() {
         Ok(prompt_ids) => {
             for prompt_id in prompt_ids {
@@ -1222,13 +1261,21 @@ pub(crate) fn current_context(agent: &Agent) -> Result<ContextSnapshot> {
     })
 }
 
-pub(crate) fn build_actor_agent(config: &AppConfig, paths: &GQYPaths, state: &StateStore) -> Result<Agent> {
+pub(crate) fn build_actor_agent(
+    config: &AppConfig,
+    paths: &GQYPaths,
+    state: &StateStore,
+) -> Result<Agent> {
     let mut agent = build_session_agent(config, paths, state)?;
     agent.prepare_for_turn()?;
     Ok(agent)
 }
 
-pub(crate) fn build_session_agent(config: &AppConfig, paths: &GQYPaths, state: &StateStore) -> Result<Agent> {
+pub(crate) fn build_session_agent(
+    config: &AppConfig,
+    paths: &GQYPaths,
+    state: &StateStore,
+) -> Result<Agent> {
     crate::models_cache::ensure_active_metadata(paths, config);
     let client = OpenAiCompatibleClient::from_config(config, paths)?;
     let registry = build_tool_registry(config, paths, AgentMode::Normal, true)?;
@@ -1275,7 +1322,10 @@ pub(crate) fn actor_context(
         .map_or_else(|| cold_context(config, state), current_context)
 }
 
-pub(crate) fn cold_context(config: &AppConfig, state_store: &StateStore) -> Result<ContextSnapshot> {
+pub(crate) fn cold_context(
+    config: &AppConfig,
+    state_store: &StateStore,
+) -> Result<ContextSnapshot> {
     let cumulative = state_store.session_cumulative_token_totals()?;
     Ok(ContextSnapshot {
         tokens: 0,
@@ -1308,7 +1358,10 @@ pub(crate) fn session_state(
     })
 }
 
-pub(crate) fn session_state_for(state: &DaemonState, session_id: &str) -> Result<ipc::SessionState> {
+pub(crate) fn session_state_for(
+    state: &DaemonState,
+    session_id: &str,
+) -> Result<ipc::SessionState> {
     let record = state
         .state_store
         .session_record(session_id)?
@@ -1335,7 +1388,9 @@ pub(crate) fn session_state_for(state: &DaemonState, session_id: &str) -> Result
 
 /// Global admin reservation (config/model changes): requires that no turn is
 /// running in any session.
-pub(crate) fn reserve_admin(manager: &Arc<Mutex<ManagerState>>) -> std::result::Result<(), ApiError> {
+pub(crate) fn reserve_admin(
+    manager: &Arc<Mutex<ManagerState>>,
+) -> std::result::Result<(), ApiError> {
     let mut manager = manager.lock().unwrap();
     if !manager.active_runs.is_empty() || manager.admin_busy {
         return Err(ApiError::new(StatusCode::CONFLICT, ipc::ADMIN_BUSY_MESSAGE));
@@ -1410,4 +1465,3 @@ pub(crate) async fn clear_platform_session_content(
         }
     }
 }
-

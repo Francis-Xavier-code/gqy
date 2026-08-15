@@ -11,7 +11,6 @@ use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use tokio::process::Command;
 
-
 #[cfg(test)]
 mod tests;
 const SCRIPT_TIMEOUT_SECS: u64 = 120;
@@ -1008,4 +1007,3 @@ fn find_auto_detected_path(scripts_dir: &Path, id: &str) -> Result<Option<String
     }
     Ok(None)
 }
-

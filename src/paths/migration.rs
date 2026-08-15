@@ -174,4 +174,3 @@ pub(crate) fn remove_empty_dir(path: &Path) -> Result<()> {
         Err(error) => Err(error.into()),
     }
 }
-

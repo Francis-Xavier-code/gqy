@@ -455,7 +455,11 @@ pub(crate) fn qq_turn_system_context(
     )
 }
 
-pub(crate) fn message_event(target: Target, event: &Value, parsed: &InboundMessage) -> PlatformInboundEvent {
+pub(crate) fn message_event(
+    target: Target,
+    event: &Value,
+    parsed: &InboundMessage,
+) -> PlatformInboundEvent {
     message_event_at(target, event, parsed, Instant::now(), None)
 }
 
@@ -654,7 +658,11 @@ pub(crate) fn group_management_notice(event: &Value) -> Option<PlatformInboundEv
     })
 }
 
-pub(crate) async fn handle_group_management_notice(state: DaemonState, conn: ConnectionHandle, event: Value) {
+pub(crate) async fn handle_group_management_notice(
+    state: DaemonState,
+    conn: ConnectionHandle,
+    event: Value,
+) {
     let Some(inbound) = group_management_notice(&event) else {
         return;
     };
@@ -689,7 +697,11 @@ pub(crate) async fn handle_group_management_notice(state: DaemonState, conn: Con
     }
 }
 
-pub(crate) async fn handle_friend_add_request(state: DaemonState, conn: ConnectionHandle, event: Value) {
+pub(crate) async fn handle_friend_add_request(
+    state: DaemonState,
+    conn: ConnectionHandle,
+    event: Value,
+) {
     let app_config = state.manager.lock().unwrap().config.clone();
     let config = &app_config.platforms.qq;
     if !config.enabled {
@@ -746,7 +758,11 @@ pub(crate) async fn handle_friend_add_request(state: DaemonState, conn: Connecti
     }
 }
 
-pub(crate) async fn handle_message_recall(state: DaemonState, conn: ConnectionHandle, event: Value) {
+pub(crate) async fn handle_message_recall(
+    state: DaemonState,
+    conn: ConnectionHandle,
+    event: Value,
+) {
     let app_config = state.manager.lock().unwrap().config.clone();
     let config = &app_config.platforms.qq;
     if !config.enabled {
@@ -798,4 +814,3 @@ pub(crate) async fn handle_message(
     let activity = observe_message_activity(&state, &event, self_id, Instant::now());
     handle_message_with_activity(state, conn, event, ingress_order, activity).await;
 }
-

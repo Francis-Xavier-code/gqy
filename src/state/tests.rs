@@ -762,7 +762,6 @@ mod tests {
             .unwrap()
             .is_none());
 
-
         // Deleting a session cascades its turns away.
         store.delete_session(&default_id).unwrap();
         assert!(store.session_record(&default_id).unwrap().is_none());
@@ -783,9 +782,7 @@ mod tests {
         store.adopt_sessions_for_persona("gqy").unwrap();
         let current = store.session_id().to_string();
         let local = store.create_session("gqy", "local", "user", None).unwrap();
-        let second = store
-            .create_session("gqy", "second", "user", None)
-            .unwrap();
+        let second = store.create_session("gqy", "second", "user", None).unwrap();
         let other_persona = store
             .create_session("other", "other", "user", None)
             .unwrap();
@@ -924,10 +921,7 @@ mod tests {
         );
 
         store.delete_session(&gqy_session.session_id).unwrap();
-        assert_eq!(
-            store.find_platform_session_binding(&gqy_key).unwrap(),
-            None
-        );
+        assert_eq!(store.find_platform_session_binding(&gqy_key).unwrap(), None);
     }
 
     #[test]
@@ -990,5 +984,4 @@ mod tests {
             42
         );
     }
-
 }

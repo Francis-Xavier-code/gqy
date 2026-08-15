@@ -78,7 +78,11 @@ async fn local_brew_search(query: &str, include_casks: bool) -> Option<Vec<Value
     for line in text.lines() {
         let line = line.trim();
         if line.starts_with("==> ") {
-            section = if line.contains("Cask") { "cask" } else { "formula" };
+            section = if line.contains("Cask") {
+                "cask"
+            } else {
+                "formula"
+            };
             continue;
         }
         if line.is_empty() {
@@ -95,15 +99,15 @@ async fn local_brew_search(query: &str, include_casks: bool) -> Option<Vec<Value
             }));
         }
     }
-    if results.is_empty() { None } else { Some(results) }
+    if results.is_empty() {
+        None
+    } else {
+        Some(results)
+    }
 }
 
 /// 官方 API 全量列表过滤(brew 未安装时的回退路径)。
-async fn api_brew_search(
-    query: &str,
-    limit: usize,
-    include_casks: bool,
-) -> Result<Vec<Value>> {
+async fn api_brew_search(query: &str, limit: usize, include_casks: bool) -> Result<Vec<Value>> {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(SEARCH_TIMEOUT_SECONDS))
         .user_agent("gqy-brew-search/0.1")
@@ -191,7 +195,10 @@ async fn brew_info(args: Value) -> Result<String> {
     }
 
     for (kind, name) in attempts {
-        let url = format!("{FORMULAE_API_BASE}/{kind}/{}.json", urlencoding::encode(name));
+        let url = format!(
+            "{FORMULAE_API_BASE}/{kind}/{}.json",
+            urlencoding::encode(name)
+        );
         let resp = client.get(&url).send().await?;
         if !resp.status().is_success() {
             continue;

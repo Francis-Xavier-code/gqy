@@ -213,4 +213,3 @@ fn expand_path(value: &str) -> PathBuf {
         super::workspace::effective_workdir().join(path)
     }
 }
-

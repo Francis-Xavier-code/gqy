@@ -30,7 +30,7 @@ mod tests {
             api_key: None,
             models: vec!["vision-model".to_string()],
             model_context_window: HashMap::new(),
-model_temperature: HashMap::new(),
+            model_temperature: HashMap::new(),
             model_modalities: HashMap::new(),
             model_costs: HashMap::new(),
             default_model: "vision-model".to_string(),

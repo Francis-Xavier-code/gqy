@@ -133,11 +133,7 @@ pub fn check_update_if_due(paths: &GQYPaths) -> Result<()> {
     save_state(paths, &state)
 }
 
-pub fn update<F>(
-    paths: &GQYPaths,
-    config: &AppConfig,
-    mut on_progress: F,
-) -> Result<DefaultKbState>
+pub fn update<F>(paths: &GQYPaths, config: &AppConfig, mut on_progress: F) -> Result<DefaultKbState>
 where
     F: FnMut(UpdateStage),
 {

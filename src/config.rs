@@ -1,4 +1,3 @@
-
 mod core;
 use core::*;
 mod plugins;
@@ -17,6 +16,4 @@ mod tests;
 mod tests2;
 #[cfg(test)]
 mod tests3;
-impl AppConfig {
-}
-
+impl AppConfig {}

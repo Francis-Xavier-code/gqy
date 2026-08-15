@@ -318,5 +318,7 @@ async fn query_token_usage(arguments: Value, context: Arc<PlatformTurnContext>) 
     let stats = tokio::task::spawn_blocking(move || store.usage_stats(range, Some(&config)))
         .await
         .context("usage stats task panicked")??;
-    Ok(crate::tools::usage_query::format_usage_summary(&stats, &range_key))
+    Ok(crate::tools::usage_query::format_usage_summary(
+        &stats, &range_key,
+    ))
 }

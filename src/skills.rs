@@ -10,7 +10,6 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use yaml_rust2::scanner::{Scanner, Token, TokenType};
 use yaml_rust2::{Yaml, YamlLoader};
 
-
 mod parse;
 use parse::*;
 mod store;
@@ -583,6 +582,3 @@ pub fn is_generated_skill(raw: &str) -> bool {
         || raw.contains("Auto-learned method from assistant conversation")
         || raw.contains("Auto-learned method from GQY conversation")
 }
-
-
-

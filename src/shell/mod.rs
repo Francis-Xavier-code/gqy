@@ -481,9 +481,7 @@ mod tests {
         assert!(looks_like_natural_language(
             "输入法在某个 App 里打不了中文，是 App 没适配吗？"
         ));
-        assert!(looks_like_natural_language(
-            "系统输入法候选框太小怎么调？"
-        ));
+        assert!(looks_like_natural_language("系统输入法候选框太小怎么调？"));
         assert!(looks_like_natural_language(
             "./target/release/gqy 查询为什么失败？"
         ));
@@ -522,10 +520,7 @@ mod tests {
             "this-command-probably-does-not-exist",
             "fish"
         ));
-        assert!(!is_shell_command(
-            "输入法候选框太小怎么调？",
-            "fish"
-        ));
+        assert!(!is_shell_command("输入法候选框太小怎么调？", "fish"));
         assert!(!is_shell_command(r"A\=是真的\这个短语", "fish"));
     }
 }

@@ -1,11 +1,10 @@
-
 mod core;
 use core::*;
 mod conversation_db;
 mod migrations;
 pub use migrations::DEFAULT_SESSION_ID;
-pub(crate) mod usage;
 mod state_impl;
+pub(crate) mod usage;
 use state_impl::*;
 mod state_impl2;
 use state_impl2::*;
@@ -17,6 +16,4 @@ mod tests;
 mod tests2;
 #[cfg(test)]
 mod tests3;
-impl StateStore {
-}
-
+impl StateStore {}

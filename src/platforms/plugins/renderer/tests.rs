@@ -185,12 +185,7 @@ fn main() {
             let mut buffer = Buffer::new(&mut font_system, metrics);
             buffer.set_size(Some(960.0), None);
             let attrs = Attrs::new().family(Family::SansSerif).metrics(metrics);
-            buffer.set_rich_text(
-                [(text, attrs.clone())],
-                &attrs,
-                Shaping::Advanced,
-                None,
-            );
+            buffer.set_rich_text([(text, attrs.clone())], &attrs, Shaping::Advanced, None);
             buffer.shape_until_scroll(&mut font_system, true);
             for run in buffer.layout_runs() {
                 for glyph in run.glyphs {

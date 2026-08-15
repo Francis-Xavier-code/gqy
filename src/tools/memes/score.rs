@@ -13,4 +13,3 @@ fn required_str<'a>(args: &'a Value, key: &str) -> Result<&'a str> {
     }
     Ok(value)
 }
-

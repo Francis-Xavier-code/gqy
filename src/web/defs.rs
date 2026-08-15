@@ -95,26 +95,86 @@ pub(crate) const APP_JS: &str = include_str!("../web/app.js");
 pub(crate) const KATEX_JS: &str = include_str!("../web/vendor/katex/katex.min.js");
 pub(crate) const KATEX_CSS: &str = include_str!("../web/vendor/katex/katex.min.css");
 pub(crate) static KATEX_FONTS: &[(&str, &[u8])] = &[
-    ("KaTeX_AMS-Regular.woff2", include_bytes!("../web/vendor/katex/fonts/KaTeX_AMS-Regular.woff2")),
-    ("KaTeX_Caligraphic-Bold.woff2", include_bytes!("../web/vendor/katex/fonts/KaTeX_Caligraphic-Bold.woff2")),
-    ("KaTeX_Caligraphic-Regular.woff2", include_bytes!("../web/vendor/katex/fonts/KaTeX_Caligraphic-Regular.woff2")),
-    ("KaTeX_Fraktur-Bold.woff2", include_bytes!("../web/vendor/katex/fonts/KaTeX_Fraktur-Bold.woff2")),
-    ("KaTeX_Fraktur-Regular.woff2", include_bytes!("../web/vendor/katex/fonts/KaTeX_Fraktur-Regular.woff2")),
-    ("KaTeX_Main-Bold.woff2", include_bytes!("../web/vendor/katex/fonts/KaTeX_Main-Bold.woff2")),
-    ("KaTeX_Main-BoldItalic.woff2", include_bytes!("../web/vendor/katex/fonts/KaTeX_Main-BoldItalic.woff2")),
-    ("KaTeX_Main-Italic.woff2", include_bytes!("../web/vendor/katex/fonts/KaTeX_Main-Italic.woff2")),
-    ("KaTeX_Main-Regular.woff2", include_bytes!("../web/vendor/katex/fonts/KaTeX_Main-Regular.woff2")),
-    ("KaTeX_Math-BoldItalic.woff2", include_bytes!("../web/vendor/katex/fonts/KaTeX_Math-BoldItalic.woff2")),
-    ("KaTeX_Math-Italic.woff2", include_bytes!("../web/vendor/katex/fonts/KaTeX_Math-Italic.woff2")),
-    ("KaTeX_SansSerif-Bold.woff2", include_bytes!("../web/vendor/katex/fonts/KaTeX_SansSerif-Bold.woff2")),
-    ("KaTeX_SansSerif-Italic.woff2", include_bytes!("../web/vendor/katex/fonts/KaTeX_SansSerif-Italic.woff2")),
-    ("KaTeX_SansSerif-Regular.woff2", include_bytes!("../web/vendor/katex/fonts/KaTeX_SansSerif-Regular.woff2")),
-    ("KaTeX_Script-Regular.woff2", include_bytes!("../web/vendor/katex/fonts/KaTeX_Script-Regular.woff2")),
-    ("KaTeX_Size1-Regular.woff2", include_bytes!("../web/vendor/katex/fonts/KaTeX_Size1-Regular.woff2")),
-    ("KaTeX_Size2-Regular.woff2", include_bytes!("../web/vendor/katex/fonts/KaTeX_Size2-Regular.woff2")),
-    ("KaTeX_Size3-Regular.woff2", include_bytes!("../web/vendor/katex/fonts/KaTeX_Size3-Regular.woff2")),
-    ("KaTeX_Size4-Regular.woff2", include_bytes!("../web/vendor/katex/fonts/KaTeX_Size4-Regular.woff2")),
-    ("KaTeX_Typewriter-Regular.woff2", include_bytes!("../web/vendor/katex/fonts/KaTeX_Typewriter-Regular.woff2")),
+    (
+        "KaTeX_AMS-Regular.woff2",
+        include_bytes!("../web/vendor/katex/fonts/KaTeX_AMS-Regular.woff2"),
+    ),
+    (
+        "KaTeX_Caligraphic-Bold.woff2",
+        include_bytes!("../web/vendor/katex/fonts/KaTeX_Caligraphic-Bold.woff2"),
+    ),
+    (
+        "KaTeX_Caligraphic-Regular.woff2",
+        include_bytes!("../web/vendor/katex/fonts/KaTeX_Caligraphic-Regular.woff2"),
+    ),
+    (
+        "KaTeX_Fraktur-Bold.woff2",
+        include_bytes!("../web/vendor/katex/fonts/KaTeX_Fraktur-Bold.woff2"),
+    ),
+    (
+        "KaTeX_Fraktur-Regular.woff2",
+        include_bytes!("../web/vendor/katex/fonts/KaTeX_Fraktur-Regular.woff2"),
+    ),
+    (
+        "KaTeX_Main-Bold.woff2",
+        include_bytes!("../web/vendor/katex/fonts/KaTeX_Main-Bold.woff2"),
+    ),
+    (
+        "KaTeX_Main-BoldItalic.woff2",
+        include_bytes!("../web/vendor/katex/fonts/KaTeX_Main-BoldItalic.woff2"),
+    ),
+    (
+        "KaTeX_Main-Italic.woff2",
+        include_bytes!("../web/vendor/katex/fonts/KaTeX_Main-Italic.woff2"),
+    ),
+    (
+        "KaTeX_Main-Regular.woff2",
+        include_bytes!("../web/vendor/katex/fonts/KaTeX_Main-Regular.woff2"),
+    ),
+    (
+        "KaTeX_Math-BoldItalic.woff2",
+        include_bytes!("../web/vendor/katex/fonts/KaTeX_Math-BoldItalic.woff2"),
+    ),
+    (
+        "KaTeX_Math-Italic.woff2",
+        include_bytes!("../web/vendor/katex/fonts/KaTeX_Math-Italic.woff2"),
+    ),
+    (
+        "KaTeX_SansSerif-Bold.woff2",
+        include_bytes!("../web/vendor/katex/fonts/KaTeX_SansSerif-Bold.woff2"),
+    ),
+    (
+        "KaTeX_SansSerif-Italic.woff2",
+        include_bytes!("../web/vendor/katex/fonts/KaTeX_SansSerif-Italic.woff2"),
+    ),
+    (
+        "KaTeX_SansSerif-Regular.woff2",
+        include_bytes!("../web/vendor/katex/fonts/KaTeX_SansSerif-Regular.woff2"),
+    ),
+    (
+        "KaTeX_Script-Regular.woff2",
+        include_bytes!("../web/vendor/katex/fonts/KaTeX_Script-Regular.woff2"),
+    ),
+    (
+        "KaTeX_Size1-Regular.woff2",
+        include_bytes!("../web/vendor/katex/fonts/KaTeX_Size1-Regular.woff2"),
+    ),
+    (
+        "KaTeX_Size2-Regular.woff2",
+        include_bytes!("../web/vendor/katex/fonts/KaTeX_Size2-Regular.woff2"),
+    ),
+    (
+        "KaTeX_Size3-Regular.woff2",
+        include_bytes!("../web/vendor/katex/fonts/KaTeX_Size3-Regular.woff2"),
+    ),
+    (
+        "KaTeX_Size4-Regular.woff2",
+        include_bytes!("../web/vendor/katex/fonts/KaTeX_Size4-Regular.woff2"),
+    ),
+    (
+        "KaTeX_Typewriter-Regular.woff2",
+        include_bytes!("../web/vendor/katex/fonts/KaTeX_Typewriter-Regular.woff2"),
+    ),
 ];
 pub(crate) const GQY_LOGO: &[u8] = include_bytes!("../pics/GQY-icon.png");
 pub(crate) const GQY_WALLPAPER: &[u8] = include_bytes!("../pics/GQY-image.png");
@@ -204,7 +264,7 @@ impl DaemonState {
                 boot_id: Arc::from("boot-test"),
                 web_port,
                 web_public: false,
-            web_bind: IpAddr::V4(Ipv4Addr::LOCALHOST),
+                web_bind: IpAddr::V4(Ipv4Addr::LOCALHOST),
                 paths,
                 manager,
                 state_store,
@@ -367,7 +427,11 @@ impl WebAuth {
         supplied.is_some_and(|token| self.sessions.lock().unwrap().contains(token))
     }
 
-    pub(crate) fn login(&self, peer: IpAddr, password: &str) -> std::result::Result<String, LoginFailure> {
+    pub(crate) fn login(
+        &self,
+        peer: IpAddr,
+        password: &str,
+    ) -> std::result::Result<String, LoginFailure> {
         let Some(expected) = self.password_digest else {
             return Ok(String::new());
         };
@@ -502,7 +566,11 @@ impl ManagerState {
         })
     }
 
-    pub(crate) fn session_runs_match_audience(&self, session_id: &str, audience: PromptAudience) -> bool {
+    pub(crate) fn session_runs_match_audience(
+        &self,
+        session_id: &str,
+        audience: PromptAudience,
+    ) -> bool {
         let mut runs = self
             .active_runs
             .values()
@@ -1401,4 +1469,3 @@ pub(crate) struct ThinkingVariantUpdate {
 pub(crate) struct SetThinkingVariantsRequest {
     updates: Vec<ThinkingVariantUpdate>,
 }
-

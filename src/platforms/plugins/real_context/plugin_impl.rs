@@ -13,7 +13,10 @@ impl RealContextPlugin {
         }
     }
 
-    pub fn settings(&self, context: &PlatformTurnContext) -> Result<Arc<RealContextPluginSettings>> {
+    pub fn settings(
+        &self,
+        context: &PlatformTurnContext,
+    ) -> Result<Arc<RealContextPluginSettings>> {
         let instance = context
             .config
             .platforms
@@ -176,7 +179,14 @@ impl RealContextPlugin {
         let now = Instant::now();
         let session_key = runtime_session_key(context);
         let preempted_targets = active_targets_from_context(context);
-        let (continuation, inherited, inherited_committed, old_reactions, mut inherited_targets, heat) = {
+        let (
+            continuation,
+            inherited,
+            inherited_committed,
+            old_reactions,
+            mut inherited_targets,
+            heat,
+        ) = {
             let mut runtime = self.runtime.lock().unwrap();
             runtime.prune(now);
             let session = runtime.session_mut(&session_key, now);

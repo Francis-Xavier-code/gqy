@@ -66,11 +66,7 @@ pub(crate) fn kitty_sequence_with_grid(
 }
 
 /// 渲染成 Kitty 序列,撑满 max 框(看图语义,print_image 用)。
-pub(crate) fn kitty_sequence(
-    image: &DynamicImage,
-    max_cols: u16,
-    max_rows: u16,
-) -> Result<String> {
+pub(crate) fn kitty_sequence(image: &DynamicImage, max_cols: u16, max_rows: u16) -> Result<String> {
     let (cell_width, cell_height) = cell_pixel_size();
     let (cols, rows) = fit_cells(
         image.width(),

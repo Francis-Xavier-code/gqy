@@ -465,7 +465,10 @@ where
     Ok(Some(payload))
 }
 
-pub(crate) async fn write_worker_response<W>(writer: &mut W, result: Result<Vec<RenderedImage>>) -> Result<()>
+pub(crate) async fn write_worker_response<W>(
+    writer: &mut W,
+    result: Result<Vec<RenderedImage>>,
+) -> Result<()>
 where
     W: AsyncWrite + Unpin,
 {
@@ -618,7 +621,12 @@ where
     Ok(byte[0])
 }
 
-pub(crate) async fn write_sized_bytes<W>(writer: &mut W, bytes: &[u8], limit: usize, label: &str) -> Result<()>
+pub(crate) async fn write_sized_bytes<W>(
+    writer: &mut W,
+    bytes: &[u8],
+    limit: usize,
+    label: &str,
+) -> Result<()>
 where
     W: AsyncWrite + Unpin,
 {
@@ -1402,4 +1410,3 @@ pub(crate) struct LayoutTableCell {
     default_color: Color,
     inline_code_background: [u8; 4],
 }
-

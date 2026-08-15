@@ -46,7 +46,11 @@ pub(crate) fn anysearch_results(data: &Value, max_results: usize) -> Vec<Value> 
         .collect()
 }
 
-pub(crate) fn format_search_results(query: &str, provider: &str, results: Vec<Value>) -> Result<String> {
+pub(crate) fn format_search_results(
+    query: &str,
+    provider: &str,
+    results: Vec<Value>,
+) -> Result<String> {
     let mut lines = vec![
         format!("## Search results for: {query}"),
         format!("**Provider**: {provider}\n"),
@@ -107,4 +111,3 @@ pub(crate) fn clip(value: &str, max_chars: usize) -> String {
         format!("{}...", value.chars().take(max_chars).collect::<String>())
     }
 }
-

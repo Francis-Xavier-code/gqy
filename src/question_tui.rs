@@ -853,7 +853,10 @@ fn option_lines(
     let label_indent = " ".repeat(label_prefix_width);
     let label_width = content_width.saturating_sub(label_prefix_width).max(1);
     let mut lines = Vec::new();
-    for (index, part) in wrap_display_text(label, label_width).into_iter().enumerate() {
+    for (index, part) in wrap_display_text(label, label_width)
+        .into_iter()
+        .enumerate()
+    {
         let part = if active || picked {
             format!("\x1b[35m{part}\x1b[0m")
         } else {

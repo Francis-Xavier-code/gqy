@@ -2,7 +2,11 @@
 
 use super::*;
 
-pub(crate) async fn tool_search_readonly(args: Value, config: AppConfig, paths: GQYPaths) -> Result<String> {
+pub(crate) async fn tool_search_readonly(
+    args: Value,
+    config: AppConfig,
+    paths: GQYPaths,
+) -> Result<String> {
     ensure_enabled(&config)?;
     let query = args
         .get("query")
@@ -22,7 +26,11 @@ pub(crate) async fn tool_search_readonly(args: Value, config: AppConfig, paths: 
         .to_string())
 }
 
-pub(crate) async fn tool_find_readonly(args: Value, config: AppConfig, paths: GQYPaths) -> Result<String> {
+pub(crate) async fn tool_find_readonly(
+    args: Value,
+    config: AppConfig,
+    paths: GQYPaths,
+) -> Result<String> {
     ensure_enabled(&config)?;
     let query = args
         .get("file_name_query")
@@ -41,7 +49,11 @@ pub(crate) async fn tool_find_readonly(args: Value, config: AppConfig, paths: GQ
         .to_string())
 }
 
-pub(crate) async fn tool_read_readonly(args: Value, config: AppConfig, paths: GQYPaths) -> Result<String> {
+pub(crate) async fn tool_read_readonly(
+    args: Value,
+    config: AppConfig,
+    paths: GQYPaths,
+) -> Result<String> {
     ensure_enabled(&config)?;
     let name = args
         .get("file_name")
@@ -468,7 +480,11 @@ pub(crate) fn build_chunks(content: &str, chunk_chars: usize, overlap: usize) ->
     chunks
 }
 
-pub(crate) fn merge_results(results: &mut Vec<SearchResult>, semantic: Vec<SearchResult>, limit: usize) {
+pub(crate) fn merge_results(
+    results: &mut Vec<SearchResult>,
+    semantic: Vec<SearchResult>,
+    limit: usize,
+) {
     for item in semantic {
         if let Some(existing) = results.iter_mut().find(|result| result.path == item.path) {
             existing.score += item.score * 0.6;
@@ -590,4 +606,3 @@ pub(crate) fn slug(value: &str) -> String {
         slug.chars().take(48).collect()
     }
 }
-

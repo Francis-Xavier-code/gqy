@@ -184,10 +184,18 @@ mod tests {
     fn tool_footprint_extracts_paths_and_memories() {
         let fp = tool_call_footprint("read_file", r#"{"path":"/tmp/a.txt"}"#).unwrap();
         assert!(fp.read.contains("/tmp/a.txt"));
-        let fp = tool_call_footprint("edit_string", r#"{"path":"b.rs","old_string":"x","new_string":"y"}"#).unwrap();
+        let fp = tool_call_footprint(
+            "edit_string",
+            r#"{"path":"b.rs","old_string":"x","new_string":"y"}"#,
+        )
+        .unwrap();
         assert!(fp.modified.contains("b.rs"));
         // stub-mode wrapped arguments unwrap
-        let fp = tool_call_footprint("write_file", r#"{"arguments":{"path":"c.md","content":"hi"}}"#).unwrap();
+        let fp = tool_call_footprint(
+            "write_file",
+            r#"{"arguments":{"path":"c.md","content":"hi"}}"#,
+        )
+        .unwrap();
         assert!(fp.modified.contains("c.md"));
         let fp = tool_call_footprint("remember_fact", r#"{"content":"用户住在杭州"}"#).unwrap();
         assert!(fp.memories.contains("用户住在杭州"));
@@ -558,7 +566,12 @@ mod tests {
         let temp = tempfile::tempdir().unwrap();
         let paths = test_paths(temp.path());
 
-        let owner = with_host_environment("base".to_string(), PromptAudience::Owner, &paths, AgentMode::Normal);
+        let owner = with_host_environment(
+            "base".to_string(),
+            PromptAudience::Owner,
+            &paths,
+            AgentMode::Normal,
+        );
         assert!(owner.starts_with("base\n\n<host-environment os=\""));
         assert!(owner.contains("/>"));
         assert!(owner.contains("LaTeX"), "渲染能力说明应跟随 owner 提示词");
@@ -585,8 +598,18 @@ mod tests {
         let paths = test_paths(temp.path());
         // Rebuilt on every turn by `prepare_for_turn`; a value that drifted
         // between rebuilds would move the prefix and cost a cache miss a turn.
-        let first = with_host_environment(String::new(), PromptAudience::Owner, &paths, AgentMode::Normal);
-        let second = with_host_environment(String::new(), PromptAudience::Owner, &paths, AgentMode::Normal);
+        let first = with_host_environment(
+            String::new(),
+            PromptAudience::Owner,
+            &paths,
+            AgentMode::Normal,
+        );
+        let second = with_host_environment(
+            String::new(),
+            PromptAudience::Owner,
+            &paths,
+            AgentMode::Normal,
+        );
         assert_eq!(first, second);
     }
 
@@ -680,7 +703,8 @@ mod tests {
 
         assert!(agent
             .chat_messages("current", "new user")
-            .unwrap().0
+            .unwrap()
+            .0
             .iter()
             .any(|message| format!("{:?}", message.content).contains("anonymous old user")));
         agent.set_session_history_suppressed(true);
@@ -847,5 +871,4 @@ mod tests {
         assert_eq!(fossil.len(), 2);
         assert!(format!("{:?}", fossil[1].content).contains("hint"));
     }
-
 }

@@ -26,12 +26,9 @@ pub use conversation_db::{
     ImageAsset, ImageAssetData, PlatformAccessActor, PlatformAccessGrant, PlatformAccessGrantKey,
     PlatformMemeRefRecord, PlatformPluginScopeKey, PlatformSessionBinding,
     PlatformSessionBindingKey, PruneStats, QueuedPrompt, QueuedPromptAttachment, RedoCandidate,
-    RedoInputKind, RedoStart, ReplayEntry, SessionOverview, SessionRecord, ToolFootprint, Turn,
-    TurnFollowup, TurnReplay,
-    TurnJournalEvent,
-    TurnRedoCheckpointPayload, TurnStatus, UserAttachment, UserAttachmentData,
-    GLOBAL_PLATFORM_ACCOUNT_SCOPE,
-    ToolFlowCall, ToolFlowRound,
+    RedoInputKind, RedoStart, ReplayEntry, SessionOverview, SessionRecord, ToolFlowCall,
+    ToolFlowRound, ToolFootprint, Turn, TurnFollowup, TurnJournalEvent, TurnRedoCheckpointPayload,
+    TurnReplay, TurnStatus, UserAttachment, UserAttachmentData, GLOBAL_PLATFORM_ACCOUNT_SCOPE,
 };
 pub use usage::{UsageMeta, UsageRange, UsageSnapshot, UsageStats};
 
@@ -57,8 +54,9 @@ pub(crate) struct SharedPlatformAccess {
     mutations: Mutex<()>,
 }
 
-pub(crate) static PLATFORM_ACCESS_INDEXES: OnceLock<Mutex<HashMap<PathBuf, Weak<SharedPlatformAccess>>>> =
-    OnceLock::new();
+pub(crate) static PLATFORM_ACCESS_INDEXES: OnceLock<
+    Mutex<HashMap<PathBuf, Weak<SharedPlatformAccess>>>,
+> = OnceLock::new();
 
 #[derive(Debug, Default)]
 pub(crate) struct PlatformAccessIndex {
@@ -178,4 +176,3 @@ pub struct StateStore {
     queue_session_id: Arc<str>,
     queue_owner_pid: u32,
 }
-

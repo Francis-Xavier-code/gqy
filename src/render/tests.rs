@@ -844,7 +844,8 @@ mod tests {
     #[test]
     fn code_block_content_has_default_color() {
         let mut renderer = MarkdownStreamRenderer::new();
-        let output = renderer.push("```\ndefaults write NSGlobalDomain AppleKeyboardUIMode -int 3\n```\n");
+        let output =
+            renderer.push("```\ndefaults write NSGlobalDomain AppleKeyboardUIMode -int 3\n```\n");
         assert!(output.contains(&format!(
             "{CODE_BLOCK_BG}defaults write NSGlobalDomain AppleKeyboardUIMode -int 3{}{RESET}",
             " ".repeat(2)
@@ -1068,5 +1069,4 @@ mod tests {
             "ok · 5s"
         );
     }
-
 }

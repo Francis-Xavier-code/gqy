@@ -779,5 +779,4 @@ mod tests {
             .model = "missing".to_string();
         assert!(config.validate().is_err());
     }
-
 }
