@@ -8,6 +8,9 @@ use futures_util::future::BoxFuture;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering as AtomicOrdering};
 
+use crate::config::AppConfig;
+use crate::state::StateStore;
+use std::sync::Mutex;
 /// Regression: an auto-attached reply image delivered in one turn must
 /// stay suppressed for the recovery turn that follows an interrupted
 /// send — that replay is what duplicated pictures in QQ groups.
