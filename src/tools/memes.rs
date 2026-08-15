@@ -15,11 +15,11 @@ use std::sync::{Arc, Mutex, OnceLock, RwLock};
 use std::time::SystemTime;
 
 mod score;
-use score::*;
+pub use score::*;
 mod validate;
-use validate::*;
+pub use validate::*;
 mod store;
-use store::*;
+pub use store::*;
 const BUILTIN_MEMES_DIR: &str = "/usr/share/gqy/memes";
 const MIN_SHORT_MEME_ID_LEN: usize = 7;
 

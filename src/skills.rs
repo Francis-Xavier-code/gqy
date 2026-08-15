@@ -11,11 +11,11 @@ use yaml_rust2::scanner::{Scanner, Token, TokenType};
 use yaml_rust2::{Yaml, YamlLoader};
 
 mod parse;
-use parse::*;
+pub use parse::*;
 mod store;
-use store::*;
+pub use store::*;
 mod install;
-use install::*;
+pub use install::*;
 #[cfg(test)]
 mod tests;
 /// Skills compiled into the binary: (name, raw SKILL.md). A user skill of

@@ -1,17 +1,17 @@
 pub(super) mod active_judgement_skip;
 
 mod core;
-use core::*;
+pub use core::*;
 mod plugin_impl;
-use plugin_impl::*;
+pub use plugin_impl::*;
 mod platform_impl;
-use platform_impl::*;
+pub use platform_impl::*;
 mod trigger;
-use trigger::*;
+pub use trigger::*;
 mod runtime;
-use runtime::*;
+pub use runtime::*;
 mod gates;
-use gates::*;
+pub use gates::*;
 mod affection;
 mod judge;
 #[cfg(test)]
@@ -47,5 +47,3 @@ use store::{
 use store::{NewHistoryMessage, SanitizedContent};
 use tokio::sync::Notify;
 impl RealContextPlugin {}
-
-impl PlatformPlugin for RealContextPlugin {}
