@@ -341,7 +341,7 @@ pub(crate) struct ReplyProcessorSettingsForm {
 }
 
 impl Default for ReplyProcessorSettingsForm {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             default_enabled: true,
             threshold: 200,

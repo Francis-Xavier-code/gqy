@@ -85,7 +85,7 @@ impl PendingTurnGuard {
 }
 
 impl Drop for PendingTurnGuard {
-    pub(crate) fn drop(&mut self) {
+    fn drop(&mut self) {
         if !self.completed {
             if let Err(error) = self.state.interrupt_turn(&self.turn_id) {
                 tracing::error!(
@@ -141,7 +141,7 @@ impl PendingRedoGuard {
 }
 
 impl Drop for PendingRedoGuard {
-    pub(crate) fn drop(&mut self) {
+    fn drop(&mut self) {
         if !self.completed {
             if let Err(error) = self
                 .state
@@ -273,7 +273,7 @@ impl QueueIngressBarrier {
 }
 
 impl Drop for QueueIngressReservation {
-    pub(crate) fn drop(&mut self) {
+    fn drop(&mut self) {
         let mut state = self.barrier.state.lock().unwrap();
         state.reservations = state.reservations.saturating_sub(1);
         self.barrier.changed.notify_waiters();

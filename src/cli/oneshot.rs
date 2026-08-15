@@ -149,7 +149,7 @@ pub(crate) struct EphemeralSessionGuard {
 }
 
 impl Drop for EphemeralSessionGuard {
-    pub(crate) fn drop(&mut self) {
+    fn drop(&mut self) {
         let _ = self.state.delete_session(&self.session_id);
     }
 }
@@ -306,7 +306,7 @@ pub(crate) struct RemoteTurnSummary {
 pub(crate) struct RemoteTurnCancelled;
 
 impl std::fmt::Display for RemoteTurnCancelled {
-    pub(crate) fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(t("cancelled", "已取消"))
     }
 }
@@ -319,7 +319,7 @@ impl std::error::Error for RemoteTurnCancelled {}
 pub(crate) struct RemoteTurnDetached;
 
 impl std::fmt::Display for RemoteTurnDetached {
-    pub(crate) fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(t("detached", "已脱离"))
     }
 }

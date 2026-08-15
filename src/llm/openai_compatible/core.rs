@@ -142,7 +142,7 @@ pub(crate) enum TransportFailureKind {
 }
 
 impl std::fmt::Display for TransportFailureKind {
-    pub(crate) fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(match self {
             Self::Connect => "connect",
             Self::Timeout => "timeout",
@@ -172,7 +172,7 @@ pub(crate) struct TransportFailure {
 }
 
 impl std::fmt::Display for TransportFailure {
-    pub(crate) fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{} transport failed ({})", self.stage, self.kind)
     }
 }
@@ -190,7 +190,7 @@ pub(crate) enum HttpFailureKind {
 }
 
 impl std::fmt::Display for HttpFailureKind {
-    pub(crate) fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(match self {
             Self::Status => "status",
             Self::Authentication => "authentication",
@@ -352,7 +352,7 @@ pub(crate) fn contains_any(value: &str, needles: &[&str]) -> bool {
 }
 
 impl std::fmt::Display for HttpStatusFailure {
-    pub(crate) fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "upstream returned HTTP {}", self.status)
     }
 }

@@ -507,7 +507,7 @@ pub(crate) fn clip_progress_line_preserving_spaces(text: &str, max_chars: usize)
 }
 
 impl Drop for StreamRenderer {
-    pub(crate) fn drop(&mut self) {
+    fn drop(&mut self) {
         let _ = self.stop_waiting();
         if let Some(mut display) = self.command_display.take() {
             let _ = display.clear(&mut self.output);

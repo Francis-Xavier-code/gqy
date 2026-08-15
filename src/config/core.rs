@@ -106,7 +106,7 @@ pub struct CacheConfig {
 }
 
 impl Default for CacheConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             keepalive_seconds: 0,
             keepalive_max_pings: 20,
@@ -148,7 +148,7 @@ pub struct PlatformGroupContextConfig {
 }
 
 impl Default for PlatformGroupContextConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             on_overflow: "pop".to_string(),
             trim_batch_ratio: 0.5,
@@ -170,7 +170,7 @@ pub struct PlatformSessionLimits {
 }
 
 impl Default for PlatformSessionLimits {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             running: 8,
             queued: 16,
@@ -198,7 +198,7 @@ pub struct PlatformsConfig {
 }
 
 impl Default for PlatformsConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             command_prefix: default_platform_command_prefix(),
             commands: BTreeMap::new(),
@@ -585,7 +585,7 @@ pub struct QqGroupManagementPluginSettings {
 }
 
 impl Default for QqGroupManagementPluginSettings {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             enable_tool: true,
             enable_kick_tool: true,
@@ -626,7 +626,7 @@ pub struct QqMessageRecallPluginSettings {
 }
 
 impl Default for QqMessageRecallPluginSettings {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             enable_tool: true,
             capture_outgoing_messages: true,
@@ -654,7 +654,7 @@ pub struct QqMemeCollectorPluginSettings {
 }
 
 impl Default for QqMemeCollectorPluginSettings {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             collect_probability: 0.02,
             max_images_per_message: 2,
@@ -724,7 +724,7 @@ pub struct QqMessageHistoryPluginSettings {
 }
 
 impl Default for QqMessageHistoryPluginSettings {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             history_search_max_results: 0,
             history_safe_page_limit: 500,
@@ -867,7 +867,7 @@ pub struct RealContextPluginSettings {
 }
 
 impl Default for RealContextPluginSettings {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             reply_context_window: 25,
             judge_context_window: 20,

@@ -374,7 +374,7 @@ pub struct PlatformMemoryConfig {
 }
 
 impl Default for PlatformMemoryConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             write_enabled: true,
         }
@@ -637,7 +637,7 @@ pub struct QqPrivateChatsConfig {
 }
 
 impl Default for QqPrivateChatsConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             whitelist: Vec::new(),
             friend_requests_require_private_whitelist: true,
@@ -672,7 +672,7 @@ pub struct PlatformRateLimit {
 }
 
 impl Default for PlatformRateLimit {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             max_messages: 0,
             window_seconds: 60,
@@ -714,7 +714,7 @@ pub struct QqGroupChatsConfig {
 }
 
 impl Default for QqGroupChatsConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             whitelist: Vec::new(),
             trigger_keywords: Vec::new(),
@@ -752,7 +752,7 @@ impl QqGroupChatsConfig {
 }
 
 impl Default for OneBotConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             enabled: false,
             reverse_ws_port: 8300,
@@ -911,7 +911,7 @@ pub struct NotificationsConfig {
 }
 
 impl Default for NotificationsConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             enabled: true,
             on_turn_complete: true,
@@ -949,7 +949,7 @@ pub(crate) struct RawDisplayConfig {
 }
 
 impl<'de> Deserialize<'de> for DisplayConfig {
-    pub(crate) fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
@@ -1174,7 +1174,7 @@ pub struct EmbeddingConfig {
 }
 
 impl Default for EmbeddingConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             provider_id: String::new(),
             model: String::new(),

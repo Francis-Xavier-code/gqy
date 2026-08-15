@@ -1020,7 +1020,7 @@ impl PersonaDbRenameGuard {
 }
 
 impl Drop for PersonaDbRenameGuard {
-    pub(crate) fn drop(&mut self) {
+    fn drop(&mut self) {
         if self.committed || self.renames.is_empty() {
             return;
         }

@@ -500,7 +500,7 @@ pub(crate) struct HistoryStore {
 }
 
 impl std::fmt::Debug for HistoryStore {
-    pub(crate) fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("HistoryStore")
             .field("db_path", &self.inner.db_path)
             .field("queue_capacity", &self.inner.queue_capacity)

@@ -322,7 +322,7 @@ pub(crate) fn normalize_api_quota_provider(config: &mut ApiQuotaProviderConfig) 
 }
 
 impl Default for AppConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             config_version: CURRENT_CONFIG_VERSION,
             active_provider: OPENCODE_PROVIDER_ID.to_string(),
@@ -350,7 +350,7 @@ impl Default for AppConfig {
 }
 
 impl Default for PromptConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             prompts_dir: default_prompts_dir(),
             identities_dir: default_identities_dir(),
@@ -364,7 +364,7 @@ impl Default for PromptConfig {
 }
 
 impl Default for DisplayConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             language: default_display_language(),
             reasoning: default_reasoning_display(),
@@ -379,7 +379,7 @@ impl Default for DisplayConfig {
 }
 
 impl Default for PluginsConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             weather: PluginEnabledConfig::default(),
             web: WebPluginConfig::default(),
@@ -406,7 +406,7 @@ impl Default for PluginsConfig {
 }
 
 impl Default for ApiQuotaPluginConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             enabled: default_true(),
             deepseek: ApiQuotaProviderConfig::default(),
@@ -416,7 +416,7 @@ impl Default for ApiQuotaPluginConfig {
 }
 
 impl Default for ApiQuotaProviderConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             api_key: String::new(),
             accounts: vec![ApiQuotaAccountConfig {
@@ -429,7 +429,7 @@ impl Default for ApiQuotaProviderConfig {
 }
 
 impl Default for McpConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             enabled: false,
             servers: Vec::new(),
@@ -438,7 +438,7 @@ impl Default for McpConfig {
 }
 
 impl Default for PluginEnabledConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             enabled: default_true(),
         }
@@ -446,7 +446,7 @@ impl Default for PluginEnabledConfig {
 }
 
 impl Default for WebPluginConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             enabled: default_true(),
             max_results: default_web_search_max_results(),
@@ -460,7 +460,7 @@ impl Default for WebPluginConfig {
 }
 
 impl Default for WebImagesPluginConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             enabled: default_true(),
             source_mode: default_web_images_source_mode(),
@@ -476,7 +476,7 @@ impl Default for WebImagesPluginConfig {
 }
 
 impl Default for DeepResearchPluginConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             enabled: default_true(),
             output_dir: default_deep_research_dir(),
@@ -491,7 +491,7 @@ impl Default for DeepResearchPluginConfig {
 }
 
 impl Default for VisionPluginConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             enabled: default_true(),
             prefer_current_multimodal_model: default_true(),
@@ -506,7 +506,7 @@ impl Default for VisionPluginConfig {
 }
 
 impl Default for ExchangeRatePluginConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             enabled: false,
             api_key: String::new(),
@@ -516,7 +516,7 @@ impl Default for ExchangeRatePluginConfig {
 }
 
 impl Default for ImageGenerationPluginConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             enabled: false,
             provider_type: default_image_generation_provider_type(),
@@ -533,7 +533,7 @@ impl Default for ImageGenerationPluginConfig {
 }
 
 impl Default for PrintImagePluginConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             enabled: default_true(),
             width_percent: default_print_image_width_percent(),
@@ -543,7 +543,7 @@ impl Default for PrintImagePluginConfig {
 }
 
 impl Default for MemesPluginConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             enabled: default_true(),
             persona_libraries: HashMap::new(),
@@ -577,7 +577,7 @@ impl MemesPluginConfig {
 }
 
 impl Default for KnowledgeBasePluginConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             enabled: default_true(),
             data_dir: String::new(),
@@ -603,7 +603,7 @@ impl Default for KnowledgeBasePluginConfig {
 }
 
 impl Default for CalculatorPluginConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             enabled: false,
             backend: default_calculator_backend(),
@@ -612,7 +612,7 @@ impl Default for CalculatorPluginConfig {
 }
 
 impl Default for DiagnosticsPluginConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             enabled: default_true(),
             command_timeout_seconds: default_diagnostics_timeout(),
@@ -623,7 +623,7 @@ impl Default for DiagnosticsPluginConfig {
 }
 
 impl Default for ToolsConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             enabled: default_true(),
             max_rounds: 0,
@@ -637,7 +637,7 @@ impl Default for ToolsConfig {
 }
 
 impl Default for SkillsConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             enabled: default_true(),
             allow_command_execution: default_true(),
@@ -646,7 +646,7 @@ impl Default for SkillsConfig {
 }
 
 impl Default for MemoryConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             enabled: default_true(),
             evicted_context_enabled: default_true(),
@@ -675,7 +675,7 @@ impl Default for MemoryConfig {
 }
 
 impl Default for ContextConfig {
-    pub(crate) fn default() -> Self {
+    fn default() -> Self {
         Self {
             tool_output_spill_bytes: default_tool_output_spill_bytes(),
             trim_at_ratio: default_trim_at_ratio(),

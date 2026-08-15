@@ -336,7 +336,7 @@ pub(crate) struct LiveRawMode {
 pub(crate) struct ReplCursorRestore;
 
 impl Drop for ReplCursorRestore {
-    pub(crate) fn drop(&mut self) {
+    fn drop(&mut self) {
         // 1. 会话级兜底：恢复括号粘贴与光标
         // 2. 再关闭 raw mode；键盘增强由 LiveRawMode / 局部输入作用域负责 Pop
         let _ = execute!(
@@ -431,7 +431,7 @@ pub(crate) fn restore_live_output_processing() -> Result<()> {
 }
 
 impl Drop for LiveRawMode {
-    pub(crate) fn drop(&mut self) {
+    fn drop(&mut self) {
         if !self.restore_terminal_on_drop {
             return;
         }

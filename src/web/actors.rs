@@ -591,7 +591,7 @@ impl AttachmentRunGuard {
 }
 
 impl Drop for AttachmentRunGuard {
-    pub(crate) fn drop(&mut self) {
+    fn drop(&mut self) {
         if let Some(run_id) = self.run_id.as_deref() {
             let _ = self.store.release_user_attachments_for_run(run_id);
         }

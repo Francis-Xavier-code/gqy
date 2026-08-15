@@ -34,7 +34,7 @@ pub(crate) struct DynamicGatePermit<'a> {
 }
 
 impl Drop for DynamicGatePermit<'_> {
-    pub(crate) fn drop(&mut self) {
+    fn drop(&mut self) {
         self.gate.active.fetch_sub(1, Ordering::AcqRel);
         self.gate.notify.notify_one();
     }
