@@ -2,10 +2,6 @@
 
 use super::*;
 
-mod agent_impl3;
-use agent_impl3::*;
-mod agent_impl4;
-use agent_impl4::*;
 impl Agent {
     pub async fn chat_stream_with_images<F>(
         &mut self,

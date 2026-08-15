@@ -2,8 +2,6 @@
 
 use super::*;
 
-mod agent_impl2;
-use agent_impl2::*;
 impl Agent {
     pub fn new(
         config: AppConfig,

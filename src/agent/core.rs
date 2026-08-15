@@ -2,10 +2,6 @@
 
 use super::*;
 
-mod compact;
-mod conversation;
-pub(crate) mod overflow;
-
 use crate::clipboard::{ClipboardImage, PastedImage};
 use crate::config::{AppConfig, PromptAudience};
 use crate::host_info::xml_attr_escape;
