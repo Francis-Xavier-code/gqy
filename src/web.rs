@@ -77,7 +77,11 @@ mod admin;
 pub use admin::*;
 mod assets;
 pub use assets::*;
+#[cfg(test)]
 mod tests;
+#[cfg(test)]
 pub use tests::*;
+#[cfg(test)]
 mod tests2;
+#[cfg(test)]
 pub use tests2::*;
