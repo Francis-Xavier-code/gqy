@@ -2,7 +2,7 @@
 #![cfg(test)]
 
 use super::tests::*;
-use super::*;
+pub(crate) use super::*;
 
 fn qq_non_whitelist_model_pool_normalizes_for_dynamic_inheritance() {
     let mut config = route_test_config();

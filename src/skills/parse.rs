@@ -1,6 +1,6 @@
 //! parse — 自 src/skills.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub fn parse_skill_metadata(raw: &str, expected_name: Option<&str>) -> Result<SkillMetadata> {
     parse_skill_document(raw, expected_name).map(|(metadata, _)| metadata)

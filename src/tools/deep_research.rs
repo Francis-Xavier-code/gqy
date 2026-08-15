@@ -630,6 +630,8 @@ fn strip_reference_section(value: &str) -> String {
     value.to_string()
 }
 
+#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments)]
 fn write_report(
     plugin: &DeepResearchPluginConfig,
     paths: &GQYPaths,

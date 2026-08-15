@@ -1,7 +1,7 @@
 //! tests — 自 src/platforms/plugins/group_management.rs 外移。
 #![cfg(test)]
 
-use super::*;
+pub(crate) use super::*;
 
 #[test]
 fn target_parser_accepts_only_qq_sized_numeric_ids() {

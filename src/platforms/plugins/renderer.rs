@@ -12,9 +12,10 @@ use std::io::{self, Write};
 
 use unicode_segmentation::UnicodeSegmentation;
 
+#[allow(clippy::module_name_repetitions)]
 mod renderer;
-pub use renderer::*;
+pub(crate) use renderer::*;
 mod handler;
-pub use handler::*;
+pub(crate) use handler::*;
 #[cfg(test)]
 mod tests;

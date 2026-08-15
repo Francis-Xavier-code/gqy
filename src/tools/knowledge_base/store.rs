@@ -1,6 +1,6 @@
 //! store — 自 src/tools/knowledge_base.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 impl KnowledgeBase {
     pub(crate) fn remove_prefix(&self, prefix: &str) -> Result<()> {

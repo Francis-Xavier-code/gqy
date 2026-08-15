@@ -2,7 +2,7 @@
 #![cfg(test)]
 
 use super::tests::*;
-use super::*;
+pub(crate) use super::*;
 
 use axum::http::HeaderMap;
 use tokio::sync::mpsc;

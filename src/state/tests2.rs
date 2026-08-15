@@ -2,7 +2,7 @@
 #![cfg(test)]
 
 use super::tests::*;
-use super::*;
+pub(crate) use super::*;
 
 #[test]
 fn local_session_listing_excludes_platform_owned_history() {

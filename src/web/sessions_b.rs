@@ -1,6 +1,6 @@
 //! sessions_b — 自 src/web.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) async fn handle_ipc_connection(
     state: DaemonState,

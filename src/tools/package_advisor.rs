@@ -98,6 +98,8 @@ async fn install_brew_package(args: Value, paths: GQYPaths) -> Result<String> {
     }))?)
 }
 
+#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments)]
 fn review_result(
     build_dir: &Path,
     package: &str,

@@ -1,6 +1,6 @@
 //! render_impl — 自 src/render/mod.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 impl StreamRenderer {
     pub fn new(
@@ -1120,6 +1120,7 @@ impl StreamRenderer {
         Some(elapsed)
     }
 
+#[allow(clippy::needless_lifetimes)]
     pub fn display_tool_name<'a>(&self, name: &'a str) -> String {
         // Subagents keep their per-call description so parallel task calls
         // show as separate lines: "子代理·<描述>".

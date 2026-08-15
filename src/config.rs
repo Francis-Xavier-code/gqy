@@ -10,17 +10,17 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 mod core;
-pub use core::*;
+pub(crate) use core::*;
 mod plugins;
-pub use plugins::*;
+pub(crate) use plugins::*;
 mod defaults;
-pub use defaults::*;
+pub(crate) use defaults::*;
 mod app_impl;
 
 mod app_impl2;
 
 mod schema;
-pub use schema::*;
+pub(crate) use schema::*;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

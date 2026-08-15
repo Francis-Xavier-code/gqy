@@ -1,6 +1,6 @@
 //! adapters — 自 src/platforms/mod.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) struct RateWindow {
     last_prune: Instant,

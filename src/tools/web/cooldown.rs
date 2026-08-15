@@ -1,6 +1,6 @@
 //! cooldown — 自 src/tools/web.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn rotate_from<T>(mut items: Vec<T>, start: usize) -> Vec<T> {
     items.rotate_left(start);

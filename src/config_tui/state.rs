@@ -1,6 +1,6 @@
 //! state — 自 src/config_tui.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn run_form(stdout: &mut io::Stdout, title: &str, fields: &mut [Field]) -> Result<bool> {
     run_form_from(stdout, title, fields, false)
@@ -825,6 +825,8 @@ pub(crate) fn draw_box(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn draw_column(
     stdout: &mut io::Stdout,
     x: u16,

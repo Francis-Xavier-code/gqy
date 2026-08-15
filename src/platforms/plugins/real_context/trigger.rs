@@ -1,6 +1,6 @@
 //! trigger — 自 src/platforms/plugins/real_context/mod.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 impl TriggerKind {
     pub(crate) fn as_str(self) -> &'static str {
@@ -322,6 +322,7 @@ pub(crate) fn format_active_reply_skip_log_for(
     }
 }
 
+#[allow(clippy::needless_lifetimes)]
 pub(crate) fn localized_affection_level<'a>(level: &'a str, locale: Locale) -> &'a str {
     if locale == Locale::Zh {
         return level;

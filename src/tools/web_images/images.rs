@@ -1,6 +1,6 @@
 //! images — 自 src/tools/web_images.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 use super::{vision, ToolProgress, ToolRegistry, ToolSpec};
 use crate::config::{AppConfig, ProviderConfig};
@@ -979,6 +979,8 @@ pub(crate) fn parse_bing_results(html: &str, limit: usize) -> Vec<ImageCandidate
     candidates
 }
 
+#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn build_candidate(
     title: &str,
     page_url: &str,
@@ -1019,7 +1021,9 @@ pub(crate) fn build_candidate(
         search_description,
         provider_rank: 0,
     })
+#[allow(clippy::too_many_arguments)]
 }
+#[allow(clippy::too_many_arguments)]
 
 pub(crate) async fn download_and_store_images(
     config: &AppConfig,

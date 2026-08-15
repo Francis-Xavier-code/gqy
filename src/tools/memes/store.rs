@@ -1,6 +1,6 @@
 //! store — 自 src/tools/memes.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn load_library(paths: &GQYPaths, library: &str) -> Result<Vec<LoadedMeme>> {
     let builtin_dir = builtin_library_dir(library);

@@ -1,6 +1,6 @@
 //! queries — 自 src/platforms/plugins/message_history/store.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn query_activity_ranking(
     conn: &Connection,

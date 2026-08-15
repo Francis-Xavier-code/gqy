@@ -1,6 +1,6 @@
 //! store — 自 src/skills.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn skill_roots(config: &AppConfig, paths: &GQYPaths) -> Vec<(PathBuf, SkillSource)> {
     vec![

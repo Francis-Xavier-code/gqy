@@ -1,6 +1,6 @@
 //! store — 自 src/state/conversation_db.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 impl ConversationDb {
     pub fn put_platform_meme_ref(&self, record: &PlatformMemeRefRecord) -> Result<()> {
@@ -110,6 +110,8 @@ impl ConversationDb {
         Ok(())
     }
 
+#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments)]
     pub fn record_subagent_usage(
         &self,
         session_id: &str,
@@ -195,7 +197,9 @@ impl ConversationDb {
             bail!("session not found: {session_id}");
         }
         Ok(())
+#[allow(clippy::too_many_arguments)]
     }
+#[allow(clippy::too_many_arguments)]
 
     pub fn start_turn(
         &self,
@@ -586,8 +590,10 @@ impl ConversationDb {
             TurnTokens::default(),
             false,
         )
+#[allow(clippy::too_many_arguments)]
     }
 
+#[allow(clippy::too_many_arguments)]
     pub fn complete_turn_with_usage(
         &self,
         turn_id: &str,
@@ -1013,9 +1019,11 @@ impl ConversationDb {
         )?;
         conn.execute(
             "INSERT INTO question_exchanges (turn_id, exchange_index, payload)
+#[allow(clippy::too_many_arguments)]
              VALUES (?1, ?2, ?3)",
             params![turn_id, next_index, serde_json::to_string(exchange)?],
         )?;
+#[allow(clippy::too_many_arguments)]
         Ok(())
     }
 

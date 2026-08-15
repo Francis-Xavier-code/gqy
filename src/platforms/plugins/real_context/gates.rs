@@ -1,6 +1,6 @@
 //! gates — 自 src/platforms/plugins/real_context/mod.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 impl DynamicGate {
     pub(crate) async fn acquire(

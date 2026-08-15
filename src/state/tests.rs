@@ -1,7 +1,7 @@
 //! tests — 自 src/state/mod.rs 外移。
 #![cfg(test)]
 
-use super::*;
+pub(crate) use super::*;
 
 #[cfg(test)]
 #[test]
@@ -676,14 +676,16 @@ fn user_attachment_moves_from_staged_to_turn_and_cascades() {
     store.save_user_attachment(&attachment, b"content").unwrap();
     assert_eq!(
         store
-            .load_staged_user_attachments(&[attachment.attachment_id.clone()])
+#[allow(clippy::cloned_instead_of_copied)]
+            .load_staged_user_attachments(std::slice::from_ref(&attachment.attachment_id))
             .unwrap()[0]
             .bytes,
         b"content"
     );
 
+#[allow(clippy::cloned_instead_of_copied)]
     store
-        .reserve_user_attachments(&[attachment.attachment_id.clone()], "run_test")
+        .reserve_user_attachments(std::slice::from_ref(&attachment.attachment_id), "run_test")
         .unwrap();
     store
         .start_turn_with_display(
@@ -696,9 +698,10 @@ fn user_attachment_moves_from_staged_to_turn_and_cascades() {
         .unwrap();
     let turns = store.load_turns().unwrap();
     assert_eq!(turns[0].display_content, "visible");
+#[allow(clippy::cloned_instead_of_copied)]
     assert_eq!(turns[0].attachments, vec![attachment.clone()]);
     assert!(store
-        .load_staged_user_attachments(&[attachment.attachment_id.clone()])
+        .load_staged_user_attachments(std::slice::from_ref(&attachment.attachment_id))
         .is_err());
 
     store.reset_conversation().unwrap();
@@ -734,10 +737,11 @@ fn session_crud_switching_and_persona_adoption() {
     assert_eq!(&*reopened.session_id(), created.session_id.as_str());
 
     let listed = store.list_sessions("gqy").unwrap();
+#[allow(clippy::op_ref)]
     assert_eq!(listed.len(), 2);
     let default_overview = listed
         .iter()
-        .find(|overview| overview.record.session_id == &*default_id)
+        .find(|overview| overview.record.session_id == *default_id)
         .unwrap();
     assert_eq!(default_overview.turn_count, 1);
     assert_eq!(default_overview.last_user_content.as_deref(), Some("hello"));

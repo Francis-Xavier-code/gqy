@@ -816,6 +816,7 @@ fn ensure_safe_trash_target(path: &Path) -> Result<()> {
         Path::new("/usr"),
         Path::new("/var"),
     ];
+#[allow(clippy::unnecessary_iter_contains)]
     if dangerous.iter().any(|item| path == *item) {
         bail!(
             "refusing to trash dangerous system path: {}",

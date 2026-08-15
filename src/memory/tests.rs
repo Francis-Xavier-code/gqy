@@ -1,7 +1,7 @@
 //! tests — 自 src/memory/mod.rs 外移。
 #![cfg(test)]
 
-use super::*;
+pub(crate) use super::*;
 
 #[cfg(test)]
 use crate::config::AppConfig;

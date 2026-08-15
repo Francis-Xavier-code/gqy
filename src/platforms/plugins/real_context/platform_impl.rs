@@ -1,6 +1,6 @@
 //! platform_impl — 自 src/platforms/plugins/real_context/mod.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 impl PlatformPlugin for RealContextPlugin {
     fn descriptor(&self) -> PluginDescriptor {
@@ -386,7 +386,7 @@ impl PlatformPlugin for RealContextPlugin {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(super) enum TriggerKind {
+pub(crate) enum TriggerKind {
     Probability,
     Continuation,
     Direct,

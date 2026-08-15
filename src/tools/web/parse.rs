@@ -1,6 +1,6 @@
 //! parse — 自 src/tools/web.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn clean_html_text(value: &str) -> String {
     html_unescape(&html_conversion::to_text_lossy(value, 120))

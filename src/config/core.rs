@@ -1,6 +1,6 @@
 //! core — 自 src/config.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
@@ -347,6 +347,7 @@ impl PlatformsConfig {
             route.prune_model_references(providers);
         }
         mutate_real_context_settings(&mut self.qq.plugins, |settings| {
+#[allow(clippy::single_element_loop)]
             for pool in [&mut settings.text_models] {
                 if let Some(models) = pool {
                     models.retain(|model| active_model_exists(providers, model));
@@ -371,6 +372,7 @@ impl PlatformsConfig {
         for route in &mut self.qq.conversations {
             route.remove_model_references(provider_id, model);
         }
+#[allow(clippy::single_element_loop)]
         mutate_real_context_settings(&mut self.qq.plugins, |settings| {
             for pool in [&mut settings.text_models] {
                 if let Some(models) = pool {
@@ -402,6 +404,7 @@ impl PlatformsConfig {
                 }
                 normalize_route_pool(pool);
             }
+#[allow(clippy::single_element_loop)]
         }
         mutate_real_context_settings(&mut self.qq.plugins, |settings| {
             for pool in [&mut settings.text_models] {
@@ -426,6 +429,7 @@ impl PlatformsConfig {
             normalize_route_pool(pool);
         }
         for route in &mut self.qq.conversations {
+#[allow(clippy::single_element_loop)]
             route.rename_provider_references(old_id, new_id);
         }
         mutate_real_context_settings(&mut self.qq.plugins, |settings| {

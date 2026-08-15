@@ -2,7 +2,7 @@
 #![cfg(test)]
 
 use super::tests4::*;
-use super::*;
+pub(crate) use super::*;
 
 #[cfg(test)]
 use crate::config::AppConfig;
@@ -812,6 +812,7 @@ fn nothing_after_the_leading_prompt_may_carry_the_system_role() {
     // byte-identical prefix: appending `assistant + user` hit 99%, the same
     // append with one `system` in front of it hit 0%, and moving that
     // `system` to the very end still hit 0%.
+#[allow(clippy::useless_vec)]
     let messages = vec![
         ChatMessage::system("persona"),
         ChatMessage::plain("user", "问题"),

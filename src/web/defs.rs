@@ -1,15 +1,13 @@
 //! defs — 自 src/web.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 use crate::agent::{AgentEvent, AgentMode};
 
 use crate::cli::build_tool_registry;
 use crate::config::{ActiveProviderModelConfig, AppConfig, PromptAudience};
 use crate::i18n::text as t;
-use crate::ipc::{
-    Command as IpcCommand, Frame as IpcFrame, ImageAttachment, Request as IpcRequest,
-};
+use crate::ipc::{self, ImageAttachment};
 
 use crate::llm::{ChatStreamKind, OpenAiCompatibleClient};
 
@@ -31,7 +29,6 @@ use std::collections::{HashMap, HashSet, VecDeque};
 
 use std::net::IpAddr;
 
-use std::path::Path as FilePath;
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::{Arc, Mutex};
 
@@ -568,6 +565,7 @@ pub(crate) struct ContextSnapshot {
     pub(crate) cumulative_cache_read_tokens: u64,
 }
 
+#[allow(clippy::large_enum_variant)]
 pub(crate) enum ActorCommand {
     StartTurn {
         run_id: String,
@@ -903,7 +901,9 @@ pub(crate) struct ActiveTool {
     command_output: Option<crate::render::CommandOutputTail>,
 }
 
+#[allow(clippy::too_many_arguments)]
 impl RunEventMapper {
+#[allow(clippy::too_many_arguments)]
     pub(crate) fn new(
         run_id: String,
         events: EventHub,

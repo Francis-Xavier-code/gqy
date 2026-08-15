@@ -1,6 +1,6 @@
 //! store — 自 src/platforms/plugins/message_history/store.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 use crate::platforms::{ConversationKind, PlatformMention};
 use anyhow::{anyhow, bail, Context, Result};

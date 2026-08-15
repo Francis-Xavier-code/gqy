@@ -1,6 +1,6 @@
 //! assets — 自 src/web.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 impl From<ArtifactAsset> for SafeArtifactAsset {
     fn from(asset: ArtifactAsset) -> Self {

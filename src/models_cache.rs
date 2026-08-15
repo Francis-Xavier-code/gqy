@@ -681,6 +681,7 @@ fn lookup_reasoning_info(
             groups.push((info, 1));
         }
     }
+#[allow(clippy::unnecessary_sort_by)]
     groups.sort_by(|left, right| right.1.cmp(&left.1));
     let (info, count) = groups.first()?;
     if groups

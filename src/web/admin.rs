@@ -1,6 +1,6 @@
 //! admin — 自 src/web.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) async fn reset_platform_persona_state(
     state: &DaemonState,
@@ -263,10 +263,11 @@ pub(crate) fn persona_identity(config: &AppConfig, prompts: &PromptDocuments) ->
         .personas
         .iter()
         .find(|document| document.name == active);
+#[allow(clippy::bind_instead_of_map)]
     let avatar_url = document
         .and_then(|document| document.avatar_path.as_deref())
         .filter(|path| !path.trim().is_empty())
-        .and_then(|_| Some("/api/persona/avatar".to_string()));
+        .map(|_| "/api/persona/avatar".to_string());
     let board_image_url = if document
         .and_then(|document| document.board_image_path.as_deref())
         .is_some_and(|path| !path.trim().is_empty())
@@ -642,8 +643,9 @@ pub(crate) fn parse_secret_list(
     field: &str,
 ) -> std::result::Result<Vec<String>, ApiError> {
     validate_secret_text(value, field)?;
+#[allow(clippy::manual_pattern_char_comparison)]
     Ok(value
-        .split(|character| matches!(character, ',' | '\n' | '\r'))
+        .split([',', '\n', '\r'])
         .map(str::trim)
         .filter(|item| !item.is_empty())
         .map(str::to_string)

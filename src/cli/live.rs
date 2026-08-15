@@ -1,6 +1,6 @@
 //! live — 自 src/cli.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) struct LiveReplTail {
     pub(crate) editor: LiveReplEditor,

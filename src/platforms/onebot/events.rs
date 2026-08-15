@@ -1,8 +1,7 @@
 //! events — 自 src/platforms/onebot.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
-use std::sync::atomic::AtomicI64;
 #[derive(Default)]
 pub(crate) struct InboundMessage {
     pub(crate) text: String,
@@ -57,8 +56,11 @@ pub(crate) struct FileRef {
 /// leak digests into each other and fail depending on scheduling order.
 #[cfg(test)]
 pub(crate) fn unique_test_conversation(target: Target) -> PlatformConversation {
-    pub(crate) static NEXT_ACCOUNT: AtomicI64 = AtomicI64::new(10_000);
-    platform_conversation(target, NEXT_ACCOUNT.fetch_add(1, AtomicOrdering::Relaxed))
+    pub(crate) static NEXT_ACCOUNT: std::sync::atomic::AtomicI64 = std::sync::atomic::AtomicI64::new(10_000);
+    platform_conversation(
+        target,
+        NEXT_ACCOUNT.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
+    )
 }
 
 pub(crate) fn platform_conversation(target: Target, self_id: i64) -> PlatformConversation {

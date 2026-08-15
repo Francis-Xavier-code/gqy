@@ -2,10 +2,9 @@
 
 #![cfg(test)]
 
-use super::*;
+pub(crate) use super::*;
 
 #[cfg(test)]
-use crate::question::{};
 use crate::state::PlatformSessionBindingKey;
 
 #[test]
@@ -816,7 +815,7 @@ pub(crate) async fn config_reload_succeeds_and_keeps_turns_running() {
     state.manager.lock().unwrap().active_runs.insert(
         "hot-reload-run".to_string(),
         RunInfo {
-            session_id: state.state_store.session_id().into(),
+            session_id: state.state_store.session_id(),
             mode: AgentMode::Normal,
             audience: PromptAudience::External,
             cancel,

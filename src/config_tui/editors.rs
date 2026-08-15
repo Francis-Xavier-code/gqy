@@ -1,6 +1,6 @@
 //! editors — 自 src/config_tui.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn platform_conversation_kind_label(kind: PlatformConversationKind) -> &'static str {
     match kind {

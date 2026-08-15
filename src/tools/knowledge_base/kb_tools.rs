@@ -1,6 +1,6 @@
 //! kb_tools — 自 src/tools/knowledge_base.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) async fn tool_search_readonly(
     args: Value,

@@ -1,6 +1,6 @@
 //! api — 自 src/llm/openai_compatible.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn strip_tagged_sections(mut text: String, tag: &str) -> String {
     let open = format!("<{tag}>");
@@ -23,6 +23,8 @@ pub(crate) fn strip_tagged_sections(mut text: String, tag: &str) -> String {
     }
     text
 }
+#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn handle_responses_sse_line<F>(
     line: &str,
     content: &mut String,
@@ -732,7 +734,9 @@ where
     }
     Ok(())
 }
+#[allow(clippy::too_many_arguments)]
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn finalize_responses_stream_result(
     content: String,
     reasoning: String,

@@ -18,17 +18,17 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 mod core;
-pub use core::*;
+pub(crate) use core::*;
 mod client_impl;
 
 mod client_impl2;
 
 mod providers;
-pub use providers::*;
+pub(crate) use providers::*;
 mod providers2;
 pub use providers2::*;
 mod api;
-pub use api::*;
+pub(crate) use api::*;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

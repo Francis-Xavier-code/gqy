@@ -846,6 +846,8 @@ fn log_profile_initialized(
     );
 }
 
+#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments)]
 fn format_affection_initialized_log(
     account_id: &str,
     group_id: &str,

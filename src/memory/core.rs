@@ -1,6 +1,6 @@
 //! core — 自 src/memory/mod.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 impl CompactJieba {
     pub(crate) fn new() -> Result<Self> {

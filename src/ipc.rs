@@ -1163,7 +1163,7 @@ mod tests {
 
     #[test]
     fn directory_sync_failure_after_rename_keeps_the_commit_successful() {
-        let error = std::io::Error::new(std::io::ErrorKind::Other, "injected sync failure");
+        let error = std::io::Error::other("injected sync failure");
 
         assert!(finish_private_state_commit(Path::new("/private/state"), Err(error)).is_ok());
     }

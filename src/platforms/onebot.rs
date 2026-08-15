@@ -23,7 +23,6 @@ use crate::web::{
 };
 
 use anyhow::{bail, Context, Result};
-use axum::http::header::{AUTHORIZATION, HOST};
 
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
@@ -34,21 +33,20 @@ use sha2::{Digest, Sha256};
 use std::collections::{HashMap, HashSet};
 
 use std::path::PathBuf;
-use std::sync::atomic::Ordering as AtomicOrdering;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 mod core;
-pub use core::*;
+pub(crate) use core::*;
 mod events;
-pub use events::*;
+pub(crate) use events::*;
 mod handlers;
-pub use handlers::*;
+pub(crate) use handlers::*;
 mod groups;
-pub use groups::*;
+pub(crate) use groups::*;
 mod messages;
-pub use messages::*;
+pub(crate) use messages::*;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

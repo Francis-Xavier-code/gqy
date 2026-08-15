@@ -1,6 +1,6 @@
 //! research — 自 src/agent/mod.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn tool_output_succeeded(output: &str) -> bool {
     serde_json::from_str::<serde_json::Value>(output)
@@ -580,6 +580,7 @@ pub(crate) fn compact_artifact_tool_report(tool_name: &str, output: &str) -> Opt
         .and_then(Value::as_str)
         .map(str::trim)
         .filter(|value| !value.is_empty());
+#[allow(clippy::unnecessary_wraps)]
     Some(
         serde_json::to_string(&serde_json::json!({
             "artifact": filename,

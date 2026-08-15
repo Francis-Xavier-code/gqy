@@ -2,7 +2,7 @@
 #![cfg(test)]
 
 use super::tests3::*;
-use super::*;
+pub(crate) use super::*;
 
 use tokio::io::AsyncWriteExt;
 use tokio::net::TcpListener;

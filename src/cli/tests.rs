@@ -1,7 +1,7 @@
 //! tests — 自 src/cli.rs 外移。
 #![cfg(test)]
 
-use super::*;
+pub(crate) use super::*;
 
 mod repl_input_tests {
     use super::*;
@@ -351,7 +351,7 @@ mod repl_input_tests {
                 password: None,
                 password_file: Some(path),
                 ..
-            })) if path == PathBuf::from("/tmp/gqy-password")
+            })) if path == *"/tmp/gqy-password"
         ));
 
         assert!(parse_args(["gqy", "web", "--public"].map(OsString::from).to_vec(),).is_err());

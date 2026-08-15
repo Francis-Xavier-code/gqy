@@ -1,6 +1,6 @@
 //! validate — 自 src/tools/memes.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn validate_classification(classification: &MemeClassification) -> Result<()> {
     if !classification.save {

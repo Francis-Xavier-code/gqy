@@ -1,6 +1,6 @@
 //! core — 自 src/render/mod.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 use crate::i18n::text as t;
 use crate::llm::{ChatResult, ChatStreamKind, Usage};

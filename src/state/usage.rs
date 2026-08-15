@@ -400,6 +400,7 @@ pub fn usage_stats(path: &Path, range: UsageRange, price: PriceFn<'_>) -> Result
     for record in &records {
         first_ts = Some(first_ts.map_or(record.ts, |t| t.min(record.ts)));
         let cost = record_cost(record);
+#[allow(clippy::unnecessary_map_or)]
         let in_range = start.map_or(true, |s| record.ts >= s);
         if in_range {
             totals.absorb(record, cost);
@@ -477,6 +478,7 @@ pub fn usage_stats(path: &Path, range: UsageRange, price: PriceFn<'_>) -> Result
                     model,
                     aggregate,
                 })
+#[allow(clippy::unnecessary_sort_by)]
                 .collect();
             models.sort_by(|a, b| b.aggregate.total.cmp(&a.aggregate.total));
             SourceUsage {

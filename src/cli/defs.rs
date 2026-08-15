@@ -1,6 +1,6 @@
 //! defs — 自 src/cli.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) fn run_history(paths: &GQYPaths, args: HistoryArgs) -> Result<()> {
     let state = StateStore::new(paths)?;

@@ -1,6 +1,6 @@
 //! runtime — 自 src/platforms/plugins/real_context/mod.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 impl RuntimeState {
     pub(crate) fn session_mut(&mut self, key: &str, now: Instant) -> &mut SessionRuntime {

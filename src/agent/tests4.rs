@@ -2,7 +2,7 @@
 #![cfg(test)]
 
 use super::tests::*;
-use super::*;
+pub(crate) use super::*;
 use crate::config::ProviderConfig;
 use crate::platforms::{ConversationKind, PlatformConversation};
 use crate::tools::{empty_parameters, ToolSpec};

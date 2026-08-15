@@ -1,6 +1,6 @@
 //! crawlers — 自 src/tools/web.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) async fn search_duckduckgo(
     client: &reqwest::Client,

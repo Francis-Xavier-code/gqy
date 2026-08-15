@@ -1,6 +1,6 @@
 //! actors — 自 src/web.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) async fn set_models(
     State(state): State<DaemonState>,
@@ -449,7 +449,7 @@ pub(crate) async fn actor_loop(
                     let (removed, prompt) = store
                         .undo_last_turn()
                         .map_err(|error| AdminFailure::Internal(safe_error_message(&error)))?;
-                    if &*state_store.session_id() == &*session_id {
+                    if *state_store.session_id() == *session_id {
                         manager.lock().unwrap().context =
                             actor_context(&agent, &config, &state_store).map_err(|error| {
                                 AdminFailure::Internal(safe_error_message(&error))
@@ -486,7 +486,7 @@ pub(crate) async fn actor_loop(
                     let memory_config = config.memory_config();
                     archive_and_delete_visible_turns(&store, &memory, &selected)
                         .map_err(|error| AdminFailure::Internal(safe_error_message(&error)))?;
-                    if &*state_store.session_id() == &*session_id {
+                    if *state_store.session_id() == *session_id {
                         manager.lock().unwrap().context =
                             actor_context(&agent, &config, &state_store).map_err(|error| {
                                 AdminFailure::Internal(safe_error_message(&error))
@@ -506,7 +506,7 @@ pub(crate) async fn actor_loop(
             }
             ActorCommand::Compact { session_id, reply } => {
                 let result = async {
-                    let updates_default = &*state_store.session_id() == &*session_id;
+                    let updates_default = *state_store.session_id() == *session_id;
                     let compact = if updates_default {
                         let agent = ensure_actor_agent(
                             &mut agent,
@@ -1235,10 +1235,12 @@ pub(crate) fn sanitize_session_title(raw: &str) -> String {
     cleaned.chars().take(20).collect()
 }
 
+#[allow(clippy::large_enum_variant)]
 pub(crate) enum TurnOutcome {
     Finished(Result<ChatResult>),
     Cancelled,
 }
+#[allow(clippy::large_enum_variant)]
 
 pub(crate) enum OverflowOutcome {
     Finished(Result<Option<ChatResult>>),

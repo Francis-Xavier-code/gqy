@@ -1,6 +1,6 @@
 //! config — 自 src/web.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) async fn get_config(
     State(state): State<DaemonState>,
@@ -1400,7 +1400,7 @@ pub(crate) async fn set_session_models_http(
 ) -> std::result::Result<Json<SessionModelsResponse>, ApiError> {
     require_mutation(&headers, &state)?;
     let record = require_local_web_session(&state, &session_id)?;
-    let models = (!request.models.is_empty()).then(|| request.models);
+    let models = (!request.models.is_empty()).then_some(request.models);
     if let Some(models) = &models {
         let choices = {
             let manager = state.manager.lock().unwrap();

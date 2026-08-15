@@ -1,6 +1,6 @@
 //! remote — 自 src/cli.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) async fn run_remote_repl(paths: &GQYPaths, mut mode: AgentMode) -> Result<()> {
     let _cursor_restore = ReplCursorRestore;

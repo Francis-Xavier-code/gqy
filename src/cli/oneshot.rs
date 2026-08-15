@@ -1,6 +1,6 @@
 //! oneshot — 自 src/cli.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 pub(crate) async fn append_stdin_if_piped(message: String) -> String {
     if io::stdin().is_terminal() {
@@ -353,6 +353,8 @@ pub(crate) fn detect_origin_tty() -> Option<crate::ipc::OriginTty> {
     })
 }
 
+#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments)]
 pub(crate) async fn try_run_remote_chat(
     paths: &GQYPaths,
     mut live: Option<&mut LiveReplTail>,
@@ -589,6 +591,7 @@ pub(crate) async fn try_run_remote_chat(
                         // The job strip is part of the live tail, so it keeps
                         // rendering during streaming; throttle to ~every 8th
                         // spinner frame.
+#[allow(clippy::manual_is_multiple_of)]
                         if let Some(feed) = jobs_feed {
                             job_strip_tick = job_strip_tick.wrapping_add(1);
                             if job_strip_tick % 8 == 0 && !live.external_output_active {

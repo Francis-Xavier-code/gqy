@@ -1,7 +1,7 @@
 //! tests — 自 src/render/mod.rs 外移。
 #![cfg(test)]
 
-use super::*;
+pub(crate) use super::*;
 
 use unicode_width::UnicodeWidthStr;
 #[cfg(test)]

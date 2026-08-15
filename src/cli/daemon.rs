@@ -1,6 +1,6 @@
 //! daemon — 自 src/cli.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 #[derive(Debug, Args)]
 pub struct KbRemoveArgs {

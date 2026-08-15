@@ -1,6 +1,6 @@
 //! store_impl — 自 src/memory/mod.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 impl MemoryStore {
     pub fn new(config: &AppConfig, paths: &GQYPaths) -> Self {

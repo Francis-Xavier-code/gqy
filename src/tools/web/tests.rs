@@ -1,7 +1,7 @@
 //! tests — 自 src/tools/web.rs 外移。
 #![cfg(test)]
 
-use super::*;
+pub(crate) use super::*;
 
 #[test]
 fn clips_fetch_output_with_notice() {

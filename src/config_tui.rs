@@ -35,18 +35,18 @@ use std::sync::mpsc::{self, Receiver};
 use std::time::Duration;
 
 mod ui;
-pub use ui::*;
+pub(crate) use ui::*;
 mod plugins;
-pub use plugins::*;
+pub(crate) use plugins::*;
 mod fields;
-pub use fields::*;
+pub(crate) use fields::*;
 mod fields2;
 pub use fields2::*;
 mod editors;
-pub use editors::*;
+pub(crate) use editors::*;
 mod menus;
-pub use menus::*;
+pub(crate) use menus::*;
 mod state;
-pub use state::*;
+pub(crate) use state::*;
 #[cfg(test)]
 mod tests;

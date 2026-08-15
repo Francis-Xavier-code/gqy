@@ -1,6 +1,6 @@
 //! agent_impl2 — 自 src/agent/agent_impl.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 impl Agent {
     pub async fn chat_stream_with_images<F>(

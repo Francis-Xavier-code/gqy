@@ -1,6 +1,6 @@
 //! state_impl2 — 自 src/state/state_impl.rs 拆分。
 
-use super::*;
+pub(crate) use super::*;
 
 impl StateStore {
     pub fn load_user_attachment(&self, attachment_id: &str) -> Result<Option<UserAttachmentData>> {
