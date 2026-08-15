@@ -350,6 +350,10 @@ fn inspect_script(path: &Path) -> Option<DetectedScript> {
     })
 }
 
+fn extract_description(raw: &str) -> Option<String> {
+    select_script_description(&extract_metadata(raw).descriptions)
+}
+
 fn description_from_script(path: &Path) -> Option<String> {
     std::fs::read_to_string(path)
         .ok()
