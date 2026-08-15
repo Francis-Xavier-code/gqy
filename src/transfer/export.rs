@@ -1,9 +1,9 @@
-//! `miyu export`: pack a portable copy of this installation.
+//! `gqy export`: pack a portable copy of this installation.
 
 use super::manifest::{Entry, Manifest, Scope, MANIFEST_FORMAT_VERSION, MANIFEST_NAME};
 use super::registry::{is_backup_name, unit_for, DataUnit, UnitKind, IGNORED_SUFFIXES, UNITS};
 use crate::i18n::text as t;
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use anyhow::{bail, Context, Result};
 use flate2::write::GzEncoder;
 use flate2::Compression;
@@ -32,7 +32,7 @@ impl ExportOptions {
 /// One concrete file destined for the archive.
 struct Planned {
     unit: &'static str,
-    /// Where it lands in the archive, relative to `MIYU_HOME`.
+    /// Where it lands in the archive, relative to `GQY_HOME`.
     rel: String,
     /// Where to read it from — the live file, or a snapshot in a temp dir.
     source: PathBuf,
@@ -49,8 +49,8 @@ pub struct ExportReport {
     pub by_unit: Vec<(&'static str, u64)>,
 }
 
-pub fn export(paths: &MiyuPaths, output: &Path, options: &ExportOptions) -> Result<ExportReport> {
-    let root = miyu_home(paths)?;
+pub fn export(paths: &GQYPaths, output: &Path, options: &ExportOptions) -> Result<ExportReport> {
+    let root = gqy_home(paths)?;
     if !options.dry_run && output.exists() && !options.force {
         bail!(
             "{}: {}",
@@ -102,7 +102,7 @@ pub fn export(paths: &MiyuPaths, output: &Path, options: &ExportOptions) -> Resu
 
     let manifest = Manifest {
         format_version: MANIFEST_FORMAT_VERSION,
-        miyu_version: env!("CARGO_PKG_VERSION").to_string(),
+        gqy_version: env!("CARGO_PKG_VERSION").to_string(),
         exported_at: chrono::Local::now().to_rfc3339(),
         config_version: crate::config::CURRENT_CONFIG_VERSION,
         schema_versions,
@@ -142,13 +142,13 @@ pub fn export(paths: &MiyuPaths, output: &Path, options: &ExportOptions) -> Resu
     })
 }
 
-/// `MIYU_HOME` — the common ancestor of the config/data/state/cache roots.
-pub fn miyu_home(paths: &MiyuPaths) -> Result<PathBuf> {
+/// `GQY_HOME` — the common ancestor of the config/data/state/cache roots.
+pub fn gqy_home(paths: &GQYPaths) -> Result<PathBuf> {
     paths
         .config_dir
         .parent()
         .map(Path::to_path_buf)
-        .context("could not determine MIYU_HOME from the config directory")
+        .context("could not determine GQY_HOME from the config directory")
 }
 
 fn plan_unit(

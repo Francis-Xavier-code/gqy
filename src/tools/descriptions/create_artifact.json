@@ -1,7 +1,7 @@
 {
   "name": "create_artifact",
   "display_name": "创建预览文件",
-  "description": "在 Miyu 托管的 Artifact 工作区创建或更新完整交付物，并立即展示到 WebUI。用户明确要求报告、文档、网页、表格、数据文件、独立代码文件或可下载成品时优先调用。内容完成后再调用；普通项目源码修改不要调用。",
+  "description": "在 GQY 托管的 Artifact 工作区创建或更新完整交付物，并立即展示到 WebUI。用户明确要求报告、文档、网页、表格、数据文件、独立代码文件或可下载成品时优先调用。内容完成后再调用；普通项目源码修改不要调用。",
   "parameters": {
     "type": "object",
     "properties": {
