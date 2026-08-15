@@ -2,11 +2,6 @@
 
 use super::*;
 
-mod conversation_db;
-mod migrations;
-pub use migrations::DEFAULT_SESSION_ID;
-pub(crate) mod usage;
-
 /// Newest `conversation.db` schema this build can open — the gate an import
 /// checks before restoring a database written by a newer GQY.
 pub fn latest_schema_version() -> i64 {

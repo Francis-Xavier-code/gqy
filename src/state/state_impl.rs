@@ -2,8 +2,6 @@
 
 use super::*;
 
-mod state_impl2;
-use state_impl2::*;
 impl StateStore {
     pub fn new(paths: &GQYPaths) -> Result<Self> {
         let state_dir = paths.state_dir.clone();
