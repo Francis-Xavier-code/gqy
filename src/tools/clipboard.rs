@@ -1,7 +1,7 @@
 use super::{ToolRegistry, ToolSpec};
 use crate::clipboard::ClipboardContent;
 use crate::i18n::agent_text as t;
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use anyhow::{bail, Result};
 use serde_json::{json, Value};
 use std::env;
@@ -14,12 +14,12 @@ enum PreferredType {
     Image,
 }
 
-pub fn register(registry: &mut ToolRegistry, paths: MiyuPaths) {
+pub fn register(registry: &mut ToolRegistry, paths: GQYPaths) {
     registry.register(ToolSpec::new(
         "read_clipboard",
         t(
-            "Read the current Linux clipboard and automatically detect whether it contains text, an image, or a copied local file path. Supports wl-paste, xclip, or xsel.",
-            "读取当前 Linux 剪贴板，并自动判断其中是文本、图片还是复制的本地文件路径。支持 wl-paste、xclip 或 xsel。",
+            "Read the current macOS clipboard and automatically detect whether it contains text, an image, or a copied local file path. Uses pbpaste/osascript.",
+            "读取当前 macOS 剪贴板，并自动判断其中是文本、图片还是复制的本地文件路径。使用 pbpaste/osascript。",
         ),
         json!({
             "type": "object",
@@ -40,12 +40,12 @@ pub fn register(registry: &mut ToolRegistry, paths: MiyuPaths) {
     ));
 }
 
-fn read_clipboard_tool(args: Value, paths: MiyuPaths) -> Result<String> {
-    if std::env::consts::OS != "linux" {
+fn read_clipboard_tool(args: Value, paths: GQYPaths) -> Result<String> {
+    if std::env::consts::OS != "macos" {
         return Ok(serde_json::to_string_pretty(&json!({
             "ok": false,
             "kind": "clipboard",
-            "error": t("read_clipboard currently only supports Linux", "read_clipboard 当前仅支持 Linux"),
+            "error": t("read_clipboard currently only supports macOS", "read_clipboard 当前仅支持 macOS"),
         }))?);
     }
 
@@ -55,8 +55,8 @@ fn read_clipboard_tool(args: Value, paths: MiyuPaths) -> Result<String> {
             "ok": false,
             "kind": "clipboard",
             "error": t(
-                "No supported clipboard backend found. Install wl-clipboard, xclip, or xsel.",
-                "未检测到可用的剪贴板读取工具，请安装 wl-clipboard、xclip 或 xsel。"
+                "Clipboard access failed (pbpaste/osascript unavailable).",
+                "剪贴板读取失败（pbpaste/osascript 不可用）。"
             ),
             "required_tools": required_tools(preferred),
         }))?);
@@ -85,11 +85,11 @@ impl PreferredType {
     }
 }
 
-fn auto_result(paths: MiyuPaths) -> Result<String> {
+fn auto_result(paths: GQYPaths) -> Result<String> {
     detected_text_result(paths)
 }
 
-fn detected_text_result(paths: MiyuPaths) -> Result<String> {
+fn detected_text_result(paths: GQYPaths) -> Result<String> {
     match crate::clipboard::read_clipboard()? {
         ClipboardContent::Image(img) => image_binary_result(img, &paths),
         ClipboardContent::ImagePath(path) => image_path_result(path),
@@ -122,7 +122,7 @@ fn text_result() -> Result<String> {
     empty_result()
 }
 
-fn image_binary_result(img: crate::clipboard::ClipboardImage, paths: &MiyuPaths) -> Result<String> {
+fn image_binary_result(img: crate::clipboard::ClipboardImage, paths: &GQYPaths) -> Result<String> {
     let mime = img.mime.clone();
     let bytes = img.data.len();
     let path = img.write_temp_file(&paths.cache_dir, 0)?;
@@ -166,20 +166,12 @@ fn empty_result() -> Result<String> {
     }))?)
 }
 
-fn has_required_backend(preferred: PreferredType) -> bool {
-    match preferred {
-        PreferredType::Image => command_exists("wl-paste") || command_exists("xclip"),
-        PreferredType::Auto | PreferredType::Text => {
-            command_exists("wl-paste") || command_exists("xclip") || command_exists("xsel")
-        }
-    }
+fn has_required_backend(_preferred: PreferredType) -> bool {
+    command_exists("pbpaste") && command_exists("osascript")
 }
 
-fn required_tools(preferred: PreferredType) -> Vec<&'static str> {
-    match preferred {
-        PreferredType::Image => vec!["wl-clipboard", "xclip"],
-        PreferredType::Auto | PreferredType::Text => vec!["wl-clipboard", "xclip", "xsel"],
-    }
+fn required_tools(_preferred: PreferredType) -> Vec<&'static str> {
+    vec!["pbpaste", "osascript"]
 }
 
 fn command_exists(name: &str) -> bool {

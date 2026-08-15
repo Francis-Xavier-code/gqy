@@ -697,9 +697,9 @@ async fn search_exa(
 
 const EXA_MCP_ENDPOINT: &str = "https://mcp.exa.ai/mcp";
 
-/// 免 key 通道的 MCP 端点，可用 MIYU_EXA_MCP_ENDPOINT 覆盖（自建代理/测试用）
+/// 免 key 通道的 MCP 端点，可用 GQY_EXA_MCP_ENDPOINT 覆盖（自建代理/测试用）
 fn exa_mcp_endpoint() -> String {
-    std::env::var("MIYU_EXA_MCP_ENDPOINT")
+    std::env::var("GQY_EXA_MCP_ENDPOINT")
         .ok()
         .filter(|value| !value.trim().is_empty())
         .unwrap_or_else(|| EXA_MCP_ENDPOINT.to_string())
@@ -720,7 +720,7 @@ async fn search_exa_public(
         "params": {
             "protocolVersion": "2025-03-26",
             "capabilities": {},
-            "clientInfo": {"name": "miyu", "version": env!("CARGO_PKG_VERSION")},
+            "clientInfo": {"name": "gqy", "version": env!("CARGO_PKG_VERSION")},
         },
     });
     let response = client
@@ -1930,7 +1930,7 @@ mod tests {
         assert!(search_provider_order("exa", &config).is_ok());
     }
 
-    /// 真实网络实测：cargo test --bin miyu -- --ignored exa_free_quota
+    /// 真实网络实测：cargo test --bin gqy -- --ignored exa_free_quota
     #[tokio::test]
     #[ignore = "hits the real Exa MCP endpoint"]
     async fn exa_free_quota_live_search() {
@@ -1938,7 +1938,7 @@ mod tests {
             .timeout(CRAWLER_TIMEOUT)
             .build()
             .unwrap();
-        let output = search_exa_public(&client, "Arch Linux kernel release", 2)
+        let output = search_exa_public(&client, "macOS kernel release", 2)
             .await
             .unwrap();
         assert!(output.contains("**Provider**: Exa (free quota)"));

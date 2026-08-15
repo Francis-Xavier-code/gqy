@@ -1,0 +1,32 @@
+{
+  "name": "query_applegamingwiki",
+  "display_name": "查询 macOS 游戏兼容性",
+  "description": "查询 AppleGamingWiki 的 macOS 游戏兼容性信息（原生、Crossover、Wine、Whisky、Parallels 等运行方式与评价）。",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "query": {
+        "type": "string",
+        "description": "Game name to search."
+      },
+      "title": {
+        "type": "string",
+        "description": "Exact wiki page title."
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "auto",
+          "search",
+          "page"
+        ]
+      }
+    }
+  },
+  "permission": "readonly",
+  "always_loaded": false,
+  "load_policy": "group",
+  "groups": [
+    "gaming"
+  ]
+}

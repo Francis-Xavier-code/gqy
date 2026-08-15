@@ -80,37 +80,68 @@ pub(crate) fn write_image_cache_file(
     Ok(path)
 }
 
+/// macOS 剪贴板图片:pbpaste -tiff 取 TIFF,再用系统自带 sips 转 PNG。
 pub fn read_clipboard_image() -> Result<Option<ClipboardImage>> {
-    if let Some(img) = try_command("wl-paste", &["-t", "image/png"], "image/png")? {
-        return Ok(Some(img));
+    if !clipboard_classes()?.iter().any(|class| is_image_class(class)) {
+        return Ok(None);
     }
-    if let Some(img) = try_command(
-        "xclip",
-        &["-selection", "clipboard", "-t", "image/png", "-o"],
-        "image/png",
-    )? {
-        return Ok(Some(img));
-    }
-    Ok(None)
-}
-
-fn try_command(cmd: &str, args: &[&str], mime: &str) -> Result<Option<ClipboardImage>> {
-    let output = Command::new(cmd)
-        .args(args)
+    let tiff = Command::new("pbpaste")
+        .arg("-tiff")
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
         .output();
-
-    match output {
-        Ok(output) if output.status.success() && !output.stdout.is_empty() => {
-            if output.stdout.len() > MAX_CLIPBOARD_IMAGE_BYTES {
-                return Ok(None);
-            }
-            Ok(Some(ClipboardImage::new(mime.to_string(), output.stdout)))
-        }
-        _ => Ok(None),
+    let Ok(output) = tiff else {
+        return Ok(None);
+    };
+    if !output.status.success() || output.stdout.is_empty() {
+        return Ok(None);
     }
+    if output.stdout.len() > MAX_CLIPBOARD_IMAGE_BYTES {
+        return Ok(None);
+    }
+    if let Some(png) = tiff_to_png(&output.stdout)? {
+        return Ok(Some(ClipboardImage::new("image/png".to_string(), png)));
+    }
+    Ok(Some(ClipboardImage::new(
+        "image/tiff".to_string(),
+        output.stdout,
+    )))
+}
+
+fn tiff_to_png(tiff: &[u8]) -> Result<Option<Vec<u8>>> {
+    let dir = std::env::temp_dir();
+    let id = format!("gqy-clipboard-{}", std::process::id());
+    let input = dir.join(format!("{id}.tiff"));
+    let output = dir.join(format!("{id}.png"));
+    std::fs::write(&input, tiff)?;
+    let status = Command::new("sips")
+        .args(["-s", "format", "png", "-s", "formatOptions", "default"])
+        .arg(&input)
+        .arg("--out")
+        .arg(&output)
+        .stdin(Stdio::null())
+        .stderr(Stdio::null())
+        .status();
+    let _ = std::fs::remove_file(&input);
+    match status {
+        Ok(status) if status.success() => {
+            let png = std::fs::read(&output).ok();
+            let _ = std::fs::remove_file(&output);
+            Ok(png.filter(|data| !data.is_empty()))
+        }
+        _ => {
+            let _ = std::fs::remove_file(&output);
+            Ok(None)
+        }
+    }
+}
+
+fn is_image_class(class: &str) -> bool {
+    let class = class.to_ascii_lowercase();
+    ["pngf", "tiff", "jpeg", "8bps", "gif", "webp"]
+        .iter()
+        .any(|c| class.contains(c))
 }
 
 const IMAGE_EXTENSIONS: &[&str] = &["png", "jpg", "jpeg", "gif", "webp", "bmp", "svg"];
@@ -124,19 +155,15 @@ pub enum ClipboardContent {
 }
 
 pub fn read_clipboard() -> Result<ClipboardContent> {
-    let targets = list_clipboard_targets()?;
-    let has_uri_list = targets.iter().any(|t| {
-        t == "text/uri-list"
-            || t == "x-special/gnome-copied-files"
-            || t == "application/glfw+clipboard-32678"
-    });
-    let has_image = targets.iter().any(|t| t.starts_with("image/"));
-    let has_text = targets
+    let classes = clipboard_classes()?;
+    let has_file_url = classes.iter().any(|c| c.contains("furl") || c.contains("file-url"));
+    let has_image = classes.iter().any(|class| is_image_class(class));
+    let has_text = classes
         .iter()
-        .any(|t| t == "text/plain" || t == "TEXT" || t == "STRING" || t == "UTF8_STRING");
-    if has_uri_list || has_text {
+        .any(|c| c.contains("utf8") || c.contains("text"));
+    if has_file_url || has_text {
         if let Some(text) = read_clipboard_text()? {
-            if has_uri_list || text.starts_with("file://") || text.starts_with('/') {
+            if has_file_url || text.starts_with("file://") || text.starts_with('/') {
                 if let Some(cp) = parse_clipboard_path(&text) {
                     if cp.is_image {
                         return Ok(ClipboardContent::ImagePath(cp.path));
@@ -158,40 +185,35 @@ pub fn read_clipboard() -> Result<ClipboardContent> {
     Ok(ClipboardContent::None)
 }
 
-fn list_clipboard_targets() -> Result<Vec<String>> {
-    if let Some(targets) = try_targets_command("wl-paste", &["-l"])? {
-        return Ok(targets);
-    }
-    if let Some(targets) =
-        try_targets_command("xclip", &["-selection", "clipboard", "-t", "TARGETS", "-o"])?
-    {
-        return Ok(targets);
-    }
-    Ok(Vec::new())
-}
-
-fn try_targets_command(cmd: &str, args: &[&str]) -> Result<Option<Vec<String>>> {
-    let output = Command::new(cmd)
-        .args(args)
+/// macOS 剪贴板内容类型:`osascript -e 'clipboard info'` 输出
+/// `«class PNGf», «class TIFF», «class utf8»` 之类;解析出类型名列表。
+fn clipboard_classes() -> Result<Vec<String>> {
+    let output = Command::new("osascript")
+        .args(["-e", "clipboard info"])
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
         .output();
-    match output {
-        Ok(o) if o.status.success() && !o.stdout.is_empty() => {
-            let targets = String::from_utf8_lossy(&o.stdout)
-                .lines()
-                .map(|line| line.trim().to_string())
-                .filter(|line| !line.is_empty())
-                .collect::<Vec<_>>();
-            if targets.is_empty() {
-                Ok(None)
-            } else {
-                Ok(Some(targets))
-            }
-        }
-        _ => Ok(None),
+    let Ok(output) = output else {
+        return Ok(Vec::new());
+    };
+    if !output.status.success() {
+        return Ok(Vec::new());
     }
+    let text = String::from_utf8_lossy(&output.stdout);
+    let mut classes = Vec::new();
+    for token in text.split([',', '«', '»']) {
+        let token = token.trim();
+        if token.is_empty() {
+            continue;
+        }
+        if token.starts_with("class ") {
+            classes.push(token.trim_start_matches("class ").to_string());
+        } else if token.contains("class") {
+            classes.push(token.to_string());
+        }
+    }
+    Ok(classes)
 }
 
 pub struct ClipboardPath {
@@ -200,29 +222,11 @@ pub struct ClipboardPath {
 }
 
 pub fn read_clipboard_text() -> Result<Option<String>> {
-    if let Some(text) = try_text_command("wl-paste", &[])? {
-        return Ok(Some(text));
-    }
-    if let Some(text) = try_text_command("xclip", &["-selection", "clipboard", "-o"])? {
-        return Ok(Some(text));
-    }
-    if let Some(text) = try_text_command("xsel", &["--clipboard", "--output"])? {
-        return Ok(Some(text));
-    }
-    Ok(None)
+    try_text_command("pbpaste", &[])
 }
 
 pub fn write_clipboard_text(text: &str) -> Result<bool> {
-    if try_write_text_command("wl-copy", &[], text)? {
-        return Ok(true);
-    }
-    if try_write_text_command("xclip", &["-selection", "clipboard"], text)? {
-        return Ok(true);
-    }
-    if try_write_text_command("xsel", &["--clipboard", "--input"], text)? {
-        return Ok(true);
-    }
-    Ok(false)
+    try_write_text_command("pbcopy", &[], text)
 }
 
 fn try_write_text_command(cmd: &str, args: &[&str], text: &str) -> Result<bool> {

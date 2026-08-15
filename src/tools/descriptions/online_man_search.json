@@ -1,7 +1,7 @@
 {
   "name": "online_man_search",
   "display_name": "搜索在线手册",
-  "description": "Search online Linux man pages using Arch manual pages.",
+  "description": "Search man pages with the local man -k command.",
   "parameters": {
     "type": "object",
     "properties": {
@@ -26,6 +26,6 @@
   "always_loaded": false,
   "load_policy": "summary",
   "groups": [
-    "linux-docs"
+    "man-docs"
   ]
 }

@@ -50,7 +50,7 @@ pub fn register_run_command(registry: &mut ToolRegistry, allow_command_execution
 pub fn register_readonly(registry: &mut ToolRegistry) {
     registry.register(ToolSpec::new(
         "check_os_info",
-        t("Check basic read-only OS, shell, desktop session, kernel, host, and package-manager context. For concrete Linux input method issues, load the linux-input-method-diagnose skill.", "查看只读基础系统信息，包括 OS、shell、桌面会话、内核、主机和包管理器上下文。排查具体 Linux 输入法问题时先加载 linux-input-method-diagnose 技能。"),
+        t("Check basic read-only macOS system context: OS version, shell, kernel, host, and package-manager state.", "查看只读基础系统信息，包括 macOS 版本、shell、内核、主机和包管理器状态。"),
         json!({"type":"object","properties":{},"additionalProperties":false}),
         |_| async move { check_os_info() },
     ));
@@ -76,17 +76,7 @@ pub fn register_readonly(registry: &mut ToolRegistry) {
 
 fn check_os_info() -> Result<String> {
     let mut env = BTreeMap::new();
-    for key in [
-        "SHELL",
-        "TERM",
-        "LANG",
-        "PATH",
-        "XDG_CURRENT_DESKTOP",
-        "XDG_SESSION_TYPE",
-        "DESKTOP_SESSION",
-        "WAYLAND_DISPLAY",
-        "DISPLAY",
-    ] {
+    for key in ["SHELL", "TERM", "LANG", "PATH"] {
         if let Ok(value) = std::env::var(key) {
             if !value.trim().is_empty() {
                 env.insert(key, value);
@@ -94,85 +84,41 @@ fn check_os_info() -> Result<String> {
         }
     }
     // Shared with the `<host-environment/>` prompt block so the two never
-    // disagree about what OS this is; `os_release_text` also covers the
-    // `/usr/lib/os-release` fallback that image-based distros rely on.
-    let os_release = crate::host_info::os_release_text();
-    let arch_release = read_small_file("/etc/arch-release").is_some();
-    let debian_version = read_small_file("/etc/debian_version");
-    let fedora_release = read_small_file("/etc/fedora-release");
-    let proc_version = read_small_file("/proc/version");
-    let proc_cmdline = read_small_file("/proc/cmdline");
+    // disagree about what OS this is.
     let macos_system_version = crate::host_info::macos_system_version_text();
     let macos = parse_macos_system_version(macos_system_version.as_deref());
-    let package_manager_guess = package_manager_guess(
-        &os_release,
-        arch_release,
-        debian_version.is_some(),
-        fedora_release.is_some(),
-        macos_system_version.is_some(),
-    );
+    let package_manager_guess = package_manager_guess();
+    let hostname = std::process::Command::new("hostname")
+        .output()
+        .ok()
+        .filter(|output| output.status.success())
+        .map(|output| String::from_utf8_lossy(&output.stdout).trim().to_string())
+        .filter(|value| !value.is_empty());
     Ok(serde_json::to_string_pretty(&json!({
         "ok": true,
         "platform": std::env::consts::OS,
-        "os_release": os_release,
-        "arch_release": arch_release,
-        "debian_version": debian_version,
-        "fedora_release": fedora_release,
         "macos": macos,
-        "kernel_version": proc_version,
-        "kernel_cmdline": proc_cmdline,
+        "kernel_version": crate::host_info::detect_kernel_release(),
         "arch": std::env::consts::ARCH,
         "os": std::env::consts::OS,
         "family": std::env::consts::FAMILY,
         "username": std::env::var("USER").ok().or_else(|| std::env::var("USERNAME").ok()),
-        "hostname": read_small_file("/etc/hostname").map(|value| value.trim().to_string()),
+        "hostname": hostname,
         "env": env,
         "package_manager_guess": package_manager_guess,
         "notes": [
-            "This tool is read-only and does not execute shell commands.",
-            "This only reports basic OS context. For concrete Linux input method issues, load the linux-input-method-diagnose skill."
+            "This tool is read-only and does not execute shell commands."
         ],
     }))?)
 }
 
-fn package_manager_guess(
-    os_release: &Option<String>,
-    arch_release: bool,
-    debian_version: bool,
-    fedora_release: bool,
-    macos: bool,
-) -> Vec<&'static str> {
-    let lower = os_release
-        .as_deref()
-        .unwrap_or_default()
-        .to_ascii_lowercase();
+fn package_manager_guess() -> Vec<&'static str> {
     let mut managers = Vec::new();
-    if arch_release || lower.contains("id=arch") || lower.contains("id_like=arch") {
-        managers.push("pacman");
+    if Path::new("/opt/homebrew").exists() || Path::new("/usr/local/Homebrew").exists() {
+        managers.push("brew");
     }
-    if debian_version
-        || lower.contains("id=debian")
-        || lower.contains("id=ubuntu")
-        || lower.contains("id_like=debian")
-    {
-        managers.push("apt");
-    }
-    if fedora_release || lower.contains("id=fedora") || lower.contains("id_like=fedora") {
-        managers.push("dnf");
-    }
-    if macos || std::env::consts::OS == "macos" {
-        if Path::new("/opt/homebrew").exists() || Path::new("/usr/local/Homebrew").exists() {
-            managers.push("brew");
-        }
-        if Path::new("/opt/local").exists() {
-            managers.push("port");
-        }
-        if !managers
-            .iter()
-            .any(|manager| matches!(*manager, "brew" | "port"))
-        {
-            managers.push("brew");
-        }
+    if Path::new("/opt/local").exists() {
+        managers.push("port");
     }
     if managers.is_empty() {
         managers.push("unknown");
@@ -535,16 +481,16 @@ async fn execute_command(command: &str, timeout: u64, progress: ToolProgress) ->
         // Explicit cwd: shell commands must run in the turn workspace, not
         // whatever the daemon process cwd happens to be.
         .current_dir(super::workspace::effective_workdir());
-    // 工具桥环境(任务#12):脚本里 `miyu tool-call` 凭这些以本回合的
+    // 工具桥环境(任务#12):脚本里 `gqy tool-call` 凭这些以本回合的
     // 会话身份/来源打回 daemon 执行结构化工具,内层调用照走 guard 管线。
     if let Some(session) = super::workspace::try_session() {
-        command_process.env("MIYU_SESSION", &*session);
+        command_process.env("GQY_SESSION", &*session);
     }
     if let Ok(origin) = serde_json::to_string(&super::workspace::current_turn_origin()) {
-        command_process.env("MIYU_TURN_ORIGIN", origin);
+        command_process.env("GQY_TURN_ORIGIN", origin);
     }
     command_process.env(
-        "MIYU_BRIDGE_DEPTH",
+        "GQY_BRIDGE_DEPTH",
         super::workspace::current_bridge_depth().to_string(),
     );
     command_process
@@ -1044,7 +990,7 @@ mod tests {
         assert_eq!(stderr, b"err");
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(target_os = "macos")]
     #[tokio::test]
     async fn command_timeout_kills_descendant_processes() {
         let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();

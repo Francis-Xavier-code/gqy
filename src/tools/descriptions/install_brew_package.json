@@ -1,13 +1,13 @@
 {
-  "name": "install_aur_package",
-  "display_name": "安装 AUR 包",
-  "description": "Install an AUR package only after review_aur_package recorded an allowed review state and the user explicitly confirmed installation in a later reply. Requires user_confirmed=true. ",
+  "name": "install_brew_package",
+  "display_name": "安装 Homebrew 包",
+  "description": "Install a Homebrew package only after review_brew_package recorded an allowed review state and the user explicitly confirmed installation in a later reply. Requires user_confirmed=true. Runs brew install.",
   "parameters": {
     "type": "object",
     "properties": {
       "package": {
         "type": "string",
-        "description": "AUR package name."
+        "description": "Homebrew formula or cask name."
       },
       "user_confirmed": {
         "type": "boolean",
@@ -19,10 +19,10 @@
       "user_confirmed"
     ]
   },
-  "permission": "writes",
+  "permission": "write",
   "always_loaded": false,
   "load_policy": "group",
   "groups": [
-    "arch"
+    "brew"
   ]
 }

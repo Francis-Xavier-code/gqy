@@ -5,7 +5,7 @@
 
 set -u
 
-VERSION="0.2.0"
+VERSION="0.3.0"
 APP_NAME="battery-care"
 SYSFS_ROOT="${SYSFS_ROOT:-}"
 DRY_RUN=0
@@ -25,14 +25,19 @@ Usage:
 
 Commands:
   status    show health, charge, limit, backend, and path
-  limit N   set stop limit; numeric backends use start=N-5
+  limit N   set stop limit (macOS writes pmset chargelimit)
   set       set --start N and/or --stop N
   reset     restore full charge
   doctor    detailed diagnostics
 
 Options:
-  --dry-run         show writes without changing sysfs
-  --sysfs-root DIR  prefix sysfs paths for fixture testing
+  --dry-run         show writes without changing the system
+  --sysfs-root DIR  prefix sysfs paths for fixture testing (Linux only)
+
+Backends:
+  Linux   sysfs charge thresholds (standard / ThinkPad smapi / Huawei /
+          IdeaPad conservation / LG / Samsung / Sony)
+  macOS   pmset chargelimit (Intel and Apple silicon MacBooks, requires sudo)
 EOF
 }
 
@@ -123,6 +128,90 @@ first_battery_dir() {
   done
   shopt -u nullglob
   return 1
+}
+
+macos_batt_line() {
+  pmset -g batt 2>/dev/null | grep 'InternalBattery' | head -n 1
+}
+
+macos_batt_state() {
+  local line
+  line="$(macos_batt_line)"
+  [[ -n "$line" ]] || return 0
+  case "$line" in
+    *discharging*) printf 'discharging' ;;
+    *"not charging"*) printf 'not charging' ;;
+    *charging*) printf 'charging' ;;
+    *charged*) printf 'charged' ;;
+  esac
+}
+
+macos_batt_percent() {
+  local line
+  line="$(macos_batt_line)"
+  [[ "$line" =~ ([0-9]+)% ]] && printf '%s' "${BASH_REMATCH[1]}"
+}
+
+macos_ioreg_value() {
+  local key="$1"
+  ioreg -rn AppleSmartBattery 2>/dev/null | grep "\"$key\" = " | head -n 1 | awk -F'= ' '{print $2}'
+}
+
+macos_current_chargelimit() {
+  local v
+  v="$(pmset -g custom 2>/dev/null | grep -i chargelimit | tail -n 1 | awk '{print $2}')"
+  if [[ -n "$v" ]]; then
+    printf '%s' "$v"
+    return 0
+  fi
+  v="$(pmset -g 2>/dev/null | grep -i chargelimit | tail -n 1 | awk '{print $2}')"
+  [[ -n "$v" ]] && printf '%s' "$v"
+}
+
+macos_mah_to_wh() {
+  local mah="$1" mv
+  mah="${mah//[^0-9]/}"
+  mv="$(macos_ioreg_value Voltage)"
+  if [[ "$mah" =~ ^[0-9]+$ && "$mv" =~ ^[0-9]+$ && "$mv" -gt 0 ]]; then
+    awk -v c="$mah" -v v="$mv" 'BEGIN { printf "%.1f Wh", c * v / 1000000 }'
+  else
+    printf '%s mAh' "$mah"
+  fi
+}
+
+print_macos_battery_status() {
+  local state charge full design cycle temp health capacity_line
+  state="$(macos_batt_state)"
+  charge="$(macos_batt_percent)"
+  full="$(macos_ioreg_value AppleRawMaxCapacity)"
+  [[ -n "$full" ]] || full="$(macos_ioreg_value MaxCapacity)"
+  design="$(macos_ioreg_value DesignCapacity)"
+  cycle="$(macos_ioreg_value CycleCount)"
+  temp="$(macos_ioreg_value Temperature)"
+  health="$(percent_from_energy "$full" "$design" 2>/dev/null || true)"
+  [[ -n "$state" ]] && printf 'State: %s\n' "$state"
+  [[ -n "$charge" ]] && printf 'Charge: %s%%\n' "$charge"
+  [[ -n "$health" ]] && printf 'Health: %s\n' "$health"
+  if [[ -n "$full" || -n "$design" ]]; then
+    capacity_line=""
+    if [[ -n "$full" ]]; then
+      capacity_line="full $(macos_mah_to_wh "$full")"
+    fi
+    if [[ -n "$design" ]]; then
+      if [[ -n "$capacity_line" ]]; then
+        capacity_line="$capacity_line / design $(macos_mah_to_wh "$design")"
+      else
+        capacity_line="design $(macos_mah_to_wh "$design")"
+      fi
+    fi
+    printf 'Capacity: %s\n' "$capacity_line"
+  fi
+  if [[ "$temp" =~ ^[0-9]+$ && "$temp" -gt 500 ]]; then
+    printf 'Temperature: '
+    awk -v t="$temp" 'BEGIN { printf "%.1f °C", (t - 2731) / 10 }'
+    printf '\n'
+  fi
+  [[ -n "$cycle" ]] && printf 'Cycles: %s\n' "$cycle"
 }
 
 one_line() {
@@ -319,6 +408,16 @@ probe_vendor_toggles() {
   [[ -e "$path" ]] && add_backend "sony-legacy" "sony-laptop" "fixed-toggle" "" "" "$path" "" ""
 }
 
+probe_macos_pmset() {
+  # 夹具模式(--sysfs-root)下跳过真实机器探测,让 sysfs 目录可在任意机器上复现。
+  [[ -z "$SYSFS_ROOT" ]] || return 0
+  [[ "$(uname -s 2>/dev/null)" == "Darwin" ]] || return 0
+  command -v pmset >/dev/null 2>&1 || return 0
+  command -v ioreg >/dev/null 2>&1 || return 0
+  pmset -g batt 2>/dev/null | grep -q 'InternalBattery' || return 0
+  add_backend "macos-pmset" "macos-pmset" "numeric-single" "" "" "" "" ""
+}
+
 probe_all() {
   BACKEND=()
   LABEL=()
@@ -334,6 +433,7 @@ probe_all() {
   probe_huawei_wmi
   probe_ideapad_conservation
   probe_vendor_toggles
+  probe_macos_pmset
 }
 
 count_backend() {
@@ -347,7 +447,7 @@ count_backend() {
 
 selected_backend_type() {
   local type
-  for type in standard-threshold thinkpad-smapi huawei-wmi standard-charge-type ideapad-conservation lg-legacy samsung-legacy sony-legacy; do
+  for type in macos-pmset standard-threshold thinkpad-smapi huawei-wmi standard-charge-type ideapad-conservation lg-legacy samsung-legacy sony-legacy; do
     if (( $(count_backend "$type") > 0 )); then
       printf '%s' "$type"
       return 0
@@ -380,6 +480,10 @@ path_writable_state() {
 device_name() {
   local vendor=""
   local product=""
+  if [[ -z "$SYSFS_ROOT" && "$(uname -s 2>/dev/null)" == "Darwin" ]]; then
+    printf '%s' "$(sysctl -n hw.model 2>/dev/null || printf 'unknown')"
+    return 0
+  fi
   [[ -r "$(sys_path /sys/class/dmi/id/sys_vendor)" ]] && vendor="$(read_first "$(sys_path /sys/class/dmi/id/sys_vendor)")"
   [[ -r "$(sys_path /sys/class/dmi/id/product_name)" ]] && product="$(read_first "$(sys_path /sys/class/dmi/id/product_name)")"
   if [[ -n "$vendor" && -n "$product" ]]; then
@@ -410,6 +514,9 @@ control_summary() {
     numeric-pair)
       printf 'start-stop'
       ;;
+    numeric-single)
+      printf 'stop-only'
+      ;;
     fixed-toggle)
       printf 'fixed-toggle'
       ;;
@@ -428,6 +535,14 @@ control_summary() {
 write_summary() {
   local idx="$1"
   local path=""
+  if [[ "${BACKEND[$idx]}" == "macos-pmset" ]]; then
+    if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+      printf 'yes'
+    else
+      printf 'root-required'
+    fi
+    return 0
+  fi
   [[ -n "${STOP_PATH[$idx]}" && -e "${STOP_PATH[$idx]}" ]] && path="${STOP_PATH[$idx]}"
   [[ -z "$path" && -n "${START_PATH[$idx]}" && -e "${START_PATH[$idx]}" ]] && path="${START_PATH[$idx]}"
   [[ -z "$path" && -n "${VALUE_PATH[$idx]}" && -e "${VALUE_PATH[$idx]}" ]] && path="${VALUE_PATH[$idx]}"
@@ -441,6 +556,20 @@ limit_summary() {
   local stop=""
   local value=""
   local ctype=""
+  if [[ "${BACKEND[$idx]}" == "macos-pmset" ]]; then
+    local current
+    current="$(macos_current_chargelimit)"
+  if [[ -n "$current" ]]; then
+    if [[ "$current" == "100" ]]; then
+      printf 'limit 100%% (full charge)'
+    else
+      printf 'limit %s%%' "$current"
+    fi
+  else
+    printf 'no limit (full charge)'
+  fi
+  return 0
+  fi
   [[ -n "${START_PATH[$idx]}" && -r "${START_PATH[$idx]}" ]] && start="$(read_first "${START_PATH[$idx]}" 2>/dev/null || true)"
   [[ -n "${STOP_PATH[$idx]}" && -r "${STOP_PATH[$idx]}" ]] && stop="$(read_first "${STOP_PATH[$idx]}" 2>/dev/null || true)"
   [[ -n "${VALUE_PATH[$idx]}" && -r "${VALUE_PATH[$idx]}" ]] && value="$(read_first "${VALUE_PATH[$idx]}" 2>/dev/null || true)"
@@ -471,6 +600,10 @@ limit_summary() {
 
 primary_path() {
   local idx="$1"
+  if [[ "${BACKEND[$idx]}" == "macos-pmset" ]]; then
+    printf 'pmset -a chargelimit'
+    return 0
+  fi
   if [[ -n "${STOP_PATH[$idx]}" && -e "${STOP_PATH[$idx]}" ]]; then
     printf '%s' "${STOP_PATH[$idx]}"
   elif [[ -n "${VALUE_PATH[$idx]}" && -e "${VALUE_PATH[$idx]}" ]]; then
@@ -640,6 +773,33 @@ set_lg_backend() {
   fi
 }
 
+set_macos_backend() {
+  local idx="$1"
+  local stop="$2"
+  is_int_0_100 "$stop" || die "limit must be an integer from 0 to 100"
+  write_macos_chargelimit "$stop"
+}
+
+write_macos_chargelimit() {
+  local value="$1"
+  if (( DRY_RUN )); then
+    printf 'dry-run: sudo pmset -a chargelimit %s\n' "$value"
+    return 0
+  fi
+  if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
+    die "permission denied for pmset chargelimit; rerun with sudo (sudo battery-care limit $value)"
+  fi
+  local before after
+  before="$(macos_current_chargelimit)"
+  if ! pmset -a chargelimit "$value" >/dev/null 2>&1; then
+    die "pmset -a chargelimit $value failed; this Mac may not support battery charge limiting"
+  fi
+  after="$(macos_current_chargelimit)"
+  if [[ -n "$after" && "$after" != "$value" ]]; then
+    die "write verification failed for chargelimit: expected '$value', read '$after'"
+  fi
+}
+
 apply_thresholds() {
   local start="$1"
   local stop="$2"
@@ -667,6 +827,10 @@ apply_thresholds() {
       lg-legacy)
         [[ -n "$stop" ]] || die "lg-laptop supports fixed limit only; pass --stop"
         set_lg_backend "$idx" "$stop"
+        ;;
+      macos-pmset)
+        [[ -n "$stop" ]] || die "${LABEL[$idx]} supports a stop limit only; pass --stop"
+        set_macos_backend "$idx" "$stop"
         ;;
     esac
   done < <(selected_indexes "$type")
@@ -711,6 +875,8 @@ cmd_limit() {
   is_int_0_100 "$stop" || die "limit must be an integer from 0 to 100"
   if (( stop >= 100 )); then
     apply_thresholds "0" "100"
+  elif [[ "$(uname -s 2>/dev/null)" == "Darwin" ]]; then
+    apply_thresholds "0" "$stop"
   else
     (( stop >= 5 )) || die "limit must be at least 5 when using numeric start threshold"
     start=$((stop - 5))
@@ -775,52 +941,56 @@ print_status_summary() {
   local bat_dir state charge health full design capacity_line full_unit design_unit voltage_now
   printf 'Device: %s\n' "$(device_name)"
   printf 'Battery: %s\n' "${LABEL[$idx]}"
-  bat_dir="$(first_battery_dir || true)"
-  if [[ -n "$bat_dir" ]]; then
-    state="$(read_prop "$bat_dir" status 2>/dev/null || true)"
-    charge="$(read_prop "$bat_dir" capacity 2>/dev/null || true)"
-    full="$(read_prop "$bat_dir" energy_full 2>/dev/null || true)"
-    design="$(read_prop "$bat_dir" energy_full_design 2>/dev/null || true)"
-    voltage_now="$(read_prop "$bat_dir" voltage_now 2>/dev/null || true)"
-    full_unit="micro_wh"
-    design_unit="micro_wh"
-    if [[ -z "$full" ]]; then
-      full="$(read_prop "$bat_dir" charge_full 2>/dev/null || true)"
-      full_unit="micro_ah"
-    fi
-    if [[ -z "$design" ]]; then
-      design="$(read_prop "$bat_dir" charge_full_design 2>/dev/null || true)"
-      design_unit="micro_ah"
-    fi
-    health="$(percent_from_energy "$full" "$design" 2>/dev/null || true)"
-    if [[ -n "$state" ]]; then
-      printf 'State: %s\n' "$state"
-    fi
-    if [[ -n "$charge" ]]; then
-      printf 'Charge: %s%%\n' "$charge"
-    fi
-    if [[ -n "$health" ]]; then
-      printf 'Health: %s\n' "$health"
-    fi
-    if [[ -n "$full" || -n "$design" ]]; then
-      capacity_line=""
-      if [[ -n "$full" ]]; then
-        if [[ "$full_unit" == "micro_ah" ]]; then
-          capacity_line="full $(format_charge_as_energy "$full" "$voltage_now")"
-        else
-          capacity_line="full $(format_sysfs_number "$full" "$full_unit")"
-        fi
+  if [[ "${BACKEND[$idx]}" == "macos-pmset" ]]; then
+    print_macos_battery_status
+  else
+    bat_dir="$(first_battery_dir || true)"
+    if [[ -n "$bat_dir" ]]; then
+      state="$(read_prop "$bat_dir" status 2>/dev/null || true)"
+      charge="$(read_prop "$bat_dir" capacity 2>/dev/null || true)"
+      full="$(read_prop "$bat_dir" energy_full 2>/dev/null || true)"
+      design="$(read_prop "$bat_dir" energy_full_design 2>/dev/null || true)"
+      voltage_now="$(read_prop "$bat_dir" voltage_now 2>/dev/null || true)"
+      full_unit="micro_wh"
+      design_unit="micro_wh"
+      if [[ -z "$full" ]]; then
+        full="$(read_prop "$bat_dir" charge_full 2>/dev/null || true)"
+        full_unit="micro_ah"
       fi
-      if [[ -n "$design" ]]; then
-        if [[ "$design_unit" == "micro_ah" ]]; then
-          [[ -n "$capacity_line" ]] && capacity_line="$capacity_line / design $(format_charge_as_energy "$design" "$voltage_now")"
-          [[ -z "$capacity_line" ]] && capacity_line="design $(format_charge_as_energy "$design" "$voltage_now")"
-        else
-          [[ -n "$capacity_line" ]] && capacity_line="$capacity_line / design $(format_sysfs_number "$design" "$design_unit")"
-          [[ -z "$capacity_line" ]] && capacity_line="design $(format_sysfs_number "$design" "$design_unit")"
-        fi
+      if [[ -z "$design" ]]; then
+        design="$(read_prop "$bat_dir" charge_full_design 2>/dev/null || true)"
+        design_unit="micro_ah"
       fi
-      printf 'Capacity: %s\n' "$capacity_line"
+      health="$(percent_from_energy "$full" "$design" 2>/dev/null || true)"
+      if [[ -n "$state" ]]; then
+        printf 'State: %s\n' "$state"
+      fi
+      if [[ -n "$charge" ]]; then
+        printf 'Charge: %s%%\n' "$charge"
+      fi
+      if [[ -n "$health" ]]; then
+        printf 'Health: %s\n' "$health"
+      fi
+      if [[ -n "$full" || -n "$design" ]]; then
+        capacity_line=""
+        if [[ -n "$full" ]]; then
+          if [[ "$full_unit" == "micro_ah" ]]; then
+            capacity_line="full $(format_charge_as_energy "$full" "$voltage_now")"
+          else
+            capacity_line="full $(format_sysfs_number "$full" "$full_unit")"
+          fi
+        fi
+        if [[ -n "$design" ]]; then
+          if [[ "$design_unit" == "micro_ah" ]]; then
+            [[ -n "$capacity_line" ]] && capacity_line="$capacity_line / design $(format_charge_as_energy "$design" "$voltage_now")"
+            [[ -z "$capacity_line" ]] && capacity_line="design $(format_charge_as_energy "$design" "$voltage_now")"
+          else
+            [[ -n "$capacity_line" ]] && capacity_line="$capacity_line / design $(format_sysfs_number "$design" "$design_unit")"
+            [[ -z "$capacity_line" ]] && capacity_line="design $(format_sysfs_number "$design" "$design_unit")"
+          fi
+        fi
+        printf 'Capacity: %s\n' "$capacity_line"
+      fi
     fi
   fi
   printf 'Support: yes\n'
@@ -837,7 +1007,11 @@ cmd_status() {
   type="$(selected_backend_type)" || {
     printf 'Support: no\n'
     printf 'Device: %s\n' "$(device_name)"
-    printf 'Reason: no known charge-threshold interface\n'
+    if [[ "$(uname -s 2>/dev/null)" == "Darwin" ]]; then
+      printf 'Reason: macOS battery present but charge limiting unavailable (pmset chargelimit)\n'
+    else
+      printf 'Reason: no known charge-threshold interface\n'
+    fi
     printf 'Hint: battery-care doctor\n'
     return 1
   }
@@ -846,7 +1020,86 @@ cmd_status() {
   print_status_summary "$idx"
 }
 
+doctor_macos() {
+  local line value selected idx prop current temp full design
+  printf 'Tool: %s %s\n' "$APP_NAME" "$VERSION"
+  printf 'Shell: bash %s\n' "${BASH_VERSION:-unknown}"
+  printf 'UID: %s\n' "${EUID:-$(id -u)}"
+  printf 'Kernel: '
+  uname -sr
+  printf 'Device: %s\n' "$(device_name)"
+  printf 'OS: '
+  sw_vers -productName -productVersion 2>/dev/null || printf 'unknown'
+
+  printf '\nPowerSupplies:\n'
+  printf '  %s\n' "$(pmset -g batt 2>/dev/null | head -n 1)"
+
+  printf '\nBatteries:\n'
+  if [[ -n "$(macos_batt_line)" ]]; then
+    printf '  AppleSmartBattery:\n'
+    printf '    state: %s\n' "$(macos_batt_state)"
+    printf '    charge: %s%%\n' "$(macos_batt_percent)"
+    for prop in AppleRawMaxCapacity AppleRawCurrentCapacity MaxCapacity DesignCapacity CurrentCapacity CycleCount Temperature Voltage Amperage FullyCharged IsCharging ExternalConnected BatteryInstalled; do
+      value="$(macos_ioreg_value "$prop")"
+      [[ -n "$value" ]] || continue
+      printf '    %s: %s\n' "$prop" "$value"
+    done
+    temp="$(macos_ioreg_value Temperature)"
+    if [[ "$temp" =~ ^[0-9]+$ && "$temp" -gt 500 ]]; then
+      printf '    computed_temperature: '
+      awk -v t="$temp" 'BEGIN { printf "%.1f °C", (t - 2731) / 10 }'
+      printf '\n'
+    fi
+    full="$(macos_ioreg_value AppleRawMaxCapacity)"
+    [[ -n "$full" ]] || full="$(macos_ioreg_value MaxCapacity)"
+    design="$(macos_ioreg_value DesignCapacity)"
+    if [[ -n "$full" && -n "$design" ]]; then
+      printf '    computed_health: %s\n' "$(percent_from_energy "$full" "$design")"
+    fi
+  else
+    printf '  none (no InternalBattery detected)\n'
+  fi
+
+  probe_all
+  printf '\nThreshold:\n'
+  selected="$(selected_backend_type 2>/dev/null || true)"
+  if [[ -n "$selected" ]]; then
+    idx="$(selected_indexes "$selected" | head -n 1)"
+    printf '  support: yes\n'
+    printf '  backend: %s\n' "${BACKEND[$idx]}"
+    printf '  battery: %s\n' "${LABEL[$idx]}"
+    printf '  control: %s\n' "$(control_summary "$idx")"
+    printf '  limit: %s\n' "$(limit_summary "$idx")"
+    printf '  write: %s\n' "$(write_summary "$idx")"
+    printf '  path: %s\n' "$(primary_path "$idx")"
+    printf '  detected_count: %s\n' "${#BACKEND[@]}"
+  else
+    printf '  support: no\n'
+    printf '  reason: no known charge-threshold interface\n'
+    current="$(pmset -g custom 2>/dev/null | grep -i chargelimit | head -n 1)"
+    [[ -n "$current" ]] && printf '  note: %s\n' "$current"
+  fi
+
+  printf '\nDetectedInterfaces:\n'
+  if ((${#BACKEND[@]} > 0)); then
+    for idx in "${!BACKEND[@]}"; do
+      printf '  %s:\n' "${LABEL[$idx]}"
+      printf '    backend: %s\n' "${BACKEND[$idx]}"
+      printf '    control: %s\n' "$(control_summary "$idx")"
+      printf '    limit: %s\n' "$(limit_summary "$idx")"
+      printf '    write: %s\n' "$(write_summary "$idx")"
+      printf '    path: %s\n' "$(primary_path "$idx")"
+    done
+  else
+    printf '  none\n'
+  fi
+}
+
 cmd_doctor() {
+  if [[ "$(uname -s 2>/dev/null)" == "Darwin" ]]; then
+    doctor_macos
+    return 0
+  fi
   local psdir ps type name selected idx prop value path exists mark voltage_now
   printf 'Tool: %s %s\n' "$APP_NAME" "$VERSION"
   printf 'Shell: bash %s\n' "${BASH_VERSION:-unknown}"
@@ -979,16 +1232,20 @@ parse_global_options() {
   REMAINING_ARGS=("$@")
 }
 
-declare -a REMAINING_ARGS
+REMAINING_ARGS=()
 if [[ $# -eq 0 && ! -t 0 ]]; then
-  mapfile -t STDIN_ARGS < <(argv_from_stdin "$(cat)" 2>/dev/null || true)
+  STDIN_ARGS=()
+  while IFS= read -r line; do
+    STDIN_ARGS+=("$line")
+  done < <(argv_from_stdin "$(cat)" 2>/dev/null || true)
   if ((${#STDIN_ARGS[@]} > 0)); then
     set -- "${STDIN_ARGS[@]}"
   fi
 fi
 
 parse_global_options "$@"
-set -- "${REMAINING_ARGS[@]}"
+# `${x[@]+…}` 保护空数组在 bash 3.2 + set -u 下的"unbound variable"误报。
+set -- "${REMAINING_ARGS[@]+"${REMAINING_ARGS[@]}"}"
 
 cmd="${1:-status}"
 [[ $# -gt 0 ]] && shift || true

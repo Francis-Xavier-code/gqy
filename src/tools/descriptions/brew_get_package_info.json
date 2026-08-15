@@ -1,0 +1,30 @@
+{
+  "name": "brew_get_package_info",
+  "display_name": "查看 Homebrew 包",
+  "description": "Get Homebrew formula or cask details.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "package_name": {
+        "type": "string"
+      },
+      "kind": {
+        "type": "string",
+        "enum": [
+          "auto",
+          "formula",
+          "cask"
+        ]
+      }
+    },
+    "required": [
+      "package_name"
+    ]
+  },
+  "permission": "readonly",
+  "always_loaded": false,
+  "load_policy": "group",
+  "groups": [
+    "brew"
+  ]
+}

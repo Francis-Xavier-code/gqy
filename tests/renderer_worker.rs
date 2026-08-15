@@ -1,9 +1,6 @@
 use std::io::{Read, Write};
 use std::process::{Command, Stdio};
 
-#[cfg(target_os = "linux")]
-const MAX_WORKER_PEAK_RSS_KIB: u64 = 100 * 1024;
-
 fn read_u32(reader: &mut impl Read) -> u32 {
     let mut bytes = [0_u8; 4];
     reader.read_exact(&mut bytes).unwrap();
@@ -37,21 +34,6 @@ fn read_image_response(reader: &mut impl Read) -> (u32, u32, String, Vec<u8>) {
     (width, height, mime, png)
 }
 
-#[cfg(target_os = "linux")]
-fn process_peak_rss_kib(pid: u32) -> u64 {
-    let status = std::fs::read_to_string(format!("/proc/{pid}/status")).unwrap();
-    status
-        .lines()
-        .find_map(|line| {
-            line.strip_prefix("VmHWM:")?
-                .split_whitespace()
-                .next()?
-                .parse()
-                .ok()
-        })
-        .expect("renderer worker VmHWM")
-}
-
 fn render_request(markdown: &str) -> Vec<u8> {
     serde_json::to_vec(&serde_json::json!({
         "markdown": markdown,
@@ -72,9 +54,9 @@ fn render_request(markdown: &str) -> Vec<u8> {
 
 #[test]
 fn hidden_renderer_worker_returns_one_unicode_png() {
-    let mut child = Command::new(env!("CARGO_BIN_EXE_miyu"))
+    let mut child = Command::new(env!("CARGO_BIN_EXE_gqy"))
         .arg("__renderer-worker")
-        .env("MIYU_INTERNAL_RENDERER_WORKER", "1")
+        .env("GQY_INTERNAL_RENDERER_WORKER", "1")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::inherit())
@@ -82,7 +64,7 @@ fn hidden_renderer_worker_returns_one_unicode_png() {
         .unwrap();
 
     let cjk_request = render_request(
-        r#"# Miyu 长图
+        r#"# GQY 长图
 
 纯中文、`inline code`。
 
@@ -135,14 +117,6 @@ background_opacity 0.92
     assert_eq!(emoji.2, "image/png");
     assert!(emoji.3.starts_with(b"\x89PNG\r\n\x1a\n"));
 
-    #[cfg(target_os = "linux")]
-    {
-        let peak_rss_kib = process_peak_rss_kib(child.id());
-        assert!(
-            peak_rss_kib < MAX_WORKER_PEAK_RSS_KIB,
-            "renderer worker peak RSS was {peak_rss_kib} KiB, exceeding the {MAX_WORKER_PEAK_RSS_KIB} KiB budget"
-        );
-    }
     drop(stdin);
     assert!(child.wait().unwrap().success());
 }

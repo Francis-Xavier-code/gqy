@@ -1,0 +1,23 @@
+{
+  "name": "review_brew_package",
+  "display_name": "审查 Homebrew 包",
+  "description": "Fetch a Homebrew formula/cask source and prepare a security review. After review, stop and ask the user whether to install; do not call install_brew_package in the same turn.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "package": {
+        "type": "string",
+        "description": "Homebrew formula or cask name."
+      }
+    },
+    "required": [
+      "package"
+    ]
+  },
+  "permission": "readonly",
+  "always_loaded": false,
+  "load_policy": "group",
+  "groups": [
+    "brew"
+  ]
+}

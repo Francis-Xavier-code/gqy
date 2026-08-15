@@ -14,7 +14,7 @@ use crate::llm::{
 use crate::memory::{
     MemoryAccess, MemoryOrganizer, MemoryOrganizerHandle, MemoryOrigin, MemoryStore,
 };
-use crate::paths::MiyuPaths;
+use crate::paths::GQYPaths;
 use crate::question::{self, QuestionAnswers, QuestionRequest, QuestionResponse};
 use crate::state::{
     ArtifactAsset, ImageAsset, PlatformPluginScopeKey, QueuedPrompt, StateStore, Turn,
@@ -79,7 +79,7 @@ const MAX_PROMPT_DOCUMENTS: usize = 128;
 const MAX_SECRET_CHARS: usize = 100_000;
 const MAX_THINKING_VARIANT_UPDATES: usize = 64;
 const EVENT_CAPACITY: usize = 4096;
-const AUTH_COOKIE: &str = "miyu_session";
+const AUTH_COOKIE: &str = "gqy_session";
 const LOGIN_WINDOW: Duration = Duration::from_secs(60);
 const LOGIN_ATTEMPT_LIMIT: u8 = 5;
 
@@ -112,8 +112,8 @@ static KATEX_FONTS: &[(&str, &[u8])] = &[
     ("KaTeX_Size4-Regular.woff2", include_bytes!("../web/vendor/katex/fonts/KaTeX_Size4-Regular.woff2")),
     ("KaTeX_Typewriter-Regular.woff2", include_bytes!("../web/vendor/katex/fonts/KaTeX_Typewriter-Regular.woff2")),
 ];
-const MIYU_LOGO: &[u8] = include_bytes!("../pics/miyu-logo.png");
-const MIYU_WALLPAPER: &[u8] = include_bytes!("../pics/miyuwallpaper.png");
+const GQY_LOGO: &[u8] = include_bytes!("../pics/GQY-icon.png");
+const GQY_WALLPAPER: &[u8] = include_bytes!("../pics/GQY-image.png");
 
 #[derive(Clone)]
 pub(crate) struct DaemonState {
@@ -122,7 +122,7 @@ pub(crate) struct DaemonState {
     pub(crate) web_port: u16,
     web_public: bool,
     web_bind: IpAddr,
-    pub(crate) paths: MiyuPaths,
+    pub(crate) paths: GQYPaths,
     pub(crate) manager: Arc<Mutex<ManagerState>>,
     pub(crate) state_store: StateStore,
     pub(crate) events: EventHub,
@@ -135,7 +135,7 @@ pub(crate) struct DaemonState {
 
 #[cfg(test)]
 impl DaemonState {
-    pub(crate) fn for_test(paths: MiyuPaths, web_port: u16) -> Result<Self> {
+    pub(crate) fn for_test(paths: GQYPaths, web_port: u16) -> Result<Self> {
         let state_store = StateStore::new(&paths)?;
         let config = AppConfig::default();
         let context = cold_context(&config, &state_store)?;
@@ -167,7 +167,7 @@ impl DaemonState {
     }
 
     pub(crate) fn for_test_with_actor(
-        paths: MiyuPaths,
+        paths: GQYPaths,
         web_port: u16,
     ) -> Result<(Self, std::thread::JoinHandle<Result<()>>)> {
         let state_store = StateStore::new(&paths)?;
@@ -285,7 +285,7 @@ impl TurnResourceCache {
     fn get_or_build(
         &mut self,
         config: &AppConfig,
-        paths: &MiyuPaths,
+        paths: &GQYPaths,
     ) -> Result<Arc<TurnResources>> {
         let key = Self::key(config)?;
         if let Some(resources) = self.entries.get(&key).cloned() {
@@ -1796,7 +1796,7 @@ struct ThinkingVariantsResponse {
     options: Vec<ThinkingVariantOptions>,
 }
 
-pub async fn run(paths: MiyuPaths, args: WebArgs) -> Result<()> {
+pub async fn run(paths: GQYPaths, args: WebArgs) -> Result<()> {
     let password = resolve_web_password(&args)?;
     AppConfig::init_files(&paths)?;
     let config = AppConfig::load_or_default(&paths)?;
@@ -1842,17 +1842,17 @@ pub async fn run(paths: MiyuPaths, args: WebArgs) -> Result<()> {
                 requested_port = args.port,
                 "{}",
                 t(
-                    "Miyu WebUI default port is occupied; selecting an ephemeral port",
-                    "Miyu WebUI 默认端口已被占用；将选择临时端口"
+                    "GQY WebUI default port is occupied; selecting an ephemeral port",
+                    "GQY WebUI 默认端口已被占用；将选择临时端口"
                 )
             );
             tokio::net::TcpListener::bind(SocketAddr::new(bind_ip, 0))
                 .await
-                .context("binding Miyu WebUI to an ephemeral fallback port")?
+                .context("binding GQY WebUI to an ephemeral fallback port")?
         }
         Err(error) => {
             return Err(error)
-                .with_context(|| format!("binding Miyu WebUI to {bind_ip}:{}", args.port));
+                .with_context(|| format!("binding GQY WebUI to {bind_ip}:{}", args.port));
         }
     };
     let port = listener.local_addr()?.port();
@@ -1912,7 +1912,7 @@ pub async fn run(paths: MiyuPaths, args: WebArgs) -> Result<()> {
     let app = router(state.clone());
     let urls = ipc::web_access_urls_for(bind_ip, port);
     for url in &urls {
-        println!("Miyu WebUI: {url}");
+        println!("GQY WebUI: {url}");
     }
     std::io::stdout().flush().ok();
 
@@ -1940,7 +1940,7 @@ pub async fn run(paths: MiyuPaths, args: WebArgs) -> Result<()> {
         .map_err(|_| anyhow::anyhow!("WebUI actor thread panicked"))?;
     memory_organizer.shutdown();
     drop(ipc_lease);
-    serve_result.context("serving Miyu WebUI")?;
+    serve_result.context("serving GQY WebUI")?;
     actor_result
 }
 
@@ -2008,10 +2008,10 @@ fn start_ipc_server(
     state: &DaemonState,
 ) -> Result<(crate::ipc::WebCoreLease, TokioJoinHandle<()>)> {
     let lease = ipc::acquire_web_core(&state.paths)
-        .context("another Miyu core is already running or starting")?;
+        .context("another GQY core is already running or starting")?;
     let socket_path = state.paths.ipc_socket();
     let listener = tokio::net::UnixListener::bind(&socket_path)
-        .with_context(|| format!("binding Miyu IPC socket at {}", socket_path.display()))?;
+        .with_context(|| format!("binding GQY IPC socket at {}", socket_path.display()))?;
     std::fs::set_permissions(&socket_path, std::fs::Permissions::from_mode(0o600))?;
 
     let server_state = state.clone();
@@ -2024,7 +2024,7 @@ fn start_ipc_server(
                     tracing::warn!(
                         error = %error,
                         "{}",
-                        t("Miyu IPC listener stopped", "Miyu IPC 监听器已停止")
+                        t("GQY IPC listener stopped", "GQY IPC 监听器已停止")
                     );
                     break;
                 }
@@ -2041,8 +2041,8 @@ fn start_ipc_server(
                         error = %error,
                         "{}",
                         t(
-                            "Miyu IPC connection closed with an error",
-                            "Miyu IPC 连接因错误关闭"
+                            "GQY IPC connection closed with an error",
+                            "GQY IPC 连接因错误关闭"
                         )
                     );
                 }
@@ -2061,7 +2061,7 @@ async fn handle_ipc_connection(
         ipc::receive::<IpcRequest>(&mut stream),
     )
     .await
-    .context("timed out waiting for a Miyu IPC request")??
+    .context("timed out waiting for a GQY IPC request")??
     else {
         return Ok(());
     };
@@ -2294,7 +2294,7 @@ async fn handle_ipc_connection(
                 release_admin(&state.manager);
                 ipc::send(
                     &mut stream,
-                    &IpcFrame::error("Miyu core worker is unavailable"),
+                    &IpcFrame::error("GQY core worker is unavailable"),
                 )
                 .await?;
                 return Ok(());
@@ -2326,7 +2326,7 @@ async fn handle_ipc_connection(
                     release_admin(&state.manager);
                     ipc::send(
                         &mut stream,
-                        &IpcFrame::error("Miyu core stopped while reloading configuration"),
+                        &IpcFrame::error("GQY core stopped while reloading configuration"),
                     )
                     .await?
                 }
@@ -2353,7 +2353,7 @@ async fn handle_ipc_connection(
                 .is_err()
             {
                 release_admin(&state.manager);
-                anyhow::bail!("Miyu core worker is unavailable");
+                anyhow::bail!("GQY core worker is unavailable");
             }
             match receiver.await {
                 Ok(Ok(())) => {
@@ -2371,7 +2371,7 @@ async fn handle_ipc_connection(
                 }
                 Err(_) => {
                     release_admin(&state.manager);
-                    anyhow::bail!("Miyu core stopped while resetting the conversation");
+                    anyhow::bail!("GQY core stopped while resetting the conversation");
                 }
             }
         }
@@ -2397,7 +2397,7 @@ async fn handle_ipc_connection(
                     .await?;
                 }
                 Err(PlatformPersonaResetError::Unavailable) => {
-                    anyhow::bail!("Miyu core worker is unavailable");
+                    anyhow::bail!("GQY core worker is unavailable");
                 }
                 Err(PlatformPersonaResetError::Internal(message)) => {
                     ipc::send(&mut stream, &IpcFrame::error(message)).await?;
@@ -2425,7 +2425,7 @@ async fn handle_ipc_connection(
                 .is_err()
             {
                 release_admin(&state.manager);
-                anyhow::bail!("Miyu core worker is unavailable");
+                anyhow::bail!("GQY core worker is unavailable");
             }
             match receiver.await {
                 Ok(Ok(data)) => {
@@ -2443,7 +2443,7 @@ async fn handle_ipc_connection(
                 }
                 Err(_) => {
                     release_admin(&state.manager);
-                    anyhow::bail!("Miyu core stopped while undoing the conversation");
+                    anyhow::bail!("GQY core stopped while undoing the conversation");
                 }
             }
         }
@@ -2469,7 +2469,7 @@ async fn handle_ipc_connection(
                 .is_err()
             {
                 release_admin(&state.manager);
-                anyhow::bail!("Miyu core worker is unavailable");
+                anyhow::bail!("GQY core worker is unavailable");
             }
             match receiver.await {
                 Ok(Ok(data)) => {
@@ -2487,7 +2487,7 @@ async fn handle_ipc_connection(
                 }
                 Err(_) => {
                     release_admin(&state.manager);
-                    anyhow::bail!("Miyu core stopped while popping the conversation");
+                    anyhow::bail!("GQY core stopped while popping the conversation");
                 }
             }
         }
@@ -2512,7 +2512,7 @@ async fn handle_ipc_connection(
                 .is_err()
             {
                 release_admin(&state.manager);
-                anyhow::bail!("Miyu core worker is unavailable");
+                anyhow::bail!("GQY core worker is unavailable");
             }
             match receiver.await {
                 Ok(Ok(data)) => {
@@ -2530,7 +2530,7 @@ async fn handle_ipc_connection(
                 }
                 Err(_) => {
                     release_admin(&state.manager);
-                    anyhow::bail!("Miyu core stopped while compacting the conversation");
+                    anyhow::bail!("GQY core stopped while compacting the conversation");
                 }
             }
         }
@@ -2708,7 +2708,7 @@ async fn handle_session_command(
         }
         IpcCommand::ListSessions { mode } => {
             // dev 列表以 dev REPL 指针为"当前":全局指针指向普通会话,
-            // 用它高亮永远落空。"all" 是管理面(miyu session):普通+dev
+            // 用它高亮永远落空。"all" 是管理面(gqy session):普通+dev
             // 合并按更新时间排,别的人格仍不可见。
             let dev = mode.as_deref() == Some("dev");
             let all = mode.as_deref() == Some("all");
@@ -3301,14 +3301,14 @@ async fn switch_session_via_actor(
         .is_err()
     {
         release_admin(&state.manager);
-        return Err("Miyu core worker is unavailable".to_string());
+        return Err("GQY core worker is unavailable".to_string());
     }
     match receiver.await {
         Ok(Ok(())) => Ok(()),
         Ok(Err(AdminFailure::Invalid(message) | AdminFailure::Internal(message))) => Err(message),
         Err(_) => {
             release_admin(&state.manager);
-            Err("Miyu core stopped while switching sessions".to_string())
+            Err("GQY core stopped while switching sessions".to_string())
         }
     }
 }
@@ -3327,17 +3327,17 @@ async fn switch_session_via_actor_reserved(
         })
         .is_err()
     {
-        return Err("Miyu core worker is unavailable".to_string());
+        return Err("GQY core worker is unavailable".to_string());
     }
     match receiver.await {
         Ok(Ok(())) => Ok(()),
         Ok(Err(AdminFailure::Invalid(message) | AdminFailure::Internal(message))) => Err(message),
-        Err(_) => Err("Miyu core stopped while switching sessions".to_string()),
+        Err(_) => Err("GQY core stopped while switching sessions".to_string()),
     }
 }
 
 /// 普通人格 + dev 保留人格的本地会话合并,按更新时间排。WebUI 侧栏与
-/// `miyu session` 管理面共用:mode 字段(session_record_json)区分分组。
+/// `gqy session` 管理面共用:mode 字段(session_record_json)区分分组。
 fn sessions_with_dev(
     store: &StateStore,
     persona: &str,
@@ -3505,7 +3505,7 @@ async fn handle_ipc_turn(
         .is_err()
     {
         finish_run(&state.manager, &run_id, None);
-        ipc::send(stream, &IpcFrame::error("Miyu core worker is unavailable")).await?;
+        ipc::send(stream, &IpcFrame::error("GQY core worker is unavailable")).await?;
         return Ok(());
     }
     let mut run_guard = IpcRunGuard {
@@ -3539,7 +3539,7 @@ async fn handle_ipc_turn(
         if record.kind == "resync_required" {
             ipc::send(
                 stream,
-                &IpcFrame::error("Miyu core event history was exhausted; the turn was cancelled"),
+                &IpcFrame::error("GQY core event history was exhausted; the turn was cancelled"),
             )
             .await?;
             break;
@@ -3617,7 +3617,7 @@ async fn follow_run(
         if record.kind == "resync_required" {
             ipc::send(
                 stream,
-                &IpcFrame::error("Miyu core event history was exhausted"),
+                &IpcFrame::error("GQY core event history was exhausted"),
             )
             .await?;
             break;
@@ -3664,8 +3664,8 @@ fn router(state: DaemonState) -> Router {
         .route("/vendor/katex/katex.min.css", get(katex_css_asset))
         .route("/vendor/katex/fonts/{font}", get(katex_font_asset))
         .route("/api/media", get(media_stream))
-        .route("/assets/miyu-logo.png", get(logo_asset))
-        .route("/assets/miyuwallpaper.png", get(wallpaper_asset))
+        .route("/assets/gqy-logo.png", get(logo_asset))
+        .route("/assets/gqywallpaper.png", get(wallpaper_asset))
         .route("/api/health", get(health))
         .route("/api/auth/login", post(auth_login))
         .route("/api/bootstrap", get(bootstrap))
@@ -3741,7 +3741,7 @@ fn router(state: DaemonState) -> Router {
         // OneBot v11 reverse-WS endpoint: NapCat connects here as a WS
         // client. Gated by platforms.qq config, not web auth.
         .route("/ws", get(platforms::onebot::onebot_ws_on_web_port))
-        // Backward-compatible endpoint used by earlier Miyu releases.
+        // Backward-compatible endpoint used by earlier GQY releases.
         .route(
             "/onebot/v11/ws",
             get(platforms::onebot::onebot_ws_on_web_port),
@@ -3755,7 +3755,7 @@ fn router(state: DaemonState) -> Router {
 /// never pin a stale file.
 fn build_etag() -> &'static HeaderValue {
     static ETAG_VALUE: std::sync::LazyLock<HeaderValue> = std::sync::LazyLock::new(|| {
-        HeaderValue::from_str(concat!("\"", env!("MIYU_BUILD_ID"), "\""))
+        HeaderValue::from_str(concat!("\"", env!("GQY_BUILD_ID"), "\""))
             .expect("build id forms a valid header value")
     });
     &ETAG_VALUE
@@ -3788,15 +3788,15 @@ async fn index_asset(headers: HeaderMap) -> Response {
     // serve a stale app.js/styles.css after an upgrade.
     static VERSIONED_INDEX: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| {
         INDEX_HTML
-            .replace("href=\"/styles.css\"", concat!("href=\"/styles.css?v=", env!("MIYU_BUILD_ID"), "\""))
-            .replace("src=\"/app.js\"", concat!("src=\"/app.js?v=", env!("MIYU_BUILD_ID"), "\""))
+            .replace("href=\"/styles.css\"", concat!("href=\"/styles.css?v=", env!("GQY_BUILD_ID"), "\""))
+            .replace("src=\"/app.js\"", concat!("src=\"/app.js?v=", env!("GQY_BUILD_ID"), "\""))
             .replace(
                 "href=\"/vendor/katex/katex.min.css\"",
-                concat!("href=\"/vendor/katex/katex.min.css?v=", env!("MIYU_BUILD_ID"), "\""),
+                concat!("href=\"/vendor/katex/katex.min.css?v=", env!("GQY_BUILD_ID"), "\""),
             )
             .replace(
                 "src=\"/vendor/katex/katex.min.js\"",
-                concat!("src=\"/vendor/katex/katex.min.js?v=", env!("MIYU_BUILD_ID"), "\""),
+                concat!("src=\"/vendor/katex/katex.min.js?v=", env!("GQY_BUILD_ID"), "\""),
             )
     });
     embedded_asset(&headers, VERSIONED_INDEX.as_bytes(), "text/html; charset=utf-8")
@@ -3822,7 +3822,7 @@ async fn app_asset(headers: HeaderMap) -> Response {
 }
 
 async fn logo_asset(headers: HeaderMap) -> Response {
-    embedded_asset(&headers, MIYU_LOGO, "image/png")
+    embedded_asset(&headers, GQY_LOGO, "image/png")
 }
 
 #[derive(Deserialize)]
@@ -3957,7 +3957,7 @@ async fn katex_font_asset(headers: HeaderMap, Path(font): Path<String>) -> Respo
 }
 
 async fn wallpaper_asset(headers: HeaderMap) -> Response {
-    embedded_asset(&headers, MIYU_WALLPAPER, "image/png")
+    embedded_asset(&headers, GQY_WALLPAPER, "image/png")
 }
 
 async fn persona_avatar(
@@ -4543,7 +4543,7 @@ async fn update_config(
 }
 
 fn cleanup_persona_assets(
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     previous: &PromptDocuments,
     current: &PromptDocuments,
 ) {
@@ -4723,7 +4723,7 @@ async fn upload_user_attachment(
         ));
     }
     let encoded_name = headers
-        .get("x-miyu-filename")
+        .get("x-gqy-filename")
         .and_then(|value| value.to_str().ok())
         .ok_or_else(|| ApiError::new(StatusCode::BAD_REQUEST, "attachment filename is required"))?;
     let decoded_name = urlencoding::decode(encoded_name)
@@ -5275,7 +5275,7 @@ async fn redo_turn(
         if manager.admin_busy || manager.session_has_runs(&session_id) {
             return Err(ApiError::new(
                 StatusCode::CONFLICT,
-                "Miyu is busy in this conversation",
+                "GQY is busy in this conversation",
             ));
         }
         manager.active_runs.insert(
@@ -5415,7 +5415,7 @@ async fn create_turn(
         if manager.admin_busy || manager.session_has_runs(&session_id) {
             return Err(ApiError::new(
                 StatusCode::CONFLICT,
-                "Miyu is busy in this conversation",
+                "GQY is busy in this conversation",
             ));
         }
         manager.active_runs.insert(
@@ -5974,7 +5974,7 @@ async fn reset_conversation(
 #[allow(clippy::too_many_arguments)]
 fn spawn_actor(
     config: AppConfig,
-    paths: MiyuPaths,
+    paths: GQYPaths,
     state_store: StateStore,
     manager: Arc<Mutex<ManagerState>>,
     events: EventHub,
@@ -5984,7 +5984,7 @@ fn spawn_actor(
 ) -> Result<(mpsc::UnboundedSender<ActorCommand>, JoinHandle<Result<()>>)> {
     let (sender, receiver) = mpsc::unbounded_channel();
     let join = std::thread::Builder::new()
-        .name("miyu-daemon-core".to_string())
+        .name("gqy-daemon-core".to_string())
         // tiktoken 词元计数器首次初始化会走 fancy_regex/regex_automata 的深递归
         // 编译，debug 构建栈帧大，默认 2MB 线程栈会溢出（release 勉强够用）
         .stack_size(16 * 1024 * 1024)
@@ -6017,7 +6017,7 @@ fn spawn_actor(
 #[allow(clippy::too_many_arguments)]
 async fn actor_loop(
     mut config: AppConfig,
-    paths: MiyuPaths,
+    paths: GQYPaths,
     state_store: StateStore,
     manager: Arc<Mutex<ManagerState>>,
     events: EventHub,
@@ -6406,14 +6406,6 @@ async fn actor_loop(
     }
 }
 
-#[cfg(target_os = "linux")]
-fn trim_process_memory() {
-    unsafe {
-        libc::malloc_trim(0);
-    }
-}
-
-#[cfg(not(target_os = "linux"))]
 fn trim_process_memory() {}
 
 struct AttachmentRunGuard {
@@ -6470,7 +6462,7 @@ impl Drop for AttachmentRunGuard {
 #[allow(clippy::too_many_arguments)]
 async fn run_turn_task(
     mut config: AppConfig,
-    paths: MiyuPaths,
+    paths: GQYPaths,
     store: StateStore,
     base_store: StateStore,
     manager: Arc<Mutex<ManagerState>>,
@@ -6656,11 +6648,11 @@ async fn run_turn_task(
             // it rides the turn tail; only the static policy stays in the
             // system prompt.
             turn_system_context.push(format!(
-                "<artifact-workspace>\n{manifest}\n使用 read_artifact 和 apply_artifact_patch 按文件名操作已有 Artifact；不要用 glob 搜索托管目录，也不要猜测 ~/.miyu 路径。\n</artifact-workspace>"
+                "<artifact-workspace>\n{manifest}\n使用 read_artifact 和 apply_artifact_patch 按文件名操作已有 Artifact；不要用 glob 搜索托管目录，也不要猜测 ~/.gqy 路径。\n</artifact-workspace>"
             ));
             runtime_system_context.push(
                 "<artifact-policy>\n\
-                你正在 Miyu WebUI 中工作，并且拥有 Artifact 展示工具。\n\
+                你正在 GQY WebUI 中工作，并且拥有 Artifact 展示工具。\n\
                 - 当用户明确要求报告、文档、网页、表格、数据文件、独立代码文件或其他可下载成品时，必须创建或展示 Artifact。\n\
                 - 对由你直接编写的文本交付物，优先调用 create_artifact；filename 必须带正确扩展名。\n\
                 - 对命令或其他工具已经生成的文件，调用 present_artifact。\n\
@@ -6989,7 +6981,7 @@ async fn run_turn_task(
 /// session-scoped operations hit the turn's own session.
 fn finish_turn_task(
     config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     store: &StateStore,
     title_seed: &str,
     events: &EventHub,
@@ -7011,7 +7003,7 @@ fn finish_turn_task(
 /// detached on the actor's LocalSet — never blocks the turn.
 fn spawn_session_title_refinement(
     config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     store: &StateStore,
     events: &EventHub,
     fallback: String,
@@ -7113,7 +7105,7 @@ enum OverflowOutcome {
 
 fn active_thinking_variant_options(
     config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
 ) -> Result<Vec<ThinkingVariantOptions>> {
     crate::models_cache::ensure_active_metadata(paths, config);
     let preferences = ThinkingVariantPreferences::load(paths);
@@ -7134,7 +7126,7 @@ fn active_thinking_variant_options(
 fn apply_thinking_variant_updates(
     agent: &mut Option<Agent>,
     config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     updates: &[ThinkingVariantUpdate],
 ) -> std::result::Result<(), AdminFailure> {
     let options = active_thinking_variant_options(config, paths)
@@ -7198,7 +7190,7 @@ fn apply_thinking_variant_updates(
 fn rebuild_for_models(
     agent: &mut Option<Agent>,
     config: &mut AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     state_store: &StateStore,
     manager: &Arc<Mutex<ManagerState>>,
     models: &[ActiveProviderModelConfig],
@@ -7283,7 +7275,7 @@ fn session_for_persona(
 fn rebuild_for_config(
     agent: &mut Option<Agent>,
     config: &mut AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     state_store: &StateStore,
     manager: &Arc<Mutex<ManagerState>>,
     events: &EventHub,
@@ -7559,7 +7551,7 @@ fn switch_actor_session(
 fn reset_actor_conversation(
     agent: &mut Option<Agent>,
     config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     state_store: &StateStore,
     manager: &Arc<Mutex<ManagerState>>,
     events: &EventHub,
@@ -7570,7 +7562,7 @@ fn reset_actor_conversation(
     // sense against that history. This used to be gated on a flag that was
     // really asking "did the caller address the session as `Current`?" — an
     // implementation detail of each frontend, which left `/reset` and the
-    // WebUI clearing strictly less than `miyu reset`. Platform sessions never
+    // WebUI clearing strictly less than `gqy reset`. Platform sessions never
     // reach this command (both entry points reject them) and clear themselves
     // through `ClearSessionContent`, so there is nothing left for a flag to
     // protect.
@@ -7581,7 +7573,7 @@ fn reset_actor_conversation(
         let memory = MemoryStore::new(config, paths);
         memory.clear_evicted_context()?;
         memory.clear_pending_events()?;
-        tools::clear_aur_review_state(paths)?;
+        tools::clear_brew_review_state(paths)?;
         if &*state_store.session_id() == session_id {
             if let Some(agent) = agent.as_mut() {
                 agent.reset_memory()?;
@@ -7606,7 +7598,7 @@ fn reset_actor_persona_state(
     agent: &mut Option<Agent>,
     daemon_config: &AppConfig,
     reset_config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     state_store: &StateStore,
     manager: &Arc<Mutex<ManagerState>>,
     events: &EventHub,
@@ -7618,7 +7610,7 @@ fn reset_actor_persona_state(
         if persona != daemon_config.active_persona_scope() {
             return Ok(manager.lock().unwrap().context);
         }
-        tools::clear_aur_review_state(paths)?;
+        tools::clear_brew_review_state(paths)?;
         state_store.reset_conversation_usage()?;
         if let Some(agent) = agent.as_mut() {
             agent.reset_memory()?;
@@ -7812,7 +7804,7 @@ async fn stream_job_wake_to_origin_tty(
         tracing::info!(job_id = %completion.job_id, reason, "job wake writeback fell back to a notification");
         if config.notifications.enabled {
             crate::notify::notify(
-                &format!("Miyu 后台任务跟进 · {}", completion.title),
+                &format!("GQY 后台任务跟进 · {}", completion.title),
                 "任务已完成,跟进回复在会话里(终端不在提示符,没有直接写入)。",
             );
         }
@@ -7845,7 +7837,7 @@ async fn stream_job_wake_to_origin_tty(
     let (ops_tx, ops_rx) = std::sync::mpsc::channel::<TtyWriteOp>();
     let shell_pid = origin.shell_pid;
     let writer = std::thread::Builder::new()
-        .name("miyu-tty-writeback".to_string())
+        .name("gqy-tty-writeback".to_string())
         .spawn(move || origin_tty_writer(tty, shell_pid, ops_rx));
     if writer.is_err() {
         notify_fallback("writer thread spawn failed");
@@ -7856,7 +7848,7 @@ async fn stream_job_wake_to_origin_tty(
         crate::render::ReasoningDisplayMode::from_config(&config.display.reasoning);
     // 落笔即有反馈:头部先行,正文随事件到达逐行追加。
     let _ = ops_tx.send(TtyWriteOp::Write(format!(
-        "\r\n\x1b[1m✦ Miyu 后台任务跟进\x1b[0m \x1b[2m· {}\x1b[0m\r\n\r\n",
+        "\r\n\x1b[1m✦ GQY 后台任务跟进\x1b[0m \x1b[2m· {}\x1b[0m\r\n\r\n",
         completion.title
     )));
 
@@ -8499,13 +8491,13 @@ fn current_context(agent: &Agent) -> Result<ContextSnapshot> {
     })
 }
 
-fn build_actor_agent(config: &AppConfig, paths: &MiyuPaths, state: &StateStore) -> Result<Agent> {
+fn build_actor_agent(config: &AppConfig, paths: &GQYPaths, state: &StateStore) -> Result<Agent> {
     let mut agent = build_session_agent(config, paths, state)?;
     agent.prepare_for_turn()?;
     Ok(agent)
 }
 
-fn build_session_agent(config: &AppConfig, paths: &MiyuPaths, state: &StateStore) -> Result<Agent> {
+fn build_session_agent(config: &AppConfig, paths: &GQYPaths, state: &StateStore) -> Result<Agent> {
     crate::models_cache::ensure_active_metadata(paths, config);
     let client = OpenAiCompatibleClient::from_config(config, paths)?;
     let registry = build_tool_registry(config, paths, AgentMode::Normal, true)?;
@@ -8522,7 +8514,7 @@ fn build_session_agent(config: &AppConfig, paths: &MiyuPaths, state: &StateStore
 fn ensure_actor_agent<'a>(
     agent: &'a mut Option<Agent>,
     config: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     state: &StateStore,
     turn_engine: &TurnEngineState,
 ) -> std::result::Result<&'a mut Agent, AdminFailure> {
@@ -8849,7 +8841,7 @@ fn release_admin(manager: &Arc<Mutex<ManagerState>>) {
 fn config_response(
     config: &AppConfig,
     context: ContextSnapshot,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
 ) -> std::result::Result<ConfigResponse, ApiError> {
     let mut redacted = config.clone();
     let mut secret_states = HashMap::new();
@@ -8933,9 +8925,9 @@ fn persona_identity(config: &AppConfig, prompts: &PromptDocuments) -> PersonaIde
     let active = config.prompt.active_persona.trim();
     if active.is_empty() {
         return PersonaIdentity {
-            name: "Miyu".to_string(),
-            avatar_url: Some("/assets/miyu-logo.png".to_string()),
-            board_image_url: Some("/assets/miyuwallpaper.png".to_string()),
+            name: "GQY".to_string(),
+            avatar_url: Some("/assets/gqy-logo.png".to_string()),
+            board_image_url: Some("/assets/gqywallpaper.png".to_string()),
             board_title: DEFAULT_BOARD_TITLE.to_string(),
             board_subtitle: DEFAULT_BOARD_SUBTITLE.to_string(),
             starter_prompts: DEFAULT_STARTER_PROMPTS.map(str::to_string).to_vec(),
@@ -8991,7 +8983,7 @@ fn persona_identity(config: &AppConfig, prompts: &PromptDocuments) -> PersonaIde
 fn active_persona_avatar_path(
     config: &AppConfig,
     prompts: &PromptDocuments,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
 ) -> Option<PathBuf> {
     let active = config.prompt.active_persona.trim();
     if active.is_empty() {
@@ -9008,7 +9000,7 @@ fn active_persona_avatar_path(
 fn active_persona_board_path(
     config: &AppConfig,
     prompts: &PromptDocuments,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
 ) -> Option<PathBuf> {
     let active = config.prompt.active_persona.trim();
     let value = prompts
@@ -9019,7 +9011,7 @@ fn active_persona_board_path(
     resolve_persona_asset_path(paths, value)
 }
 
-fn resolve_persona_asset_path(paths: &MiyuPaths, value: &str) -> Option<PathBuf> {
+fn resolve_persona_asset_path(paths: &GQYPaths, value: &str) -> Option<PathBuf> {
     let value = value.trim();
     if persona_asset_uses_managed_namespace(value) {
         return managed_persona_asset_path(paths, value);
@@ -9035,7 +9027,7 @@ fn resolve_persona_asset_path(paths: &MiyuPaths, value: &str) -> Option<PathBuf>
     })
 }
 
-fn managed_persona_asset_path(paths: &MiyuPaths, value: &str) -> Option<PathBuf> {
+fn managed_persona_asset_path(paths: &GQYPaths, value: &str) -> Option<PathBuf> {
     let value = value.trim();
     if value.contains('\\') || value.chars().any(char::is_control) {
         return None;
@@ -9073,7 +9065,7 @@ fn persona_asset_uses_managed_namespace(value: &str) -> bool {
         })
 }
 
-fn validate_managed_persona_asset_file(paths: &MiyuPaths, path: &FilePath) -> Result<()> {
+fn validate_managed_persona_asset_file(paths: &GQYPaths, path: &FilePath) -> Result<()> {
     let root_path = paths.persona_avatars_dir();
     let root_metadata = std::fs::symlink_metadata(&root_path)?;
     if root_metadata.file_type().is_symlink() || !root_metadata.is_dir() {
@@ -9570,7 +9562,7 @@ fn validate_prompt_document_name(name: &str, kind: &str) -> std::result::Result<
     Ok(())
 }
 
-fn read_prompt_documents(config: &AppConfig, paths: &MiyuPaths) -> Result<PromptDocuments> {
+fn read_prompt_documents(config: &AppConfig, paths: &GQYPaths) -> Result<PromptDocuments> {
     Ok(PromptDocuments {
         personas: read_prompt_document_dir(&config.prompts_dir_path(paths), true)?,
         identities: read_prompt_document_dir(&config.identities_dir_path(paths), false)?,
@@ -9737,7 +9729,7 @@ fn apply_prompt_documents(
     next_config: &AppConfig,
     current: &PromptDocuments,
     next: &PromptDocuments,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
 ) -> Result<Vec<FileBackup>> {
     let mut mutations = HashMap::<PathBuf, Option<Vec<u8>>>::new();
     collect_prompt_file_mutations(
@@ -9787,7 +9779,7 @@ fn apply_persona_scope_changes(
     next_config: &AppConfig,
     current: &PromptDocuments,
     next: &PromptDocuments,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
 ) -> Result<Vec<PersonaScopeBackup>> {
     let changes = persona_document_changes(current, next);
     let mut backups = Vec::new();
@@ -9813,7 +9805,7 @@ fn apply_persona_scope_changes(
                     .parent()
                     .context("persona scope path has no parent")?;
                 let staged = parent.join(format!(
-                    ".miyu-web-scope-{}-{change_index}-{scope_index}",
+                    ".gqy-web-scope-{}-{change_index}-{scope_index}",
                     random_token(10)
                 ));
                 std::fs::rename(&original, &staged)?;
@@ -9862,7 +9854,7 @@ fn apply_persona_scope_changes(
 fn config_change_requires_interrupt(
     current: &AppConfig,
     next: &AppConfig,
-    paths: &MiyuPaths,
+    paths: &GQYPaths,
     next_prompts: &PromptDocuments,
 ) -> bool {
     let Ok(previous_prompts) = read_prompt_documents(current, paths) else {
@@ -10542,8 +10534,8 @@ mod tests {
         assert!(!is_local_webui_request(PromptAudience::External, true));
     }
 
-    fn test_paths(root: &FilePath) -> MiyuPaths {
-        MiyuPaths {
+    fn test_paths(root: &FilePath) -> GQYPaths {
+        GQYPaths {
             root_dir: root.to_path_buf(),
             config_dir: root.join("config"),
             config_file: root.join("config/config.jsonc"),
@@ -11522,11 +11514,11 @@ mod tests {
         let (state, actor_join) = test_daemon_with_actor(temp.path());
         let target = state
             .state_store
-            .create_session("miyu", "qq target", "user", None)
+            .create_session("gqy", "qq target", "user", None)
             .unwrap();
         let other = state
             .state_store
-            .create_session("miyu", "other", "user", None)
+            .create_session("gqy", "other", "user", None)
             .unwrap();
         let target_store = state.state_store.pinned(&target.session_id);
         target_store
@@ -11617,9 +11609,9 @@ mod tests {
     fn startup_repairs_a_platform_owned_current_session() {
         let temp = tempfile::tempdir().unwrap();
         let store = StateStore::new(&test_paths(temp.path())).unwrap();
-        store.adopt_sessions_for_persona("miyu").unwrap();
+        store.adopt_sessions_for_persona("gqy").unwrap();
         let qq_session = store
-            .create_session("miyu", "QQ group 20000", "user", None)
+            .create_session("gqy", "QQ group 20000", "user", None)
             .unwrap();
         store
             .bind_platform_session(
@@ -11629,21 +11621,21 @@ mod tests {
                     conversation_kind: "group".to_string(),
                     conversation_id: "20000".to_string(),
                     participant_id: None,
-                    persona: "miyu".to_string(),
+                    persona: "gqy".to_string(),
                 },
                 &qq_session.session_id,
             )
             .unwrap();
         store.switch_session(&qq_session.session_id).unwrap();
 
-        ensure_local_current_session(&store, "miyu").unwrap();
+        ensure_local_current_session(&store, "gqy").unwrap();
 
         let repaired = store.session_id();
         assert_ne!(&*repaired, qq_session.session_id);
         assert!(!store.is_platform_session(&repaired).unwrap());
         assert_eq!(
             store.session_record(&repaired).unwrap().unwrap().persona,
-            "miyu"
+            "gqy"
         );
     }
 
@@ -11725,8 +11717,8 @@ mod tests {
         let mut config = AppConfig::default();
         let prompts = PromptDocuments::default();
         let default = persona_identity(&config, &prompts);
-        assert_eq!(default.name, "Miyu");
-        assert_eq!(default.avatar_url.as_deref(), Some("/assets/miyu-logo.png"));
+        assert_eq!(default.name, "GQY");
+        assert_eq!(default.avatar_url.as_deref(), Some("/assets/gqy-logo.png"));
 
         config.prompt.active_persona = "Alice.md".to_string();
         let prompts = PromptDocuments {
@@ -11751,8 +11743,8 @@ mod tests {
     fn sanitize_session_title_cleans_llm_output() {
         assert_eq!(sanitize_session_title("「东京天气查询」"), "东京天气查询");
         assert_eq!(
-            sanitize_session_title("\"Arch Linux 新闻\"\n第二行忽略"),
-            "Arch Linux 新闻"
+            sanitize_session_title("\"Homebrew 更新公告\"\n第二行忽略"),
+            "Homebrew 更新公告"
         );
         assert_eq!(sanitize_session_title("  标题。  "), "标题");
         assert_eq!(sanitize_session_title(""), "");
@@ -11952,7 +11944,7 @@ mod tests {
         let mut headers = HeaderMap::new();
         headers.insert(
             COOKIE,
-            HeaderValue::from_static("other=1; miyu_session=secret-token; suffix=2"),
+            HeaderValue::from_static("other=1; gqy_session=secret-token; suffix=2"),
         );
         assert_eq!(cookie_value(&headers, AUTH_COOKIE), Some("secret-token"));
         assert_eq!(cookie_value(&headers, "session"), None);
@@ -12099,7 +12091,7 @@ mod tests {
         config.plugins.api_quota.deepseek.api_key = "deepseek-secret".to_string();
         config.plugins.api_quota.openrouter.api_key = "openrouter-secret".to_string();
         let paths = tempfile::tempdir().unwrap();
-        let paths = MiyuPaths {
+        let paths = GQYPaths {
             root_dir: paths.path().to_path_buf(),
             config_dir: paths.path().join("config"),
             config_file: paths.path().join("config/config.jsonc"),
@@ -12556,7 +12548,7 @@ print(pid, slave, flush=True)
 sys.stdin.readline()  # 等 Rust 侧写完
 data = b""
 try:
-    while b"MIYU-E2E-END" not in data:
+    while b"GQY-E2E-END" not in data:
         data += os.read(master, 4096)
 except OSError:
     pass
@@ -12603,11 +12595,11 @@ sys.stdin.readline()  # 等 Rust 侧完成死后判定
             let writer = std::thread::spawn(move || origin_tty_writer(tty, shell_pid, ops_rx));
             ops_tx
                 .send(TtyWriteOp::Write(
-                    "\x1b[1m✦ Miyu 后台任务跟进\x1b[0m\r\n".to_string(),
+                    "\x1b[1m✦ GQY 后台任务跟进\x1b[0m\r\n".to_string(),
                 ))
                 .unwrap();
             let mut body = String::new();
-            push_rendered_line("**粗体** 与 `代码` MIYU-E2E-END", WriteLineStyle::Content, &mut body);
+            push_rendered_line("**粗体** 与 `代码` GQY-E2E-END", WriteLineStyle::Content, &mut body);
             ops_tx.send(TtyWriteOp::Write(body)).unwrap();
             ops_tx.send(TtyWriteOp::Finish).unwrap();
             writer.join().unwrap();
@@ -12626,10 +12618,10 @@ sys.stdin.readline()  # 等 Rust 侧完成死后判定
             .collect::<Vec<u8>>();
         let text = String::from_utf8_lossy(&bytes);
         assert!(
-            text.contains("Miyu 后台任务跟进"),
+            text.contains("GQY 后台任务跟进"),
             "master 端应读到标题,实际: {text:?}"
         );
-        assert!(text.contains("MIYU-E2E-END"), "正文应完整到达");
+        assert!(text.contains("GQY-E2E-END"), "正文应完整到达");
         assert!(text.contains("\u{1b}["), "应带 SGR 样式");
 
         let gone = lines.next().unwrap().unwrap();
