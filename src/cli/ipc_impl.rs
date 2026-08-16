@@ -109,7 +109,7 @@ pub(crate) async fn apply_repl_session_switch(
     // the footer left the previous session's numbers on screen until the next
     // turn finished.
     *cumulative_tokens = state_cumulative(&state);
-    let session_config = footer_config_for_session(paths, config, state.session_id);
+    let session_config = footer_config_for_session(paths, config, &state.session_id);
     *footer =
         ReplFooterStatus::from_config(&session_config, state.context_tokens, *cumulative_tokens);
     let client = OpenAiCompatibleClient::from_config(&session_config, paths)?;

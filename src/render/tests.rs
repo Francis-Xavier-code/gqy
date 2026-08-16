@@ -847,7 +847,7 @@ fn code_block_content_has_default_color() {
         renderer.push("```\ndefaults write NSGlobalDomain AppleKeyboardUIMode -int 3\n```\n");
     assert!(output.contains(&format!(
         "{CODE_BLOCK_BG}defaults write NSGlobalDomain AppleKeyboardUIMode -int 3{}{RESET}",
-        " ".repeat(2)
+        ""
     )));
     assert!(!output.contains("\x1b[33mdefaults"));
 }

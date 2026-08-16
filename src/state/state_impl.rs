@@ -889,7 +889,10 @@ impl StateStore {
         let source_key = canonical.to_string_lossy().to_string();
         let session_id = self.session();
         let managed_session_dir = self.artifacts_dir.join(session_id.as_ref());
-        let identity_scope = if canonical.starts_with(&managed_session_dir) {
+        let canonical_managed_session_dir = managed_session_dir
+            .canonicalize()
+            .unwrap_or_else(|_| managed_session_dir.clone());
+        let identity_scope = if canonical.starts_with(&canonical_managed_session_dir) {
             session_id.as_ref()
         } else {
             turn_id

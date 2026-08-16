@@ -6,7 +6,7 @@ pub mod request_log;
 pub(crate) use openai_compatible::{
     thinking_variant_options_for_model, ThinkingVariantPreferences,
 };
-pub use openai_compatible::{OpenAiCompatibleClient, ThinkingVariantOptions};
+pub(crate) use openai_compatible::{OpenAiCompatibleClient, ThinkingVariantOptions};
 
 use serde::{Deserialize, Serialize};
 

@@ -482,7 +482,14 @@ fn unified_layout_still_refuses_relative_symlink_outside_cache() {
 #[test]
 fn unified_layout_cross_source_conflict_has_zero_migration_writes() {
     let temp = tempfile::tempdir().unwrap();
-    let (legacy, next) = test_layouts(temp.path());
+    let (mut legacy, next) = test_layouts(temp.path());
+    // Use two genuinely distinct directories. The real miyu/Miyu pair can be
+    // the same directory on a case-insensitive macOS filesystem, which would
+    // make this conflict test impossible.
+    legacy.pictures_dirs = vec![
+        temp.path().join("Pictures/gqy-a"),
+        temp.path().join("Pictures/gqy-b"),
+    ];
     fs::create_dir_all(&legacy.config_dir).unwrap();
     fs::create_dir_all(&legacy.pictures_dirs[0]).unwrap();
     fs::create_dir_all(&legacy.pictures_dirs[1]).unwrap();

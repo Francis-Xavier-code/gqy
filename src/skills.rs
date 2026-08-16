@@ -20,7 +20,8 @@ pub(crate) use install::*;
 mod tests;
 /// Skills compiled into the binary: (name, raw SKILL.md). A user skill of
 /// the same name in the persona/global directories overrides the built-in.
-const BUILTIN_SKILLS: &[(&str, &str)] = &[];
+const BUILTIN_SKILLS: &[(&str, &str)] =
+    &[("skill-creator", include_str!("skills/skill-creator.md"))];
 const DRAFT_MANIFEST: &str = "draft.json";
 const DRAFT_PACKAGE_DIR: &str = "package";
 const DRAFT_VERSION: u32 = 1;

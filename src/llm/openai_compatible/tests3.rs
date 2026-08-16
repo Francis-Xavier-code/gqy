@@ -313,6 +313,28 @@ pub(crate) async fn read_http_headers(stream: &mut tokio::net::TcpStream) {
         assert_ne!(read, 0, "connection closed before request headers");
         request.push(byte[0]);
     }
+    // Drain the request body. Closing a TCP socket while unread data is still
+    // in the receive buffer can make the peer see RST instead of FIN, which
+    // would turn the intentional truncated-SSE tests into transport errors.
+    let headers = String::from_utf8_lossy(&request);
+    let content_length = headers
+        .lines()
+        .find_map(|line| {
+            let (name, value) = line.split_once(':')?;
+            name.trim()
+                .eq_ignore_ascii_case("content-length")
+                .then(|| value.trim().parse::<usize>().ok())
+                .flatten()
+        })
+        .unwrap_or(0);
+    let mut remaining = content_length;
+    let mut buffer = vec![0u8; 8192];
+    while remaining > 0 {
+        let read_len = remaining.min(buffer.len());
+        let read = stream.read(&mut buffer[..read_len]).await.unwrap();
+        assert_ne!(read, 0, "connection closed before request body was drained");
+        remaining -= read;
+    }
 }
 
 pub(crate) async fn write_http_sse_response(stream: &mut tokio::net::TcpStream, body: &str) {

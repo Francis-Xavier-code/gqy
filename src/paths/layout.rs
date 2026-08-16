@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::fs::{self, File, OpenOptions};
 use std::io::Write;
 use std::os::fd::AsRawFd;
-use std::os::unix::fs::{DirBuilderExt, OpenOptionsExt, PermissionsExt};
+use std::os::unix::fs::{DirBuilderExt, MetadataExt, OpenOptionsExt, PermissionsExt};
 use std::path::{Component, Path, PathBuf};
 
 pub(crate) const LAYOUT_MARKER: &str = ".layout-v1";
@@ -203,8 +203,13 @@ impl GQYPaths {
 
     pub fn legacy_config_dir(&self) -> Option<PathBuf> {
         let base = BaseDirs::new()?;
-        (self.config_dir == base.home_dir().join(".miyu/config"))
-            .then(|| base.config_dir().join("miyu"))
+        if self.config_dir == base.home_dir().join(".miyu/config") {
+            Some(base.config_dir().join("miyu"))
+        } else if self.config_dir == base.home_dir().join(".gqy/config") {
+            Some(base.config_dir().join("gqy"))
+        } else {
+            None
+        }
     }
 
     pub fn migrated_resource_path(&self, path: &Path) -> Option<PathBuf> {
@@ -1097,6 +1102,7 @@ pub(crate) fn legacy_migration_mappings(
 
 pub(crate) fn existing_mappings(mappings: &[MigrationMapping]) -> Result<Vec<MigrationMapping>> {
     let mut active = Vec::with_capacity(mappings.len());
+    let mut seen_sources = Vec::new();
     for mapping in mappings {
         if mapping.source == mapping.destination || !entry_exists(&mapping.source)? {
             continue;
@@ -1110,6 +1116,17 @@ pub(crate) fn existing_mappings(mappings: &[MigrationMapping]) -> Result<Vec<Mig
                 mapping.destination.display()
             );
         }
+        // macOS filesystems are often case-insensitive, so `Pictures/miyu`
+        // and `Pictures/Miyu` can be the same physical directory. Deduplicate
+        // by device/inode so the legacy migration does not try to move one
+        // source twice.
+        let source_key = fs::metadata(&mapping.source)
+            .map(|metadata| format!("{}:{}", metadata.dev(), metadata.ino()))
+            .unwrap_or_else(|_| format!("path:{}", mapping.source.display()));
+        if seen_sources.iter().any(|seen| seen == &source_key) {
+            continue;
+        }
+        seen_sources.push(source_key);
         active.push(mapping.clone());
     }
     for (index, left) in active.iter().enumerate() {

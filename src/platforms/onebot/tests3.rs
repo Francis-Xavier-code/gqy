@@ -4,6 +4,7 @@
 use super::tests::*;
 pub(crate) use super::*;
 
+use axum::http::header::AUTHORIZATION;
 use axum::http::HeaderMap;
 use tokio::sync::mpsc;
 use tokio::sync::watch;
