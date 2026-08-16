@@ -291,8 +291,10 @@ fn new_custom_provider_has_no_openai_defaults() {
 
 #[test]
 fn default_anthropic_provider_uses_the_global_context_window_default() {
-    let mut config = AppConfig::default();
-    config.active_provider = "anthropic".to_string();
+    let mut config = AppConfig {
+        active_provider: "anthropic".to_string(),
+        ..Default::default()
+    };
     let provider = config
         .providers
         .iter_mut()

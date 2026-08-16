@@ -838,7 +838,8 @@ fn persona_reset_clears_active_local_and_onebot_contexts_only() {
     ] {
         assert!(store.pinned(session_id).load_turns().unwrap().is_empty());
     }
-    for session_id in [&other_persona.session_id] {
+    {
+        let session_id = &other_persona.session_id;
         assert_eq!(store.pinned(session_id).load_turns().unwrap().len(), 1);
     }
     assert_eq!(

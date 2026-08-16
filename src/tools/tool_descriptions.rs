@@ -5,16 +5,12 @@ use std::sync::OnceLock;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum LoadPolicy {
+    #[default]
     Summary,
     Group,
     Hidden,
-}
-
-impl Default for LoadPolicy {
-    fn default() -> Self {
-        Self::Summary
-    }
 }
 
 #[derive(Debug, Clone, Deserialize)]

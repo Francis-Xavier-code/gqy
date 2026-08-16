@@ -658,11 +658,8 @@ pub(crate) fn run_clipboard_paste(paths: &GQYPaths) -> Result<()> {
             std::fs::create_dir_all(&dir)?;
             crate::clipboard::cleanup_clipboard_images(&dir);
             let link_path = dir.join(filename);
-            let need_create = if link_path.is_symlink() {
-                !link_path.exists()
-            } else {
-                !link_path.exists()
-            };
+            // 两支等价(is_symlink 不影响 exists 对目标存在的判断),简化。
+            let need_create = !link_path.exists();
             if need_create {
                 if link_path.exists() || link_path.is_symlink() {
                     std::fs::remove_file(&link_path)?;

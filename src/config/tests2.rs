@@ -388,12 +388,11 @@ fn legacy_real_context_history_limits_move_to_message_history() {
     assert_eq!(history.history_search_max_results, 25);
     assert_eq!(history.history_safe_page_limit, 250);
     assert!(!history.allow_cross_conversation_search);
-    assert!(config
+    assert!(!config
         .platforms
         .qq
         .plugins
-        .get(REAL_CONTEXT_PLUGIN_ID)
-        .is_none());
+        .contains_key(REAL_CONTEXT_PLUGIN_ID));
 }
 
 #[test]

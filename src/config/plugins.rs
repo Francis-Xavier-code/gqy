@@ -1279,7 +1279,7 @@ pub struct ToolsConfig {
     pub command_deny: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct McpConfig {
     #[serde(default)]
     pub enabled: bool,
@@ -1287,7 +1287,7 @@ pub struct McpConfig {
     pub servers: Vec<McpServerConfig>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct McpServerConfig {
     pub id: String,
     #[serde(default)]
@@ -1362,7 +1362,7 @@ pub struct MemoryConfig {
     pub learning_min_method_chars: usize,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PluginsConfig {
     #[serde(default)]
     pub weather: PluginEnabledConfig,

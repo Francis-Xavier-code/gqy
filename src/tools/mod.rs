@@ -315,11 +315,13 @@ pub(crate) fn command_deny_guard(patterns: Vec<String>) -> ToolGuard {
             .iter()
             .find(|pattern| !pattern.is_empty() && command.contains(pattern.as_str()))
             .map(|pattern| {
-                crate::i18n::agent_is_zh()
-                    .then(|| format!("命令包含被禁止的模式 `{pattern}`,已拒绝执行"))
-                    .unwrap_or_else(|| {
+                if crate::i18n::agent_is_zh() {
+                    format!("命令包含被禁止的模式 `{pattern}`,已拒绝执行")
+                } else {
+                    {
                         format!("command contains the denied pattern `{pattern}` and was rejected")
-                    })
+                    }
+                }
             })
     })
 }

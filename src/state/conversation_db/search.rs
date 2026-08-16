@@ -1,6 +1,10 @@
 //! search — 自 src/state/conversation_db.rs 拆分。
 
-#![allow(clippy::redundant_closure, clippy::too_many_arguments)]
+#![allow(
+    clippy::redundant_closure,
+    clippy::too_many_arguments,
+    clippy::type_complexity
+)]
 pub(crate) use super::*;
 
 impl ConversationDb {

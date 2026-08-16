@@ -142,7 +142,7 @@ pub(crate) fn resolve_platform_session(
     // wins and every later account gets a fresh, correctly isolated session.
     let mut candidates = state
         .state_store
-        .list_sessions(&persona)?
+        .list_sessions(persona)?
         .into_iter()
         .filter(|overview| {
             overview.record.kind == "user"

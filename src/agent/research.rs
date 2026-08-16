@@ -580,14 +580,12 @@ pub(crate) fn compact_artifact_tool_report(tool_name: &str, output: &str) -> Opt
         .and_then(Value::as_str)
         .map(str::trim)
         .filter(|value| !value.is_empty());
-    Some(
-        serde_json::to_string(&serde_json::json!({
-            "artifact": filename,
-            "title": title,
-            "operation": tool_name,
-        }))
-        .ok()?,
-    )
+    serde_json::to_string(&serde_json::json!({
+        "artifact": filename,
+        "title": title,
+        "operation": tool_name,
+    }))
+    .ok()
 }
 
 pub(crate) fn wrap_previous_tool_report(tool_name: &str, report: &str) -> String {

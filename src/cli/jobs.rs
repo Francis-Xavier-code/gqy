@@ -2,7 +2,7 @@
 
 // ponytail: 与 src/tools/jobs.rs（后台命令 job 工具）同名易混淆：本文件是 CLI 的 job 命令；
 // 改名（如 jobs_cmd.rs）后删除本注释。
-#![allow(clippy::too_many_arguments)]
+#![allow(clippy::too_many_arguments, clippy::type_complexity)]
 pub(crate) use super::*;
 
 type JobsOverviewSnapshot = (
@@ -332,7 +332,7 @@ pub(crate) async fn follow_wake_run(
                     handle_live_agent_event(live, &mut renderer, AgentEvent::SpinnerTick)?;
                     // 状态条是 live tail 的一部分，附着期间同样要持续刷新。
                     follow_strip_tick = follow_strip_tick.wrapping_add(1);
-                    if follow_strip_tick % 8 == 0 && !live.external_output_active {
+                    if follow_strip_tick.is_multiple_of(8) && !live.external_output_active {
                         if live.set_jobs(jobs_feed.current()) {
                             synchronized_terminal_update(CursorAfterUpdate::Preserve, || {
                                 live.redraw()
@@ -1255,13 +1255,9 @@ pub(crate) fn render_repl_input_with_footer(
     let prompt_prefix = input_prompt_bar(mode);
     let plain_prefix = "  ";
     let cols = terminal_cols();
-    let display_lines = repl_visible_input_lines(
-        &plain_prefix,
-        &lines,
-        REPL_MAX_VISIBLE_INPUT_ROWS,
-        is_pasted,
-    );
-    let display_rows = repl_wrapped_input_rows_for_cols(&plain_prefix, &display_lines, cols);
+    let display_lines =
+        repl_visible_input_lines(plain_prefix, &lines, REPL_MAX_VISIBLE_INPUT_ROWS, is_pasted);
+    let display_rows = repl_wrapped_input_rows_for_cols(plain_prefix, &display_lines, cols);
     let display_rows: Vec<String> = display_rows
         .iter()
         .map(|line| colorize_repl_placeholders(line))
@@ -1320,18 +1316,18 @@ pub(crate) fn render_repl_input_with_footer(
         }
     }
     let (cursor_col, cursor_row_offset) = if display_lines.len() == lines.len() {
-        repl_cursor_position(&plain_prefix, input, cursor)
+        repl_cursor_position(plain_prefix, input, cursor)
     } else {
         let last_line = display_lines.last().map(String::as_str).unwrap_or_default();
         let (col, _) = repl_cursor_position_for_line_for_cols(
-            &plain_prefix,
+            plain_prefix,
             last_line,
             last_line.chars().count(),
             terminal_cols(),
         );
         (
             col,
-            repl_prompt_rows(&plain_prefix, &display_lines).saturating_sub(1),
+            repl_prompt_rows(plain_prefix, &display_lines).saturating_sub(1),
         )
     };
     queue!(

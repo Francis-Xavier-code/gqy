@@ -536,6 +536,7 @@ pub(crate) fn lock_thinking_variant_preferences(paths: &GQYPaths) -> Result<File
         .create(true)
         .read(true)
         .write(true)
+        .truncate(false)
         .open(&lock_path)
         .with_context(|| {
             format!(

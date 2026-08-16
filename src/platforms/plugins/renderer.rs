@@ -1,3 +1,4 @@
+#![allow(clippy::module_inception)]
 use anyhow::{anyhow, bail, Context, Result};
 use cosmic_text::{
     Align as TextAlign, Attrs, Buffer, Color, Family, FontSystem, LayoutGlyph, Metrics, Shaping,

@@ -505,7 +505,7 @@ fn apply_hunk(path: &Path, content: &str, hunk: &Hunk) -> Result<String> {
     let start_index = hunk
         .context
         .as_ref()
-        .and_then(|context| seek_sequence(&current_lines, &[context.to_string()], 0, false))
+        .and_then(|context| seek_sequence(&current_lines, std::slice::from_ref(context), 0, false))
         .map(|index| index + 1)
         .unwrap_or(0);
     if let Some(found) = seek_sequence(&current_lines, &pattern, start_index, hunk.end_of_file) {
@@ -552,7 +552,7 @@ fn apply_insertion_hunk(path: &Path, content: &str, hunk: &Hunk, new: &str) -> R
     let index = if hunk.end_of_file {
         lines.len()
     } else if let Some(context) = &hunk.context {
-        seek_sequence(&lines, &[context.to_string()], 0, false)
+        seek_sequence(&lines, std::slice::from_ref(context), 0, false)
             .map(|index| index + 1)
             .ok_or_else(|| {
                 anyhow::anyhow!(

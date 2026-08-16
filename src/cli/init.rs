@@ -747,11 +747,10 @@ pub(crate) async fn run_models_for_session(
             let models = choices
                 .iter()
                 .zip(active)
-                .filter_map(|(choice, active)| {
-                    active.then(|| ActiveProviderModelConfig {
-                        provider_id: choice.provider_id.clone(),
-                        model: choice.model.clone(),
-                    })
+                .filter(|&(_choice, active)| active)
+                .map(|(choice, _active)| ActiveProviderModelConfig {
+                    provider_id: choice.provider_id.clone(),
+                    model: choice.model.clone(),
                 })
                 .collect::<Vec<_>>();
             let cleared = models.is_empty();

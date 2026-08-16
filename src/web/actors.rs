@@ -1,6 +1,6 @@
 //! actors — 自 src/web.rs 拆分。
 
-#![allow(clippy::op_ref, clippy::too_many_arguments)]
+#![allow(clippy::op_ref, clippy::too_many_arguments, clippy::large_enum_variant)]
 pub(crate) use super::*;
 
 pub(crate) async fn set_models(
