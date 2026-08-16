@@ -2,7 +2,6 @@
 #![cfg(test)]
 
 use super::tests::*;
-pub(crate) use super::*;
 
 #[test]
 fn real_context_models_follow_provider_lifecycle() {

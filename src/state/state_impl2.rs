@@ -1,5 +1,6 @@
 //! state_impl2 — 自 src/state/state_impl.rs 拆分。
 
+#![allow(clippy::too_many_arguments)]
 pub(crate) use super::*;
 
 impl StateStore {

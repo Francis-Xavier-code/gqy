@@ -7,7 +7,6 @@ use cosmic_text::{Buffer, Color, FontSystem, SwashCache};
 
 use fontdb::Database as FontDatabase;
 
-use image::Pixel as _;
 use pulldown_cmark::{Alignment, Event, Options, Parser, Tag, TagEnd};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

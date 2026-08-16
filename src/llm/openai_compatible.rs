@@ -26,7 +26,7 @@ mod client_impl2;
 mod providers;
 pub(crate) use providers::*;
 mod providers2;
-pub use providers2::*;
+pub(crate) use providers2::*;
 mod api;
 pub(crate) use api::*;
 #[cfg(test)]

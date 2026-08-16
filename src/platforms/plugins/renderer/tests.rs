@@ -6,7 +6,6 @@ pub(crate) use super::*;
 use std::path::PathBuf;
 use std::time::Duration;
 #[cfg(test)]
-
 fn render(markdown: &str, raw_config: &RenderConfig) -> Result<Vec<RenderedImage>> {
     render_in_process_for_test(markdown, raw_config)
 }

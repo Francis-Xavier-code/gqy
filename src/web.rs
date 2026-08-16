@@ -65,7 +65,7 @@ pub(crate) use sessions_a::*;
 mod sessions_b;
 pub(crate) use sessions_b::*;
 mod sessions2;
-pub use sessions2::*;
+pub(crate) use sessions2::*;
 mod config;
 pub(crate) use config::*;
 mod actors;

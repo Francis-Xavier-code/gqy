@@ -1,3 +1,4 @@
+#![allow(clippy::too_many_arguments)]
 use super::store::{GroupKey, HistoryStore, RecentQuery};
 use crate::config::{AppConfig, RealContextPluginSettings, REAL_CONTEXT_PLUGIN_ID};
 use crate::i18n::{agent_text as t, text_for, Locale};

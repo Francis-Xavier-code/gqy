@@ -2,6 +2,7 @@
 
 // ponytail: 与 src/tools/jobs.rs（后台命令 job 工具）同名易混淆：本文件是 CLI 的 job 命令；
 // 改名（如 jobs_cmd.rs）后删除本注释。
+#![allow(clippy::too_many_arguments)]
 pub(crate) use super::*;
 
 type JobsOverviewSnapshot = (

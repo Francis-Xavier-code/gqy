@@ -1,5 +1,6 @@
 //! variant — 自 src/cli.rs 拆分。
 
+#![allow(clippy::too_many_arguments)]
 pub(crate) use super::*;
 
 pub(crate) fn draw_inline_single_variant(

@@ -57,13 +57,13 @@ pub(crate) use variant::*;
 mod live;
 pub(crate) use live::*;
 mod live2;
-pub use live2::*;
+pub(crate) use live2::*;
 mod jobs;
 pub(crate) use jobs::*;
 mod repl_ui;
 pub(crate) use repl_ui::*;
 mod keyboard_enhancement;
-pub(crate) use keyboard_enhancement::*;
+use keyboard_enhancement::*;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

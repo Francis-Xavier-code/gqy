@@ -1,5 +1,6 @@
 //! init — 自 src/cli.rs 拆分。
 
+#![allow(clippy::too_many_arguments)]
 pub(crate) use super::*;
 
 #[derive(Clone, Copy)]

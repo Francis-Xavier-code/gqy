@@ -1,5 +1,6 @@
 //! providers2 — 自 src/llm/openai_compatible/providers.rs 拆分。
 
+#![allow(clippy::too_many_arguments)]
 pub(crate) use super::*;
 
 impl AnthropicToolAccumulator {

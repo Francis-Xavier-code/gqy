@@ -1,5 +1,6 @@
 //! images — 自 src/tools/web_images.rs 拆分。
 
+#![allow(clippy::too_many_arguments)]
 pub(crate) use super::*;
 
 use super::{vision, ToolProgress, ToolRegistry, ToolSpec};

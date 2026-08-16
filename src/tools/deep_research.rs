@@ -1,4 +1,4 @@
-#![allow(clippy::ptr_arg)]
+#![allow(clippy::ptr_arg, clippy::too_many_arguments)]
 use super::subagent_runner::{
     clip_inline, format_token_count, ProgressMode, SubagentProgress, SubagentRunner,
 };

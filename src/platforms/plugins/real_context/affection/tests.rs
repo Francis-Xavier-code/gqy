@@ -1,7 +1,7 @@
 //! tests — 自 src/platforms/plugins/real_context/affection.rs 外移。
 #![cfg(test)]
 
-pub(crate) use super::*;
+use super::*;
 
 #[test]
 fn default_score_has_no_active_reply_bias() {

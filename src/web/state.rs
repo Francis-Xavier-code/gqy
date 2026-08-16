@@ -1,6 +1,6 @@
 //! state — 自 src/web.rs 拆分。
 
-#![allow(clippy::doc_lazy_continuation)]
+#![allow(clippy::doc_lazy_continuation, clippy::too_many_arguments)]
 pub(crate) use super::*;
 
 pub(crate) fn rebuild_for_config(

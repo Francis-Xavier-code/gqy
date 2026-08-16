@@ -2,6 +2,10 @@
 #![cfg(test)]
 
 use super::tests3::*;
+// glob reexport 传递链:super 项经 tests.rs → tests3 → 此处引入,
+// 自己的 super::* 与链冗余;但删除会断链(tests4 直接依赖 super 命名空间),
+// 故保留并抑制 clippy 的 unused 判定。
+#[allow(unused_imports)]
 pub(crate) use super::*;
 
 #[tokio::test]

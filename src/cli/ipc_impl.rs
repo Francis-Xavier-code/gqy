@@ -2,6 +2,7 @@
 
 // ponytail: 与 src/ipc.rs（底层 Unix-socket 协议）易混淆：本文件是 CLI 侧的 IPC 客户端封装；
 // 改名（如 ipc_client.rs）后删除本注释。
+#![allow(clippy::too_many_arguments)]
 pub(crate) use super::*;
 
 pub(crate) async fn send_ipc_command(paths: &GQYPaths, command: IpcCommand) -> Result<()> {

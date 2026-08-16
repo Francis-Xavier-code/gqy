@@ -5,7 +5,6 @@ pub(crate) use super::*;
 
 use std::collections::HashMap;
 #[cfg(test)]
-
 fn candidate(title: &str, rank: usize, width: u32, height: u32) -> ImageCandidate {
     ImageCandidate {
         title: title.to_string(),

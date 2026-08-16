@@ -1,5 +1,6 @@
 //! groups — 自 src/platforms/onebot.rs 拆分。
 
+#![allow(clippy::too_many_arguments)]
 pub(crate) use super::*;
 
 /// its per-conversation route (私聊/群聊专属配置), creating the route if needed.

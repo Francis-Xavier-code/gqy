@@ -240,7 +240,6 @@ pub(crate) fn with_runtime_system_context(mut system_prompt: String, context: &[
 /// skipping the append outright — rather than adding an empty block — keeps
 /// those sessions' system prompt byte-identical to what the provider already
 /// has cached, so the platform side sees no cold start at all.
-
 /// 模式选提示词源:Dev=一行可编辑开发提示词(无人格全家、无用户身份,
 /// 极简原则);Normal=人格提示词(按 audience 附用户档案)。
 pub(crate) fn mode_system_prompt(

@@ -1,6 +1,6 @@
 //! oneshot — 自 src/cli.rs 拆分。
 
-#![allow(clippy::manual_is_multiple_of)]
+#![allow(clippy::manual_is_multiple_of, clippy::too_many_arguments)]
 pub(crate) use super::*;
 
 pub(crate) async fn append_stdin_if_piped(message: String) -> String {
