@@ -951,6 +951,18 @@ fn required(args: &Value, key: &str) -> Result<String> {
 mod tests {
     use super::*;
 
+    /// 搜索类测试依赖系统 rg(ripgrep);缺失时软跳过,
+    /// 与 pty 测试 openpty 不可用的处理一致。
+    fn rg_available() -> bool {
+        std::process::Command::new("rg")
+            .arg("--version")
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .map(|status| status.success())
+            .unwrap_or(false)
+    }
+
     fn fake_trash(args: Value) -> Result<String> {
         let (tx, _rx) = tokio::sync::mpsc::unbounded_channel();
         trash_paths_with(
@@ -1098,6 +1110,10 @@ mod tests {
 
     #[tokio::test]
     async fn glob_files_matches_filename_case_insensitively() {
+        if !rg_available() {
+            eprintln!("rg unavailable; skipping glob test");
+            return;
+        }
         let cwd = std::env::current_dir().unwrap();
         let temp = tempfile::tempdir_in(cwd).unwrap();
         let path = temp.path().join("ai测试题.txt");
@@ -1115,6 +1131,10 @@ mod tests {
 
     #[tokio::test]
     async fn grep_no_matches_is_successful_empty_result() {
+        if !rg_available() {
+            eprintln!("rg unavailable; skipping grep test");
+            return;
+        }
         let cwd = std::env::current_dir().unwrap();
         let temp = tempfile::tempdir_in(cwd).unwrap();
         std::fs::write(temp.path().join("sample.txt"), "hello").unwrap();
