@@ -48,9 +48,9 @@ jobs:
         include:
           - target: aarch64-apple-darwin
             os: macos-15
+          # Intel 资产在 arm64 runner 上交叉编译(macOS 13 已退役)。
           - target: x86_64-apple-darwin
-            # macOS 13 Intel runner 退役前暂用;退役后需在 arm64 runner 交叉编译。
-            os: macos-13
+            os: macos-15
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust
