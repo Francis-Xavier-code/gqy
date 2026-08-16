@@ -29,6 +29,9 @@ class Gqy < Formula
         (fonts_dir).install font
       end
     end
+    # 内置表情库(src/memes,随 release 资产打包)装到 share/gqy/memes,
+    # 运行时按可执行文件相对路径解析(<prefix>/share/gqy/memes)。
+    share.install "memes"
   end
 
   test do

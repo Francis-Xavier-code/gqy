@@ -68,6 +68,7 @@ jobs:
           PKG=gqy-${{ github.ref_name }}-${{ matrix.target }}
           mkdir -p dist/$PKG
           cp target/${{ matrix.target }}/release/gqy dist/$PKG/gqy
+          cp -r src/memes dist/$PKG/memes
           cp packaging/brew/gqy.rb dist/$PKG/gqy.rb 2>/dev/null || true
           cp packaging/README.md dist/$PKG/README.md 2>/dev/null || true
           tar -czf $PKG.tar.gz -C dist $PKG

@@ -230,6 +230,16 @@ fn builtin_library_dir(library: &str) -> PathBuf {
     if dev.is_dir() {
         return dev;
     }
+    // 可执行文件相对解析,与渲染字体一致:brew/手动安装的
+    // <prefix>/share/gqy/memes。/usr/share/gqy 为系统级兜底。
+    if let Ok(executable) = std::env::current_exe() {
+        if let Some(prefix) = executable.parent().and_then(std::path::Path::parent) {
+            let rel = prefix.join("share/gqy/memes").join(library);
+            if rel.is_dir() {
+                return rel;
+            }
+        }
+    }
     PathBuf::from(BUILTIN_MEMES_DIR).join(library)
 }
 
