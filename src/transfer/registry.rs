@@ -293,6 +293,22 @@ pub const UNITS: &[DataUnit] = &[
         why: "package advisor review ledger",
     },
     DataUnit {
+        id: "state.aur_review_legacy",
+        rel: "state/aur-review-state.json",
+        kind: UnitKind::File,
+        tier: Tier::Never,
+        secret: false,
+        why: "legacy Linux AUR advisor state; no longer written by macOS GQY",
+    },
+    DataUnit {
+        id: "state.arch_news_legacy",
+        rel: "state/arch_news_last_seen.json",
+        kind: UnitKind::File,
+        tier: Tier::Never,
+        secret: false,
+        why: "legacy Linux Arch news cursor; no longer written by macOS GQY",
+    },
+    DataUnit {
         id: "state.prompt_fingerprints",
         rel: "state/prompt-fingerprints",
         kind: UnitKind::Dir,

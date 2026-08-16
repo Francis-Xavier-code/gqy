@@ -326,7 +326,7 @@ for line in sys.stdin:
         let server = McpServerConfig {
             id: "mock".to_string(),
             display_name: String::new(),
-            command: "python".to_string(),
+            command: "python3".to_string(),
             args: vec!["-c".to_string(), script.to_string()],
             env: HashMap::new(),
             timeout_seconds: 5,

@@ -356,7 +356,14 @@ pub(crate) fn apply_worker_address_space_limit() -> Result<()> {
         rlim_max: WORKER_ADDRESS_SPACE_LIMIT as libc::rlim_t,
     };
     if unsafe { libc::setrlimit(libc::RLIMIT_AS, &limit) } != 0 {
-        return Err(io::Error::last_os_error()).context("limiting renderer worker address space");
+        let error = io::Error::last_os_error();
+        // macOS does not allow lowering RLIMIT_AS the way Linux does. The
+        // renderer worker is already a short-lived, single-purpose process;
+        // treat the unsupported limit as best-effort there.
+        if cfg!(target_os = "macos") && error.raw_os_error() == Some(libc::EINVAL) {
+            return Ok(());
+        }
+        return Err(error).context("limiting renderer worker address space");
     }
     Ok(())
 }

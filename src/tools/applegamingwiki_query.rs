@@ -124,7 +124,10 @@ fn extract_compatibility(markdown: &str) -> Vec<Value> {
             continue;
         }
         let method = cells[0];
-        if method.is_empty() || method.eq_ignore_ascii_case("Method") {
+        if method.is_empty()
+            || method.eq_ignore_ascii_case("Method")
+            || method.chars().all(|ch| ch == '-' || ch == ':')
+        {
             continue;
         }
         let rating = cells.get(1).copied().unwrap_or("").to_string();
