@@ -10,3 +10,5 @@
 *.pkg.tar.zst
 *.part
 *.old
+/dist/
+*.tar.gz
