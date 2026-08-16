@@ -128,6 +128,7 @@ Config lives at `~/.config/gqy/config.jsonc` (edit it visually with
 ## 文档 Documentation
 
 - [设计理念 Design philosophy](docs/理念.md) — 上下文与缓存设计（中文）
+- [CLI 命令参考 CLI reference](docs/cli.md) — 全部命令、选项与环境变量
 - [缓存与提示词计划 Cache & prompt plan](docs/cache-and-prompt-plan.md)（中文）
 - [发布打包 Release packaging](packaging/README.md) — Homebrew formula 说明
 
