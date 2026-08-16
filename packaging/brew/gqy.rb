@@ -8,8 +8,10 @@ class Gqy < Formula
   homepage "https://github.com/Francis-Xavier-code/gqy"
   license "MIT"
 
-  url "https://github.com/Francis-Xavier-code/gqy/releases/download/v0.1.0/gqy-0.1.0-aarch64-apple-darwin.tar.gz"
-  sha256 "21c8a0045245b871d9c709e13b152e35c5bd9df6ac67b061254f4b3d61a3d267"
+  # 模板约定:URL 带 v(与 CI 资产命名 gqy-<tag>-<target>.tar.gz 一致),
+  # sha256 为占位符,由 CI 的 Generate Homebrew formula 步骤替换。
+  url "https://github.com/Francis-Xavier-code/gqy/releases/download/v0.1.0/gqy-v0.1.0-aarch64-apple-darwin.tar.gz"
+  sha256 "0000000000000000000000000000000000000000000000000000000000000000"
 
   # 长回复转图片的渲染字体(与旧 AUR 包装包一致,发布资产不含字体)。
   # TODO(release): 固定 Noto 版本并填 sha256。
