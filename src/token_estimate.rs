@@ -1,4 +1,5 @@
 //! token 估算：优先使用 OpenAI-family `o200k_base` BPE，失败时回退到字符规则。
+// ponytail: 与 token_counter.rs（精确 o200k BPE 计数）易混淆，本文件是快速估算；统一改名后删除本注释。
 
 const CHARS_PER_TOKEN_LATIN: usize = 4;
 const CHARS_PER_TOKEN_CJK: usize = 2;

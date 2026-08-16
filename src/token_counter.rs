@@ -1,3 +1,5 @@
+// ponytail: 与 token_estimate.rs 易混淆：本文件是精确 o200k BPE 计数，
+// token_estimate.rs 是字符规则快速估算；改名（如 token_bpe.rs）后删除本注释。
 use anyhow::{ensure, Result};
 use fancy_regex::Regex;
 use rustc_hash::FxHashMap;

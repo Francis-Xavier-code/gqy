@@ -6,6 +6,8 @@ use super::tests3::*;
 pub(crate) use super::*;
 
 use tokio::sync::mpsc;
+
+#[test]
 fn group_trigger_matrix() {
     let at_only = OneBotConfig::default();
     let mut parsed = InboundMessage {

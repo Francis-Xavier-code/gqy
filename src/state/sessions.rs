@@ -1,5 +1,7 @@
 //! sessions — 自 src/state/mod.rs 拆分。
 
+// ponytail: 与 src/web/sessions*.rs（web API 会话处理）易混淆：本文件是会话 DB/状态；
+// 改名（如 session_store.rs）后删除本注释。
 pub(crate) use super::*;
 
 pub(crate) fn artifact_media_type(path: &Path) -> (&'static str, &'static str) {

@@ -1,5 +1,7 @@
 //! ipc — 自 src/cli.rs 拆分。
 
+// ponytail: 与 src/ipc.rs（底层 Unix-socket 协议）易混淆：本文件是 CLI 侧的 IPC 客户端封装；
+// 改名（如 ipc_client.rs）后删除本注释。
 pub(crate) use super::*;
 
 pub(crate) async fn send_ipc_command(paths: &GQYPaths, command: IpcCommand) -> Result<()> {

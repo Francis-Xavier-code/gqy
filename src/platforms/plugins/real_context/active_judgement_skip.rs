@@ -1,3 +1,5 @@
+// ponytail: 文件名用英式拼写 judgement，与同目录 judge.rs 及项目美式拼写不一致；
+// 改名 active_judgment_skip.rs（并同步 real_context/mod.rs）后删除本注释。
 use super::super::send_fixed_tool_output;
 use crate::config::REAL_CONTEXT_PLUGIN_ID;
 use crate::platforms::access_control::{
