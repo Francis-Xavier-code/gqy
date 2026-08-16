@@ -14,10 +14,9 @@ class Gqy < Formula
   sha256 "0000000000000000000000000000000000000000000000000000000000000000"
 
   # 长回复转图片的渲染字体(与旧 AUR 包装包一致,发布资产不含字体)。
-  # TODO(release): 固定 Noto 版本并填 sha256。
   resource "noto-sans-cjk-sc" do
     url "https://github.com/notofonts/noto-cjk/releases/download/Sans2.004/08_NotoSansCJKsc.zip"
-    sha256 :no_check
+    sha256 "a927e56f53bd6c3b920bc139c0b94aa36c7d9ad0cf009b159437a1a003581140"
   end
 
   def install
