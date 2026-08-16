@@ -1,3 +1,4 @@
+// ponytail: 与 src/cli/jobs.rs（CLI 的 job 命令）同名易混淆：本文件是工具实现；统一改名后删除本注释。
 //! Background command jobs: spawn-and-forget shell processes with status
 //! polling, bounded lifetimes, and orphan hygiene across restarts.
 //!

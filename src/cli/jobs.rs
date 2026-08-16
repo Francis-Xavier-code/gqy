@@ -1,5 +1,7 @@
 //! jobs — 自 src/cli.rs 拆分。
 
+// ponytail: 与 src/tools/jobs.rs（后台命令 job 工具）同名易混淆：本文件是 CLI 的 job 命令；
+// 改名（如 jobs_cmd.rs）后删除本注释。
 pub(crate) use super::*;
 
 type JobsOverviewSnapshot = (
