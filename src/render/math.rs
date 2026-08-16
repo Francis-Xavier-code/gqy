@@ -770,13 +770,31 @@ mod pty_tests {
             )
             .expect("gauss integral renders");
             let payload = art.lines.join("\r\n") + "\r\n";
-            // 非阻塞排空 master,防止写满 PTY 缓冲。
-            let flags = libc::fcntl(master, libc::F_GETFL);
-            libc::fcntl(master, libc::F_SETFL, flags | libc::O_NONBLOCK);
-            let bytes = payload.as_bytes();
-            let written = libc::write(slave, bytes.as_ptr().cast(), bytes.len());
-            assert!(written > 0, "pty write failed");
+            // 阻塞写 slave 在无 reader 排空时依内核而定：macOS 上 payload 超过
+            // ~1KB 即永久阻塞(master 非阻塞也没用)。slave 一并设非阻塞，
+            // 遇 EAGAIN 先排空 master 再续写，行为与平台无关。
             let mut sink = [0u8; 65536];
+            for fd in [master, slave] {
+                let flags = libc::fcntl(fd, libc::F_GETFL);
+                libc::fcntl(fd, libc::F_SETFL, flags | libc::O_NONBLOCK);
+            }
+            let bytes = payload.as_bytes();
+            let mut total = 0usize;
+            while total < bytes.len() {
+                let n = libc::write(slave, bytes.as_ptr().add(total).cast(), bytes.len() - total);
+                if n > 0 {
+                    total += n as usize;
+                    continue;
+                }
+                assert!(n < 0, "pty write stalled");
+                let err = std::io::Error::last_os_error();
+                assert_eq!(
+                    err.kind(),
+                    std::io::ErrorKind::WouldBlock,
+                    "pty write failed: {err}"
+                );
+                while libc::read(master, sink.as_mut_ptr().cast(), sink.len()) > 0 {}
+            }
             while libc::read(master, sink.as_mut_ptr().cast(), sink.len()) > 0 {}
 
             let mut after: libc::termios = std::mem::zeroed();

@@ -41,7 +41,7 @@ pub(crate) use plugins::*;
 mod fields;
 pub(crate) use fields::*;
 mod fields2;
-pub use fields2::*;
+pub(crate) use fields2::*;
 mod editors;
 pub(crate) use editors::*;
 mod menus;

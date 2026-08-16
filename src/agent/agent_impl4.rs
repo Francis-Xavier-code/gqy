@@ -3,6 +3,7 @@
 #![allow(
     clippy::cloned_ref_to_slice_refs,
     clippy::needless_borrow,
+    clippy::too_many_arguments,
     clippy::unnecessary_map_or
 )]
 pub(crate) use super::*;

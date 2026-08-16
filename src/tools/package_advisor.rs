@@ -2,7 +2,7 @@
 //! 审查并记录审查状态;install_brew_package 仅在用户看过审查并明确确认后
 //! 才执行 `brew install`。审查与安装必须分属不同轮次(guard 强制)。
 
-#![allow(clippy::double_ended_iterator_last)]
+#![allow(clippy::double_ended_iterator_last, clippy::too_many_arguments)]
 use super::{ToolRegistry, ToolSpec};
 use crate::paths::GQYPaths;
 use anyhow::{bail, Result};

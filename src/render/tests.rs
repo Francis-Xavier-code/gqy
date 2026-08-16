@@ -5,7 +5,6 @@ pub(crate) use super::*;
 
 use unicode_width::UnicodeWidthStr;
 #[cfg(test)]
-
 fn visible_command_lines(lines: Vec<String>) -> Vec<String> {
     lines
         .into_iter()

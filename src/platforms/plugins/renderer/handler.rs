@@ -1,5 +1,6 @@
 //! handler — 自 src/platforms/plugins/renderer.rs 拆分。
 
+#![allow(clippy::too_many_arguments)]
 pub(crate) use super::*;
 
 #[derive(Clone, Copy)]

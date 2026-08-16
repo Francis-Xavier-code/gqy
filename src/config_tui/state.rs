@@ -1,6 +1,6 @@
 //! state — 自 src/config_tui.rs 拆分。
 
-#![allow(clippy::manual_clamp)]
+#![allow(clippy::manual_clamp, clippy::too_many_arguments)]
 pub(crate) use super::*;
 
 pub(crate) fn run_form(stdout: &mut io::Stdout, title: &str, fields: &mut [Field]) -> Result<bool> {

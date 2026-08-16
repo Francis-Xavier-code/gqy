@@ -1,5 +1,6 @@
 //! store — 自 src/state/conversation_db.rs 拆分。
 
+#![allow(clippy::too_many_arguments)]
 pub(crate) use super::*;
 
 impl ConversationDb {

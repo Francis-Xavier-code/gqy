@@ -1,7 +1,7 @@
 //! tests — 自 src/platforms/plugins/message_history/tools.rs 外移。
 #![cfg(test)]
 
-pub(crate) use super::*;
+use super::*;
 
 use crate::config::AppConfig;
 use crate::paths::GQYPaths;

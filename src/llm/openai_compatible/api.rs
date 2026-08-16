@@ -1,6 +1,6 @@
 //! api — 自 src/llm/openai_compatible.rs 拆分。
 
-#![allow(clippy::unnecessary_mut_passed)]
+#![allow(clippy::unnecessary_mut_passed, clippy::too_many_arguments)]
 pub(crate) use super::*;
 
 pub(crate) fn strip_tagged_sections(mut text: String, tag: &str) -> String {

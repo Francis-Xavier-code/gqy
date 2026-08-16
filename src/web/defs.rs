@@ -1,5 +1,6 @@
 //! defs — 自 src/web.rs 拆分。
 
+#![allow(clippy::too_many_arguments)]
 pub(crate) use super::*;
 
 use crate::agent::{AgentEvent, AgentMode};
@@ -7,7 +8,7 @@ use crate::agent::{AgentEvent, AgentMode};
 use crate::cli::build_tool_registry;
 use crate::config::{ActiveProviderModelConfig, AppConfig, PromptAudience};
 use crate::i18n::text as t;
-use crate::ipc::{self, ImageAttachment};
+use crate::ipc::ImageAttachment;
 
 use crate::llm::{ChatStreamKind, OpenAiCompatibleClient};
 

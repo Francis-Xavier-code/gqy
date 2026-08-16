@@ -7,7 +7,6 @@ use directories::BaseDirs;
 use std::os::fd::AsRawFd;
 use std::path::PathBuf;
 #[cfg(test)]
-
 fn test_layouts(root: &Path) -> (LegacyLayout, Layout) {
     (
         LegacyLayout {
