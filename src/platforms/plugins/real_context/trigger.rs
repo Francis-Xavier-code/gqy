@@ -322,7 +322,7 @@ pub(crate) fn format_active_reply_skip_log_for(
     }
 }
 
-pub(crate) fn localized_affection_level<'a>(level: &'a str, locale: Locale) -> &'a str {
+pub(crate) fn localized_affection_level(level: &str, locale: Locale) -> &str {
     if locale == Locale::Zh {
         return level;
     }

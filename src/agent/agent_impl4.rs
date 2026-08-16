@@ -224,8 +224,10 @@ impl Agent {
                         && window.is_some()
                         && crate::llm::is_context_overflow_error(&error)
                     {
+                        let Some(window) = window else {
+                            return Err(error);
+                        };
                         overflow_recovery_attempted = true;
-                        let window = window.unwrap();
                         let check =
                             overflow::OverflowCheck::new(Some(window), self.trim_at_ratio, None);
                         on_event(AgentEvent::CompactStart)?;

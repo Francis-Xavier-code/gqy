@@ -116,7 +116,7 @@ struct AffectionLevel<'a> {
 }
 
 #[derive(Default)]
-pub(super) struct AffectionUpdateQueue {
+pub(crate) struct AffectionUpdateQueue {
     sender: Mutex<Option<mpsc::Sender<AffectionUpdateJob>>>,
 }
 
@@ -1082,7 +1082,7 @@ fn format_affection_failure_log(
     }
 }
 
-fn localized_level<'a>(level: &'a str, locale: Locale) -> &'a str {
+fn localized_level(level: &str, locale: Locale) -> &str {
     if locale == Locale::Zh {
         return level;
     }

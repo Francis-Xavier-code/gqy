@@ -990,10 +990,7 @@ fn strip_leading_weekday(value: &str) -> String {
         "周天",
     ];
     let mut title = value.trim_start();
-    loop {
-        let Some(weekday) = weekdays.iter().find(|weekday| title.starts_with(**weekday)) else {
-            break;
-        };
+    while let Some(weekday) = weekdays.iter().find(|weekday| title.starts_with(**weekday)) {
         title = title[weekday.len()..].trim_start();
     }
     title.to_string()

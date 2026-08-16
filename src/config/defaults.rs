@@ -378,33 +378,6 @@ impl Default for DisplayConfig {
     }
 }
 
-impl Default for PluginsConfig {
-    fn default() -> Self {
-        Self {
-            weather: PluginEnabledConfig::default(),
-            web: WebPluginConfig::default(),
-            web_images: WebImagesPluginConfig::default(),
-            deep_research: DeepResearchPluginConfig::default(),
-            vision: VisionPluginConfig::default(),
-            exchange_rate: ExchangeRatePluginConfig::default(),
-            xuanxue: PluginEnabledConfig::default(),
-            image_generation: ImageGenerationPluginConfig::default(),
-            print_image: PrintImagePluginConfig::default(),
-            memes: MemesPluginConfig::default(),
-            knowledge_base: KnowledgeBasePluginConfig::default(),
-            brew: PluginEnabledConfig::default(),
-            man: PluginEnabledConfig::default(),
-            moegirl: PluginEnabledConfig::default(),
-            hash_codec: PluginEnabledConfig::default(),
-            calculator: CalculatorPluginConfig::default(),
-            package_advisor: PluginEnabledConfig::default(),
-            diagnostics: DiagnosticsPluginConfig::default(),
-            api_quota: ApiQuotaPluginConfig::default(),
-            memory: MemoryConfig::default(),
-        }
-    }
-}
-
 impl Default for ApiQuotaPluginConfig {
     fn default() -> Self {
         Self {
@@ -424,15 +397,6 @@ impl Default for ApiQuotaProviderConfig {
                 name: default_api_quota_account_name(),
                 api_key: String::new(),
             }],
-        }
-    }
-}
-
-impl Default for McpConfig {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            servers: Vec::new(),
         }
     }
 }

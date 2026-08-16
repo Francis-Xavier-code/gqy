@@ -85,7 +85,7 @@ pub(crate) fn repl_wrapped_input_rows_for_cols(
             width = width.saturating_add(char_width);
         }
         rows.push(current);
-        if width > 0 && width % max_width == 0 {
+        if width > 0 && width.is_multiple_of(max_width) {
             rows.push(String::new());
         }
     }

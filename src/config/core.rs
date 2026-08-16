@@ -347,12 +347,11 @@ impl PlatformsConfig {
             route.prune_model_references(providers);
         }
         mutate_real_context_settings(&mut self.qq.plugins, |settings| {
-            for pool in [&mut settings.text_models] {
-                if let Some(models) = pool {
-                    models.retain(|model| active_model_exists(providers, model));
-                }
-                normalize_route_pool(pool);
+            let pool = &mut settings.text_models;
+            if let Some(models) = pool {
+                models.retain(|model| active_model_exists(providers, model));
             }
+            normalize_route_pool(pool);
         });
         self.normalize_model_routes();
     }
@@ -372,14 +371,11 @@ impl PlatformsConfig {
             route.remove_model_references(provider_id, model);
         }
         mutate_real_context_settings(&mut self.qq.plugins, |settings| {
-            for pool in [&mut settings.text_models] {
-                if let Some(models) = pool {
-                    models.retain(|entry| {
-                        !(entry.provider_id == provider_id && entry.model == model)
-                    });
-                }
-                normalize_route_pool(pool);
+            let pool = &mut settings.text_models;
+            if let Some(models) = pool {
+                models.retain(|entry| !(entry.provider_id == provider_id && entry.model == model));
             }
+            normalize_route_pool(pool);
         });
         self.normalize_model_routes();
     }
@@ -404,12 +400,11 @@ impl PlatformsConfig {
             }
         }
         mutate_real_context_settings(&mut self.qq.plugins, |settings| {
-            for pool in [&mut settings.text_models] {
-                if let Some(models) = pool {
-                    models.retain(|entry| entry.provider_id != provider_id);
-                }
-                normalize_route_pool(pool);
+            let pool = &mut settings.text_models;
+            if let Some(models) = pool {
+                models.retain(|entry| entry.provider_id != provider_id);
             }
+            normalize_route_pool(pool);
         });
         self.normalize_model_routes();
     }
@@ -429,12 +424,11 @@ impl PlatformsConfig {
             route.rename_provider_references(old_id, new_id);
         }
         mutate_real_context_settings(&mut self.qq.plugins, |settings| {
-            for pool in [&mut settings.text_models] {
-                if let Some(models) = pool {
-                    rename_provider_in_pool(models, old_id, new_id);
-                }
-                normalize_route_pool(pool);
+            let pool = &mut settings.text_models;
+            if let Some(models) = pool {
+                rename_provider_in_pool(models, old_id, new_id);
             }
+            normalize_route_pool(pool);
         });
     }
 

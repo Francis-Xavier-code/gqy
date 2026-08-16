@@ -681,7 +681,7 @@ fn lookup_reasoning_info(
             groups.push((info, 1));
         }
     }
-    groups.sort_by(|left, right| right.1.cmp(&left.1));
+    groups.sort_by_key(|(_, count)| std::cmp::Reverse(*count));
     let (info, count) = groups.first()?;
     if groups
         .get(1)

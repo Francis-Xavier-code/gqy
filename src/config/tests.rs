@@ -227,8 +227,10 @@ fn legacy_provider_temperatures_migrate_once() {
 
 #[test]
 fn empty_active_provider_models_normalizes_to_default_chat_model() {
-    let mut config = AppConfig::default();
-    config.active_provider_models = Some(Vec::new());
+    let mut config = AppConfig {
+        active_provider_models: Some(Vec::new()),
+        ..Default::default()
+    };
 
     config.normalize_builtin_providers();
 
@@ -635,9 +637,11 @@ fn qq_prompt_identity_options_default_on_and_roundtrip() {
     assert!(defaults.show_group_name);
     assert!(defaults.memory.write_enabled);
 
-    let mut disabled = OneBotConfig::default();
-    disabled.user_identification = false;
-    disabled.show_group_name = false;
+    let disabled = OneBotConfig {
+        user_identification: false,
+        show_group_name: false,
+        ..Default::default()
+    };
     let json = serde_json::to_value(&disabled).unwrap();
     assert_eq!(json["user_identification"], false);
     assert_eq!(json["show_group_name"], false);

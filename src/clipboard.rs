@@ -288,14 +288,12 @@ pub fn parse_clipboard_path(text: &str) -> Option<ClipboardPath> {
     };
     let path_str = if raw.starts_with('/') {
         raw.to_string()
-    } else if let Some(rest) = raw.strip_prefix("~/") {
-        if let Some(home) = directories::BaseDirs::new().map(|d| d.home_dir().to_path_buf()) {
-            home.join(rest).display().to_string()
-        } else {
-            return None;
-        }
     } else {
-        return None;
+        let rest = raw.strip_prefix("~/")?;
+        {
+            let home = directories::BaseDirs::new().map(|d| d.home_dir().to_path_buf())?;
+            home.join(rest).display().to_string()
+        }
     };
     let path = Path::new(&path_str);
     if !path.exists() {

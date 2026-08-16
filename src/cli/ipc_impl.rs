@@ -111,7 +111,7 @@ pub(crate) async fn apply_repl_session_switch(
     // token numbers. `refresh_footer` repaints straight away — merely storing
     // the footer left the previous session's numbers on screen until the next
     // turn finished.
-    *cumulative_tokens = state_cumulative(&state);
+    *cumulative_tokens = state_cumulative(state);
     let session_config = footer_config_for_session(paths, config, &state.session_id);
     *footer =
         ReplFooterStatus::from_config(&session_config, state.context_tokens, *cumulative_tokens);

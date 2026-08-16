@@ -1,6 +1,6 @@
 //! defs — 自 src/web.rs 拆分。
 
-#![allow(clippy::too_many_arguments)]
+#![allow(clippy::too_many_arguments, clippy::large_enum_variant)]
 pub(crate) use super::*;
 
 use crate::agent::{AgentEvent, AgentMode};
@@ -296,18 +296,10 @@ pub(crate) struct TurnResources {
 
 pub(crate) const MAX_CACHED_TURN_RESOURCE_CONFIGS: usize = 16;
 
+#[derive(Default)]
 pub(crate) struct TurnResourceCache {
     entries: HashMap<[u8; 32], Arc<TurnResources>>,
     order: VecDeque<[u8; 32]>,
-}
-
-impl Default for TurnResourceCache {
-    fn default() -> Self {
-        Self {
-            entries: HashMap::new(),
-            order: VecDeque::new(),
-        }
-    }
 }
 
 impl TurnResourceCache {

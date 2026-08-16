@@ -1120,7 +1120,7 @@ impl StreamRenderer {
         Some(elapsed)
     }
 
-    pub fn display_tool_name<'a>(&self, name: &'a str) -> String {
+    pub fn display_tool_name(&self, name: &str) -> String {
         // Subagents keep their per-call description so parallel task calls
         // show as separate lines: "子代理·<描述>".
         if let Some(description) = name.strip_prefix("task:") {

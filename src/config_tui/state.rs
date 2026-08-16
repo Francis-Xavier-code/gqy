@@ -315,7 +315,8 @@ pub(crate) fn select_multi_choice(
                 return Ok(choices
                     .iter()
                     .zip(active)
-                    .filter_map(|(choice, active)| active.then(|| choice.clone()))
+                    .filter(|&(_choice, active)| active)
+                    .map(|(choice, _active)| choice.clone())
                     .collect::<Vec<_>>()
                     .join(", "))
             }
@@ -474,7 +475,7 @@ pub(crate) fn modality_field_value(provider: &ProviderConfig, model: &str) -> St
 
 pub(crate) fn parse_modalities(value: &str) -> Vec<String> {
     value
-        .split(|ch| ch == ',' || ch == '，' || ch == '\n' || ch == '\r')
+        .split([',', '，', '\n', '\r'])
         .map(str::trim)
         .filter(|item| !item.is_empty())
         .map(str::to_string)

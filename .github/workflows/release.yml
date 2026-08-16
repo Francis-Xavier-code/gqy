@@ -10,6 +10,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
@@ -17,13 +21,15 @@ env:
 jobs:
   test:
     name: Test
-    runs-on: macos-14
+    runs-on: macos-15
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
+      - uses: swatinem/rust-cache@v2
       - name: Format check
         run: cargo fmt --all --check
       - name: Clippy
@@ -35,13 +41,15 @@ jobs:
     name: Build (${{ matrix.target }})
     needs: test
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
         include:
           - target: aarch64-apple-darwin
-            os: macos-14
+            os: macos-15
           - target: x86_64-apple-darwin
+            # macOS 13 Intel runner 退役前暂用;退役后需在 arm64 runner 交叉编译。
             os: macos-13
     steps:
       - uses: actions/checkout@v4
@@ -49,14 +57,9 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
-      - name: Cache
-        uses: actions/cache@v4
+      - uses: swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ matrix.target }}-${{ hashFiles('Cargo.lock') }}
+          key: ${{ matrix.target }}
       - name: Build release
         run: cargo build --release --target ${{ matrix.target }}
       - name: Package

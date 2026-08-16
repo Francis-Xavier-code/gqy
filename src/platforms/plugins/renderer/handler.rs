@@ -436,9 +436,7 @@ pub(crate) fn attrs_for<'a>(
         Family::SansSerif
     };
     let family = named.map(Family::Name).unwrap_or(fallback);
-    let foreground = if matches!(kind, BlockKind::Code) {
-        palette.code_text
-    } else if style.code {
+    let foreground = if matches!(kind, BlockKind::Code) || style.code {
         palette.code_text
     } else if style.link {
         palette.link

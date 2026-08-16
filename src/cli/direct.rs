@@ -398,7 +398,7 @@ pub(crate) async fn run_direct_repl(paths: &GQYPaths, initial_mode: AgentMode) -
         if input.starts_with('/') {
             let known = REPL_COMMAND_TABLE
                 .iter()
-                .any(|spec| spec.name.eq_ignore_ascii_case(&command));
+                .any(|spec| spec.name.eq_ignore_ascii_case(command));
             if known {
                 println!(
                     "{}",
