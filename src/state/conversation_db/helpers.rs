@@ -555,7 +555,6 @@ pub(crate) fn restore_redo_backup_locked(
 }
 
 #[allow(dead_code)]
-
 pub(crate) fn map_turn_row(row: &rusqlite::Row) -> rusqlite::Result<Turn> {
     let tool_reports_json: String = row.get(11)?;
     let tool_reports: Vec<String> = serde_json::from_str(&tool_reports_json).unwrap_or_default();
