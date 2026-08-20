@@ -3,6 +3,25 @@
 
 pub(crate) use super::*;
 
+/// 测试用 GQYPaths：把 state 目录指向临时目录，供审查门使用。
+fn test_paths(root: &std::path::Path) -> GQYPaths {
+    GQYPaths {
+        root_dir: root.to_path_buf(),
+        config_dir: root.join("config"),
+        config_file: root.join("config/config.jsonc"),
+        skills_dir: root.join("data/skills"),
+        data_dir: root.join("data"),
+        cache_dir: root.join("cache"),
+        state_dir: root.join("state"),
+        pictures_dir: root.join("data/pictures"),
+        fish_hook_file: root.join("fish/gqy.fish"),
+        bash_hook_file: root.join("config/shell/bash-hook.sh"),
+        zsh_hook_file: root.join("config/shell/zsh-hook.zsh"),
+        scripts_dir: root.join("data/scripts"),
+        system_scripts_dir: PathBuf::new(),
+    }
+}
+
 fn auto_detect_script(path: &Path) -> Option<ScriptEntry> {
     let detected = inspect_script(path)?;
     let description = detected.description?;
@@ -21,6 +40,26 @@ fn auto_detect_script(path: &Path) -> Option<ScriptEntry> {
         load_policy: LoadPolicy::Summary,
         groups: Vec::new(),
     })
+}
+
+/// 测试辅助：先做 allow 审查，再带 user_confirmed 注册。
+async fn review_and_register(
+    args: Value,
+    scripts_dir: &Path,
+    paths: &GQYPaths,
+) -> std::result::Result<String, anyhow::Error> {
+    let path = args.get("path").and_then(Value::as_str).unwrap_or_default();
+    let review = json!({
+        "path": path,
+        "verdict": "allow",
+        "reason": "test allow"
+    });
+    review_script_handler(review, scripts_dir, paths).await?;
+    let mut register = args.clone();
+    if register.get("user_confirmed").is_none() {
+        register["user_confirmed"] = json!(true);
+    }
+    register_script_handler(register, scripts_dir, paths).await
 }
 
 #[cfg(test)]
@@ -200,12 +239,15 @@ async fn register_script_uses_header_description_when_omitted() {
     )
     .unwrap();
 
-    register_script_handler(
+    let paths = test_paths(temp.path());
+    review_and_register(
         json!({
             "id": "pkg_install",
-            "path": "pkg.sh"
+            "path": "pkg.sh",
+            "user_confirmed": true
         }),
         scripts_dir,
+        &paths,
     )
     .await
     .unwrap();
@@ -363,10 +405,13 @@ async fn register_rejects_reserved_tool_names_before_writing_index() {
     )
     .unwrap();
 
-    let error =
-        register_script_handler(json!({"id":"get_weather","path":"weather.sh"}), scripts_dir)
-            .await
-            .unwrap_err();
+    let error = register_script_handler(
+        json!({"id":"get_weather","path":"weather.sh","user_confirmed":true}),
+        scripts_dir,
+        &test_paths(temp.path()),
+    )
+    .await
+    .unwrap_err();
     assert!(error.to_string().contains("reserved tool name"));
     assert!(!scripts_dir.join("index.json").exists());
 }
@@ -475,12 +520,18 @@ async fn lifecycle_mutations_preserve_malformed_sibling_entries() {
     )
     .unwrap();
 
-    register_script_handler(json!({"id":"new_script","path":"new.sh"}), scripts_dir)
-        .await
-        .unwrap();
+    let paths = test_paths(temp.path());
+    review_and_register(
+        json!({"id":"new_script","path":"new.sh"}),
+        scripts_dir,
+        &paths,
+    )
+    .await
+    .unwrap();
     unregister_script_handler(
         json!({"id":"existing_script","delete_file":false}),
         scripts_dir,
+        &paths,
     )
     .await
     .unwrap();
@@ -531,9 +582,14 @@ async fn lifecycle_mutations_replace_and_remove_all_same_id_entries() {
     )
     .unwrap();
 
-    register_script_handler(json!({"id":"target_script","path":"new.sh"}), scripts_dir)
-        .await
-        .unwrap();
+    let paths = test_paths(temp.path());
+    review_and_register(
+        json!({"id":"target_script","path":"new.sh"}),
+        scripts_dir,
+        &paths,
+    )
+    .await
+    .unwrap();
 
     let index_path = scripts_dir.join("index.json");
     let mut index = read_script_index_value(&index_path).unwrap();
@@ -552,6 +608,7 @@ async fn lifecycle_mutations_replace_and_remove_all_same_id_entries() {
     unregister_script_handler(
         json!({"id":"target_script","delete_file":false}),
         scripts_dir,
+        &paths,
     )
     .await
     .unwrap();
@@ -578,9 +635,13 @@ async fn unregister_keeps_file_disabled() {
     )
     .unwrap();
 
-    unregister_script_handler(json!({"id":"hello","delete_file":false}), scripts_dir)
-        .await
-        .unwrap();
+    unregister_script_handler(
+        json!({"id":"hello","delete_file":false}),
+        scripts_dir,
+        &test_paths(temp.path()),
+    )
+    .await
+    .unwrap();
 
     assert!(scripts_dir.join("hello.sh").is_file());
     let index = read_script_index_for_scan(&scripts_dir.join("index.json")).unwrap();

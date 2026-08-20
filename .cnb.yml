@@ -1,0 +1,83 @@
+# GQY release pipeline (CNB)
+#
+# 推送 v* 标签触发一条流水线：测试 → 双架构 macOS 构建 → 上传 CNB Release
+# 资产 → 回写 Homebrew formula（含真实 sha256）并提交回 main。
+#
+# 说明：
+# - 项目存在 macOS 专属测试（原子 skill 更新依赖 renameatx_np），因此
+#   test/build 必须跑在 macOS 上。这里使用组织自托管 macOS Runner
+#   （根组织设置 → 构建节点 接入后生效），接入前请把 tags 换成实际节点标签。
+# - Release 本体由 git:release 内置任务在 tag_push 事件下创建；
+#   资产上传用 cnbcool/attachments 插件。
+
+"$":
+  tag_push:
+    - name: release
+      runner:
+        namespace: group
+        tags: [macos, arm64]
+      stages:
+        - name: install-toolchain
+          script: |
+            rustup component add rustfmt clippy 2>/dev/null || true
+        - name: format
+          script: cargo fmt --all --check
+        - name: clippy
+          script: cargo clippy --all-targets -- -D warnings
+        - name: test
+          script: cargo test --all
+        - name: build-aarch64
+          script: |
+            cargo build --release --target aarch64-apple-darwin
+            PKG=gqy-$CNB_BRANCH-aarch64-apple-darwin
+            mkdir -p dist/$PKG
+            cp target/aarch64-apple-darwin/release/gqy dist/$PKG/gqy
+            cp -r src/memes dist/$PKG/memes
+            tar -czf $PKG.tar.gz -C dist $PKG
+        - name: build-x86_64
+          script: |
+            cargo build --release --target x86_64-apple-darwin
+            PKG=gqy-$CNB_BRANCH-x86_64-apple-darwin
+            mkdir -p dist/$PKG
+            cp target/x86_64-apple-darwin/release/gqy dist/$PKG/gqy
+            cp -r src/memes dist/$PKG/memes
+            tar -czf $PKG.tar.gz -C dist $PKG
+        - name: compute-checksums
+          script: |
+            sha256sum gqy-$CNB_BRANCH-*-apple-darwin.tar.gz | tee checksums.txt
+        - name: create-release
+          type: git:release
+          options:
+            descriptionFromFile: checksums.txt
+        - name: upload-assets
+          image: cnbcool/attachments:latest
+          settings:
+            attachments:
+              - "./gqy-$CNB_BRANCH-aarch64-apple-darwin.tar.gz"
+              - "./gqy-$CNB_BRANCH-x86_64-apple-darwin.tar.gz"
+        - name: update-brew-formula
+          script: |
+            set -euo pipefail
+            VERSION=${CNB_BRANCH#v}
+            SHA_ARM=$(sha256sum gqy-$CNB_BRANCH-aarch64-apple-darwin.tar.gz | cut -d' ' -f1)
+            cp packaging/brew/gqy.rb gqy.rb
+            python3 - "$VERSION" "$SHA_ARM" <<'PYEOF'
+            import sys, pathlib
+            version, sha = sys.argv[1], sys.argv[2]
+            p = pathlib.Path("gqy.rb")
+            t = p.read_text()
+            t = t.replace("v0.1.0", f"v{version}").replace("0.1.0", version)
+            t = t.replace("0000000000000000000000000000000000000000000000000000000000000000", sha)
+            p.write_text(t)
+            print("formula updated:", version, sha[:16])
+            PYEOF
+            git config user.name "cnb-actions[bot]"
+            git config user.email "41898282+users.noreply.cnb.cool"
+            cp gqy.rb packaging/brew/gqy.rb
+            git add packaging/brew/gqy.rb
+            if git diff --cached --quiet; then
+              echo "formula unchanged"
+            else
+              git commit -m "chore(brew): update formula to $CNB_BRANCH"
+              git push origin HEAD:main
+            fi

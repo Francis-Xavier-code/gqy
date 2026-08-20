@@ -107,7 +107,7 @@ matches **bytes**, not meaning. The rules that constrain real code:
    `prompt cache accounting prompt_tokens=… cache_read=… fresh=…`
    (`src/llm/cache_log.rs`).
 
-`docs/compact-plan.md` holds the compaction design (summary + fixed-token
+`docs/archive/compact-plan.md` holds the compaction design (summary + fixed-token
 verbatim tail, turn-boundary cuts, mechanical fallback on summarizer failure,
 anti-thrash gates) with per-competitor evidence; `src/agent/compact.rs` and
 `src/agent/overflow.rs` are the implementation.

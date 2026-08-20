@@ -174,6 +174,7 @@ pub async fn run(cli: Cli, paths: GQYPaths) -> Result<()> {
         Some(Command::UpdateDefaultKb) => run_update_default_kb(&paths).await,
         Some(Command::Memory(args)) => run_memory(&paths, args),
         Some(Command::Skills(args)) => run_skills(&paths, args),
+        Some(Command::Resources(args)) => run_resources(&paths, args),
         Some(Command::ResetMemoryCli) => run_reset_memory_command(&paths).await,
         Some(Command::Reset) => {
             if ipc::daemon_info(&paths).await.is_some() {

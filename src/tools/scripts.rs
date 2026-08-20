@@ -90,7 +90,7 @@ pub fn register(registry: &mut ToolRegistry, paths: &GQYPaths) {
             tracing::warn!(error = %error, "failed to scan GQY script directories during tool registration");
         }
     }
-    register_script_tools(registry, paths.scripts_dir.clone());
+    register_script_tools(registry, paths);
 }
 
 pub fn rescan_scripts(registry: &mut ToolRegistry, paths: &GQYPaths) {
@@ -640,13 +640,48 @@ fn make_executable(path: &Path) -> Result<()> {
     Ok(())
 }
 
-fn register_script_tools(registry: &mut ToolRegistry, scripts_dir: PathBuf) {
-    let scripts_dir_2 = scripts_dir.clone();
+fn register_script_tools(registry: &mut ToolRegistry, paths: &GQYPaths) {
+    let review_scripts_dir = paths.scripts_dir.clone();
+    let review_paths = paths.clone();
+    let register_scripts_dir = paths.scripts_dir.clone();
+    let register_paths = paths.clone();
+    let unregister_scripts_dir = paths.scripts_dir.clone();
+    let unregister_paths = paths.clone();
+    registry.register(
+        ToolSpec::new(
+            "review_script",
+            t(
+                "Prepare a security review of a script file in the scripts directory: returns the script content for the model to audit and records the review verdict. register_script only succeeds after a non-block review exists. After review, stop and ask the user whether to register; do not call register_script in the same turn.",
+                "准备对 scripts 目录中的脚本文件做安全审查：返回脚本内容供模型审计，并记录审查结论。只有存在非 block 的审查后 register_script 才会成功。审查后请停下并询问用户是否注册；不要在同一轮调用 register_script。",
+            ),
+            json!({
+                "type": "object",
+                "properties": {
+                    "path": { "type": "string", "description": t("Script file name or path within the user scripts directory.", "用户 scripts 目录内的脚本文件名或路径。") },
+                    "verdict": {
+                        "type": "string",
+                        "enum": ["allow", "caution", "block"],
+                        "description": t("Your security verdict after auditing the script: allow (safe), caution (medium risk), block (dangerous / blocks registration).", "审计后的安全结论：allow（安全）、caution（中风险）、block（危险/禁止注册）。")
+                    },
+                    "reason": { "type": "string", "description": t("Concrete findings justifying the verdict.", "支持该结论的具体发现。") }
+                },
+                "required": ["path", "verdict", "reason"],
+                "additionalProperties": false
+            }),
+            move |args| {
+                let scripts_dir = review_scripts_dir.clone();
+                let paths = review_paths.clone();
+                async move { review_script_handler(args, &scripts_dir, &paths).await }
+            },
+        )
+        .writes(),
+    );
+
     registry.register(ToolSpec::new(
         "register_script",
         t(
-            "Register or update a user script as a tool. The script must exist in the scripts directory. This updates index.json, sets executable permission, and makes the script immediately available as a tool in subsequent tool rounds.",
-            "注册或更新用户脚本为工具。脚本必须存在于 scripts 目录中。此操作更新 index.json、设置可执行权限，并使脚本在后续工具调用轮次中立即可用。"
+            "Register or update a user script as a tool after a recorded non-block review_script verdict and explicit user confirmation. The script must exist in the scripts directory. This updates index.json, sets executable permission, and makes the script immediately available as a tool in subsequent tool rounds.",
+            "在已有非 block 的 review_script 审查结论且用户明确确认后，注册或更新用户脚本为工具。脚本必须存在于 scripts 目录中。此操作更新 index.json、设置可执行权限，并使脚本在后续工具调用轮次中立即可用。"
         ),
         json!({
             "type": "object",
@@ -689,14 +724,19 @@ fn register_script_tools(registry: &mut ToolRegistry, scripts_dir: PathBuf) {
                     "type": "array",
                     "items": { "type": "string" },
                     "description": t("Optional hybrid catalog groups, e.g. gaming or systeminfo.", "可选 Hybrid 目录分组，例如 gaming 或 systeminfo。")
+                },
+                "user_confirmed": {
+                    "type": "boolean",
+                    "description": t("Set true only when the user explicitly confirmed registration after seeing the review.", "仅当用户看过审查后明确确认注册时才置 true。")
                 }
             },
-            "required": ["id", "path"],
+            "required": ["id", "path", "user_confirmed"],
             "additionalProperties": false
         }),
         move |args| {
-            let scripts_dir = scripts_dir.clone();
-            async move { register_script_handler(args, &scripts_dir).await }
+            let scripts_dir = register_scripts_dir.clone();
+            let paths = register_paths.clone();
+            async move { register_script_handler(args, &scripts_dir, &paths).await }
         },
     ).writes());
 
@@ -722,13 +762,91 @@ fn register_script_tools(registry: &mut ToolRegistry, scripts_dir: PathBuf) {
             "additionalProperties": false
         }),
         move |args| {
-            let scripts_dir = scripts_dir_2.clone();
-            async move { unregister_script_handler(args, &scripts_dir).await }
+            let scripts_dir = unregister_scripts_dir.clone();
+            let paths = unregister_paths.clone();
+            async move { unregister_script_handler(args, &scripts_dir, &paths).await }
         },
     ).writes());
 }
 
-async fn register_script_handler(args: Value, scripts_dir: &Path) -> Result<String> {
+/// 审查脚本文件：把内容交给模型审计并记录结论。
+async fn review_script_handler(
+    args: Value,
+    scripts_dir: &Path,
+    paths: &GQYPaths,
+) -> Result<String> {
+    let path = args
+        .get("path")
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .trim()
+        .to_string();
+    if path.is_empty() {
+        bail!("path is required");
+    }
+    let verdict = args
+        .get("verdict")
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .trim()
+        .to_string();
+    if !matches!(verdict.as_str(), "allow" | "caution" | "block") {
+        bail!("invalid verdict: {verdict}; expected allow, caution or block");
+    }
+    let reason = args
+        .get("reason")
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .trim()
+        .to_string();
+    if reason.is_empty() {
+        bail!("reason is required");
+    }
+    let unresolved_path = resolve_script_path(&path, scripts_dir);
+    if !unresolved_path.is_file() {
+        bail!("script file not found: {}", unresolved_path.display());
+    }
+    let script_path = ensure_path_within_root(&unresolved_path, scripts_dir)?;
+    let sha = crate::skills::sha256_of_resource(&script_path)?;
+    let content = std::fs::read_to_string(&script_path)?;
+    let display_name = path.rsplit(['/', '\\']).next().unwrap_or(&path).to_string();
+    let id = script_path
+        .file_stem()
+        .and_then(|name| name.to_str())
+        .unwrap_or(&display_name)
+        .to_string();
+    // 以相对脚本路径为稳定键（工具 id 可自定义，文件路径才是脚本身份）。
+    let key = relative_script_path(&script_path, scripts_dir);
+    crate::skills::record_review(
+        paths,
+        "script",
+        &key,
+        &script_path.display().to_string(),
+        &sha,
+        &verdict,
+        &reason,
+    )?;
+    Ok(serde_json::to_string_pretty(&json!({
+        "ok": true,
+        "state": "reviewed",
+        "script": id,
+        "key": key,
+        "sha256": sha,
+        "verdict": verdict,
+        "path": script_path.display().to_string(),
+        "content": content,
+        "output_instruction": "Summarize the verdict and concrete findings. If verdict is allow/caution, ask the user whether to register and stop; register_script may only run in a later turn after the user confirms.",
+    }))?)
+}
+
+async fn register_script_handler(
+    args: Value,
+    scripts_dir: &Path,
+    paths: &GQYPaths,
+) -> Result<String> {
+    if args.get("user_confirmed").and_then(Value::as_bool) != Some(true) {
+        bail!("register_script requires explicit user confirmation after review_script");
+    }
     let id = args
         .get("id")
         .and_then(Value::as_str)
@@ -772,6 +890,19 @@ async fn register_script_handler(args: Value, scripts_dir: &Path) -> Result<Stri
         bail!("script file not found: {}", unresolved_path.display());
     }
     let script_path = ensure_path_within_root(&unresolved_path, scripts_dir)?;
+    // 安全门：脚本必须已有非 block 的审查结论且内容未被改动。
+    let sha = crate::skills::sha256_of_resource(&script_path)?;
+    let review_key = relative_script_path(&script_path, scripts_dir);
+    let allowed = crate::skills::confirm_install(paths, "script", &review_key, &sha).map_err(
+        |error| {
+            anyhow::anyhow!(
+                "script `{id}` 尚未通过安全审查：{error:#}\n请先用 review_script 审查该脚本，再让用户确认后注册。"
+            )
+        },
+    )?;
+    if !allowed {
+        bail!("script `{id}` 的审查结论禁止注册（block）");
+    }
     make_executable(&script_path)?;
 
     let description = if description_override.is_empty() {
@@ -844,13 +975,25 @@ async fn register_script_handler(args: Value, scripts_dir: &Path) -> Result<Stri
 
     write_script_index_value(&index_path, &index)?;
 
+    crate::skills::record_install(
+        paths,
+        "script",
+        &review_key,
+        &script_path.display().to_string(),
+        &sha,
+    )?;
+
     Ok(format!(
         "Script '{id}' registered successfully. It will be available as a tool in the next tool call round. The script path is: {}",
         script_path.display()
     ))
 }
 
-async fn unregister_script_handler(args: Value, scripts_dir: &Path) -> Result<String> {
+async fn unregister_script_handler(
+    args: Value,
+    scripts_dir: &Path,
+    _paths: &GQYPaths,
+) -> Result<String> {
     let id = args
         .get("id")
         .and_then(Value::as_str)

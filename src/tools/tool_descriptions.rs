@@ -92,6 +92,8 @@ macro_rules! tool_description_files {
             include_str!("descriptions/register_deep_research_reference.json"),
             include_str!("descriptions/register_deep_research_topic_title.json"),
             include_str!("descriptions/register_script.json"),
+            include_str!("descriptions/review_script.json"),
+            include_str!("descriptions/review_skill.json"),
             include_str!("descriptions/remove_deep_research_reference.json"),
             include_str!("descriptions/remove_knowledge_base_file.json"),
             include_str!("descriptions/remember_fact.json"),

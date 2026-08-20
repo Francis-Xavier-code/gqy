@@ -3,8 +3,9 @@ use crate::config::AppConfig;
 use crate::i18n::agent_text as t;
 use crate::paths::GQYPaths;
 use crate::skills::{self, SkillEntry, SkillScope};
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use serde_json::{json, Value};
+use std::path::{Path, PathBuf};
 
 pub fn register_skills(
     registry: &mut ToolRegistry,
@@ -81,6 +82,7 @@ pub fn register_authoring(registry: &mut ToolRegistry, config: AppConfig, paths:
     register_create_skill(registry, config.clone(), paths.clone());
     register_update_skill(registry, config.clone(), paths.clone());
     register_delete_skill(registry, config, paths.clone());
+    register_review_skill(registry, paths.clone());
     register_publish_skill(registry, paths.clone());
     register_list_skill_drafts(registry, paths);
 }
@@ -243,20 +245,62 @@ fn register_delete_skill(registry: &mut ToolRegistry, config: AppConfig, paths: 
     );
 }
 
+/// 审查一个 skill 草稿：把草稿内容与 SKILL.md 提供给模型做安全审查，
+/// 并记录审查结论（allow/caution/block）。发布前必须存在有效审查。
+fn register_review_skill(registry: &mut ToolRegistry, paths: GQYPaths) {
+    registry.register(
+        ToolSpec::new(
+            "review_skill",
+            t(
+                "Prepare a security review of a skill draft or installed skill: returns the SKILL.md and all resources for the model to audit, and records the review verdict. publish_skill only succeeds after a non-block review exists. After review, stop and ask the user whether to publish; do not call publish_skill in the same turn.",
+                "准备对 skill 草稿或已安装 skill 的安全审查：返回 SKILL.md 与全部资源供模型审计，并记录审查结论。只有存在非 block 的审查后 publish_skill 才会成功。审查后请停下并询问用户是否发布；不要在同一轮调用 publish_skill。",
+            ),
+            json!({
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string", "description": t("Skill name.", "Skill 名称。") },
+                    "draft_id": { "type": "string", "description": t("Optional draft id to review before publishing; omit to review an already-installed skill.", "可选：待发布的草稿 id；省略则审查已安装的 skill。") },
+                    "verdict": {
+                        "type": "string",
+                        "enum": ["allow", "caution", "block"],
+                        "description": t("Your security verdict after auditing the content: allow (safe), caution (medium risk), block (dangerous / blocks install).", "审计后的安全结论：allow（安全）、caution（中风险）、block（危险/禁止安装）。")
+                    },
+                    "reason": { "type": "string", "description": t("Concrete findings justifying the verdict.", "支持该结论的具体发现。") }
+                },
+                "required": ["name", "verdict", "reason"],
+                "additionalProperties": false
+            }),
+            move |args| {
+                let paths = paths.clone();
+                async move {
+                    tokio::task::spawn_blocking(move || review_skill(args, &paths))
+                        .await
+                        .context("skill review worker stopped")?
+                }
+            },
+        )
+        .writes(),
+    );
+}
+
 fn register_publish_skill(registry: &mut ToolRegistry, paths: GQYPaths) {
     registry.register(
         ToolSpec::new(
             "publish_skill",
             t(
-                "Validate and atomically publish a GQY skill draft. Create drafts never overwrite; update drafts use revision checks. Scripts remain resources and are not registered as tools.",
-                "校验并原子发布 GQY skill 草稿。创建草稿绝不覆盖；更新草稿执行版本检查。scripts 仍是资源，不会注册为工具。",
+                "Validate and atomically publish a GQY skill draft. Requires a recorded non-block review_skill verdict for the same draft, and the user's explicit confirmation. Create drafts never overwrite; update drafts use revision checks. Scripts remain resources and are not registered as tools.",
+                "校验并原子发布 GQY skill 草稿。要求该草稿已有非 block 的 review_skill 审查结论且用户明确确认。创建草稿绝不覆盖；更新草稿执行版本检查。scripts 仍是资源，不会注册为工具。",
             ),
             json!({
                 "type": "object",
                 "properties": {
-                    "draft_id": { "type": "string", "description": t("Draft ID returned by create_skill or update_skill.", "create_skill 或 update_skill 返回的草稿 ID。") }
+                    "draft_id": { "type": "string", "description": t("Draft ID returned by create_skill or update_skill.", "create_skill 或 update_skill 返回的草稿 ID。") },
+                    "user_confirmed": {
+                        "type": "boolean",
+                        "description": t("Set true only when the user explicitly confirmed publishing after seeing the review.", "仅当用户看过审查后明确确认发布时才置 true。")
+                    }
                 },
-                "required": ["draft_id"],
+                "required": ["draft_id", "user_confirmed"],
                 "additionalProperties": false
             }),
             move |args| {
@@ -390,12 +434,87 @@ fn update_skill(args: Value, config: &AppConfig, paths: &GQYPaths) -> Result<Str
 
 fn publish_skill(args: Value, paths: &GQYPaths) -> Result<String> {
     let draft_id = required_string(&args, "draft_id")?;
+    if args.get("user_confirmed").and_then(Value::as_bool) != Some(true) {
+        bail!("publish_skill requires explicit user confirmation after review_skill");
+    }
+    let draft = skills::find_draft(paths, &draft_id)?;
+    let sha = skills::sha256_of_resource(Path::new(&draft.skill_dir))?;
+    let allowed = skills::confirm_install(paths, "skill", &draft.name, &sha)?;
+    if !allowed {
+        bail!("skill review did not allow publishing: {}", draft.name);
+    }
     let published = skills::publish_draft(paths, &draft_id)?;
+    skills::record_install(paths, "skill", &published.name, &published.path, &sha)?;
     Ok(serde_json::to_string_pretty(&json!({
         "ok": true,
         "state": "published",
         "skill": published,
         "catalog_refresh": "next tool round",
+    }))?)
+}
+
+/// 审查 skill 草稿（或已安装 skill），把内容交给模型审计并记录结论。
+fn review_skill(args: Value, paths: &GQYPaths) -> Result<String> {
+    let name = required_string(&args, "name")?;
+    let verdict = required_string(&args, "verdict")?;
+    if !matches!(verdict.as_str(), "allow" | "caution" | "block") {
+        bail!("invalid verdict: {verdict}; expected allow, caution or block");
+    }
+    let reason = required_string(&args, "reason")?;
+    let draft_id = args.get("draft_id").and_then(Value::as_str);
+
+    let (base_dir, body, files) = if let Some(draft_id) = draft_id.filter(|id| !id.is_empty()) {
+        let draft = skills::find_draft(paths, draft_id)?;
+        let dir = PathBuf::from(&draft.skill_dir);
+        let raw = std::fs::read_to_string(dir.join("SKILL.md"))?;
+        let (_, body) = crate::skills::parse_skill_document(&raw, Some(&draft.name))?;
+        let mut file_list = Vec::new();
+        for entry in std::fs::read_dir(&dir)? {
+            let entry = entry?;
+            let file_name = entry.file_name();
+            if file_name == "SKILL.md" || file_name.to_string_lossy().starts_with('.') {
+                continue;
+            }
+            if entry.file_type()?.is_file() {
+                file_list.push(entry.path());
+            }
+        }
+        file_list.sort();
+        (draft.skill_dir, body, file_list)
+    } else {
+        let config = AppConfig::load_or_default(paths)?;
+        let loaded = skills::load(&name, &config, paths)?;
+        let base_dir = loaded
+            .base_dir
+            .as_ref()
+            .map(|path| path.display().to_string())
+            .unwrap_or_else(|| "built-in".to_string());
+        (base_dir, loaded.body.clone(), loaded.files.clone())
+    };
+    let sha = skills::sha256_of_resource(Path::new(&base_dir))?;
+    skills::record_review(paths, "skill", &name, &base_dir, &sha, &verdict, &reason)?;
+    let files = if files.is_empty() {
+        String::new()
+    } else {
+        format!(
+            "\n<skill_files>\n{}\n</skill_files>",
+            files
+                .iter()
+                .map(|path| format!("  <file>{}</file>", xml_escape(&path.display().to_string())))
+                .collect::<Vec<_>>()
+                .join("\n")
+        )
+    };
+    Ok(serde_json::to_string_pretty(&json!({
+        "ok": true,
+        "state": "reviewed",
+        "skill": name,
+        "sha256": sha,
+        "verdict": verdict,
+        "base_dir": base_dir,
+        "skill_md": body,
+        "files": files,
+        "output_instruction": "Summarize the verdict and concrete findings. If verdict is allow/caution, ask the user whether to publish and stop; publish_skill may only run in a later turn after the user confirms.",
     }))?)
 }
 

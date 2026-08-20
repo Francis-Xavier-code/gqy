@@ -416,3 +416,77 @@ fn publish_rejects_excessive_directory_depth() {
     assert!(publish_draft(&paths, &draft.id).is_err());
     assert!(!paths.skills_dir.join("sample-skill").exists());
 }
+
+#[test]
+fn resource_review_confirm_and_install_ledger_roundtrip() {
+    let temp = tempfile::tempdir().unwrap();
+    let paths = test_paths(temp.path());
+    let script = temp.path().join("tool.sh");
+    fs::write(&script, "#!/bin/bash\necho hi\n").unwrap();
+    let sha = sha256_of_resource(&script).unwrap();
+
+    // 未审查时 confirm 失败
+    assert!(confirm_install(&paths, "script", "tool.sh", &sha).is_err());
+
+    // 审查 allow
+    record_review(&paths, "script", "tool.sh", "local", &sha, "allow", "ok").unwrap();
+    assert!(confirm_install(&paths, "script", "tool.sh", &sha).unwrap());
+    record_install(&paths, "script", "tool.sh", "local", &sha).unwrap();
+
+    // block 禁止
+    record_review(&paths, "skill", "evil", "remote", "abcd", "block", "bad").unwrap();
+    assert!(!confirm_install(&paths, "skill", "evil", "abcd").unwrap());
+
+    // 内容变化后 sha 不匹配，需要重新审查
+    assert!(confirm_install(&paths, "script", "tool.sh", "different-sha").is_err());
+
+    let summary = status_summary(&paths).unwrap();
+    let scripts = summary["scripts"].as_array().unwrap();
+    assert_eq!(scripts.len(), 1);
+    assert_eq!(scripts[0]["installed"], serde_json::json!(true));
+    let skills = summary["skills"].as_array().unwrap();
+    assert_eq!(skills.len(), 1);
+    assert_eq!(skills[0]["verdict"], serde_json::json!("block"));
+}
+
+#[test]
+fn review_gate_blocks_publish_until_allowed_review() {
+    let temp = tempfile::tempdir().unwrap();
+    let paths = test_paths(temp.path());
+    let config = AppConfig::default();
+    let draft = create_draft(
+        &config,
+        &paths,
+        "safe-skill",
+        "Safe skill",
+        SkillScope::Global,
+    )
+    .unwrap();
+    let sha = sha256_of_resource(Path::new(&draft.skill_dir)).unwrap();
+
+    // 未审查时 confirm 拒绝（publish_skill 会据此报错）
+    assert!(confirm_install(&paths, "skill", "safe-skill", &sha).is_err());
+
+    // block 审查 → 不允许发布
+    record_review(
+        &paths,
+        "skill",
+        "safe-skill",
+        "draft",
+        &sha,
+        "block",
+        "danger",
+    )
+    .unwrap();
+    assert!(!confirm_install(&paths, "skill", "safe-skill", &sha).unwrap());
+
+    // 改判 allow → 允许发布
+    record_review(&paths, "skill", "safe-skill", "draft", &sha, "allow", "ok").unwrap();
+    assert!(confirm_install(&paths, "skill", "safe-skill", &sha).unwrap());
+    publish_draft(&paths, &draft.id).unwrap();
+    assert!(paths
+        .skills_dir
+        .join("safe-skill")
+        .join("SKILL.md")
+        .is_file());
+}
