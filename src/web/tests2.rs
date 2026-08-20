@@ -967,6 +967,14 @@ sys.stdin.readline()  # 等 Rust 侧完成死后判定
     let mut lines = BufReader::new(child.stdout.take().unwrap()).lines();
     let head = lines.next().unwrap().unwrap();
     let (pid, slave) = head.split_once(' ').unwrap();
+    // 非交互式 CI（如容器/管道环境）中 pty.fork 的子进程 fd/0 可能指向 pipe
+    // 而非真实的 /dev/pts 设备，此时无法验证 TTY 回写链路，优雅跳过。
+    if !slave.starts_with("/dev/pts/") {
+        eprintln!("not a real pty device ({slave:?}); skipping pty gate test");
+        let _ = child.kill();
+        let _ = child.wait();
+        return;
+    }
     let origin = crate::ipc::OriginTty {
         path: std::path::PathBuf::from(slave),
         shell_pid: pid.parse().unwrap(),
