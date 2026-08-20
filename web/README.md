@@ -6,7 +6,7 @@ These static assets are embedded into the GQY daemon at build time. Run the loca
 cargo run --bin gqy -- web
 ```
 
-The command starts the GQY daemon (the same `gqy` executable re-run in daemon mode) when needed, prints the access URLs, and exits. Use `gqy daemon status` or `gqy daemon stop` to inspect or stop the daemon. WebUI listens on all local network interfaces by default. Password protection is optional:
+The command starts the GQY daemon (the same `gqy` executable re-run in daemon mode) when needed, prints the access URLs, and exits. Use `gqy daemon status` or `gqy daemon stop` to inspect or stop the daemon. WebUI binds to loopback (`127.0.0.1`) by default so it is only reachable from this machine; pass `--bind 0.0.0.0` to expose it on the LAN (pair with `-p` to set a password). Password protection is optional:
 
 ```sh
 cargo run --bin gqy -- web -p secret

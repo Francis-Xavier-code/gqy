@@ -4,10 +4,10 @@
 > A desktop AI assistant with a personality: the same GQY lives in your terminal, your browser, and in QQ.
 
 <p align="center">
-  <a href="https://github.com/Francis-Xavier-code/gqy/releases">
+  <a href="https://cnb.cool/xynrin.ptt/GQY/-/releases">
     <img alt="release" src="https://img.shields.io/github/v/release/Francis-Xavier-code/gqy?color=blue&label=release" />
   </a>
-  <a href="https://github.com/Francis-Xavier-code/gqy/actions">
+  <a href="https://cnb.cool/xynrin.ptt/GQY/-/pipelines">
     <img alt="tests" src="https://img.shields.io/github/actions/workflow/status/Francis-Xavier-code/gqy/release.yml?label=CI" />
   </a>
   <a href="LICENSE">
@@ -63,7 +63,7 @@ brew install gqy
 
 ### 📦 从 Release 下载 From release
 
-在 [Releases](https://github.com/Francis-Xavier-code/gqy/releases) 下载
+在 [Releases](https://cnb.cool/xynrin.ptt/GQY/-/releases) 下载
 `gqy-<version>-<arch>-apple-darwin.tar.gz`（`aarch64` 为 Apple Silicon，
 `x86_64` 为 Intel），解压后放进 PATH：
 
@@ -78,7 +78,7 @@ PATH.
 ### 🔨 从源码编译 From source
 
 ```sh
-git clone https://github.com/Francis-Xavier-code/gqy.git
+git clone https://cnb.cool/xynrin.ptt/GQY.git
 cd gqy
 cargo build --release
 # 产物在 target/release/gqy
@@ -111,7 +111,8 @@ DeepSeek, etc.).
 
 ## 配置 Configuration
 
-配置文件位于 `~/.config/gqy/config.jsonc`（可用 `gqy config` 图形化编辑）：
+配置文件位于 `~/.gqy/config/config.jsonc`（可用 `gqy config` 图形化编辑；
+根目录可用 `GQY_HOME` 环境变量覆盖）：
 
 | 配置段 | 说明 |
 | --- | --- |
@@ -120,8 +121,8 @@ DeepSeek, etc.).
 | `context` | 上下文窗口、压缩与缓存策略 Context, compaction & caching |
 | `plugins` | 工具与视觉插件 Tools & vision plugins |
 
-Config lives at `~/.config/gqy/config.jsonc` (edit it visually with
-`gqy config`).
+Config lives at `~/.gqy/config/config.jsonc` (edit it visually with
+`gqy config`; override the root with `GQY_HOME`).
 
 ---
 

@@ -1580,7 +1580,7 @@ pub struct WebArgs {
     #[arg(long, default_value_t = ipc::DEFAULT_WEB_PORT)]
     pub port: u16,
 
-    /// WebUI 监听地址；默认 0.0.0.0（所有网卡），127.0.0.1 仅限本机访问。
+    /// WebUI 监听地址；默认 127.0.0.1（仅本机访问），0.0.0.0 暴露到局域网（建议配合 -p 设置密码）。
     #[arg(long, value_name = "ADDR")]
     pub bind: Option<std::net::IpAddr>,
 

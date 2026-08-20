@@ -73,7 +73,7 @@ pub struct DaemonLaunchConfig {
     pub port: u16,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub password_file: Option<PathBuf>,
-    /// WebUI bind address; `None` keeps the historical 0.0.0.0 default.
+    /// WebUI bind address; `None` keeps the default 127.0.0.1 loopback bind.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bind: Option<std::net::IpAddr>,
 }

@@ -56,7 +56,7 @@ daemon 全局选项:`--port <PORT>` 指定 WebUI TCP 端口。
 | --- | --- |
 | `gqy web` | 访问本地 GQY WebUI |
 
-选项:`--port <PORT>`(默认 8300)、`--bind <ADDR>`(默认 0.0.0.0;`127.0.0.1` 仅限本机)、
+选项:`--port <PORT>`(默认 8300)、`--bind <ADDR>`(默认 127.0.0.1;`0.0.0.0` 暴露到局域网,建议配合 `-p` 设置密码)、
 `-p, --password`(安全输入访问密码)、`--password-file <PATH>`(从文件读密码)。
 
 ## 配置
