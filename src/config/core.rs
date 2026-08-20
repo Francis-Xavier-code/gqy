@@ -197,20 +197,11 @@ pub struct PlatformsConfig {
 
 /// 第三方平台通用配置段。`enabled` 为总开关，`port` 等字段按平台
 /// 语义解释（当前仅 OneBot 使用 `qq` 段，故此处为扩展预留）。
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(default)]
 pub struct PlatformTransportConfig {
     pub enabled: bool,
     pub port: Option<u16>,
-}
-
-impl Default for PlatformTransportConfig {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            port: None,
-        }
-    }
 }
 
 impl PlatformTransportConfig {

@@ -27,13 +27,8 @@ use std::sync::{Arc, Mutex};
 pub(crate) const PLATFORM_ID_ONEBOT: &str = "qq";
 /// 预留平台扩展位：后续平台（QQ 官方 / Telegram / 微信 / Slack…）
 /// 在这里追加 id，并在注册表与配置归一化中登记。
-pub(crate) const RESERVED_PLATFORM_IDS: &[&str] = &[
-    "qq",
-    "qq_official",
-    "telegram",
-    "wechat",
-    "slack",
-];
+pub(crate) const RESERVED_PLATFORM_IDS: &[&str] =
+    &["qq", "qq_official", "telegram", "wechat", "slack"];
 
 /// 传输层消息目标：发送前解析到具体账号与会话。
 #[derive(Clone, Debug)]
@@ -66,7 +61,8 @@ pub(crate) trait PlatformTransport: Send + Sync {
     fn stop<'a>(&'a self, state: &'a DaemonState) -> BoxFuture<'a, Result<()>>;
 
     /// 平台运行状态快照。
-    fn status<'a>(&'a self, state: &'a DaemonState) -> BoxFuture<'a, Result<PlatformRuntimeStatus>>;
+    fn status<'a>(&'a self, state: &'a DaemonState)
+        -> BoxFuture<'a, Result<PlatformRuntimeStatus>>;
 
     /// 发送一条消息。实现方按 `target` 解析连接与会话。
     fn send<'a>(

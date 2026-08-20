@@ -6,9 +6,7 @@
 
 pub(crate) use super::*;
 
-use crate::platforms::transports::{
-    daemon_running, is_known_platform, platform_config_section,
-};
+use crate::platforms::transports::{daemon_running, is_known_platform, platform_config_section};
 use anyhow::{bail, Result};
 
 /// `gqy platform` 顶层入口。
@@ -23,7 +21,9 @@ pub(crate) async fn run_platform(paths: &GQYPaths, args: PlatformArgs) -> Result
     }
 }
 
-fn platform_status_lines(status: &crate::platforms::transports::PlatformRuntimeStatus) -> Vec<String> {
+fn platform_status_lines(
+    status: &crate::platforms::transports::PlatformRuntimeStatus,
+) -> Vec<String> {
     let mut lines = Vec::new();
     lines.push(format!(
         "{} ({}) — {}",
@@ -31,11 +31,7 @@ fn platform_status_lines(status: &crate::platforms::transports::PlatformRuntimeS
         status.transport,
         t("third-party communication platform", "第三方通信平台")
     ));
-    lines.push(format!(
-        "{}: {}",
-        t("id", "id"),
-        status.id
-    ));
+    lines.push(format!("{}: {}", t("id", "id"), status.id));
     lines.push(format!(
         "{}: {}",
         t("enabled", "启用"),
@@ -55,10 +51,7 @@ fn platform_status_lines(status: &crate::platforms::transports::PlatformRuntimeS
         }
     ));
     if let Some(port) = status.listen_port {
-        lines.push(format!(
-            "{}: ws://localhost:{port}/ws",
-            t("listen", "监听")
-        ));
+        lines.push(format!("{}: ws://localhost:{port}/ws", t("listen", "监听")));
     }
     if status.connected_accounts.is_empty() {
         lines.push(format!(
@@ -106,9 +99,9 @@ async fn run_platform_status(paths: &GQYPaths, name: Option<&str>) -> Result<()>
                     .and_then(serde_json::Value::as_array)
                     .cloned()
                     .unwrap_or_default();
-                let found = statuses
-                    .into_iter()
-                    .find(|value| value.get("id").and_then(serde_json::Value::as_str) == Some(name));
+                let found = statuses.into_iter().find(|value| {
+                    value.get("id").and_then(serde_json::Value::as_str) == Some(name)
+                });
                 match found {
                     Some(value) => {
                         let status = serde_json::from_value::<
@@ -126,23 +119,16 @@ async fn run_platform_status(paths: &GQYPaths, name: Option<&str>) -> Result<()>
                         print_platform_status(&status);
                     }
                     None => {
-                        bail!(
-                            "{}: {name}",
-                            t("platform is not registered", "平台未注册")
-                        );
+                        bail!("{}: {name}", t("platform is not registered", "平台未注册"));
                     }
                 }
             } else {
                 let Some(section) = platform_config_section(&config, name) else {
-                    bail!(
-                        "{}: {name}",
-                        t("platform is not registered", "平台未注册")
-                    );
+                    bail!("{}: {name}", t("platform is not registered", "平台未注册"));
                 };
                 println!(
-                    "{} ({}) — {}",
+                    "{} (onebot-v11) — {}",
                     name,
-                    "onebot-v11",
                     t("third-party communication platform", "第三方通信平台")
                 );
                 println!(
@@ -169,22 +155,23 @@ async fn run_platform_status(paths: &GQYPaths, name: Option<&str>) -> Result<()>
         None => {
             if running {
                 let (_, data) = send_ipc_admin(paths, IpcCommand::GetStatus).await?;
-                let statuses: Vec<crate::platforms::transports::PlatformRuntimeStatus> =
-                    data.pointer("/transports")
-                        .and_then(serde_json::Value::as_array)
-                        .map(|values| {
-                            values
-                                .iter()
-                                .filter_map(|value| {
-                                    serde_json::from_value(value.clone()).ok()
-                                })
-                                .collect()
-                        })
-                        .unwrap_or_default();
+                let statuses: Vec<crate::platforms::transports::PlatformRuntimeStatus> = data
+                    .pointer("/transports")
+                    .and_then(serde_json::Value::as_array)
+                    .map(|values| {
+                        values
+                            .iter()
+                            .filter_map(|value| serde_json::from_value(value.clone()).ok())
+                            .collect()
+                    })
+                    .unwrap_or_default();
                 if statuses.is_empty() {
                     println!(
                         "{}",
-                        t("no third-party communication platforms are registered", "没有已注册的第三方通信平台")
+                        t(
+                            "no third-party communication platforms are registered",
+                            "没有已注册的第三方通信平台"
+                        )
                     );
                 } else {
                     for status in &statuses {
@@ -242,18 +229,25 @@ async fn run_platform_list(paths: &GQYPaths) -> Result<()> {
                 "{}\t{}\t{}\t{}",
                 status.id,
                 status.label,
-                if status.enabled { "enabled" } else { "disabled" },
+                if status.enabled {
+                    "enabled"
+                } else {
+                    "disabled"
+                },
                 if status.running { "running" } else { "stopped" },
             );
         }
     } else {
         for status in local_platform_statuses(&config) {
             println!(
-                "{}\t{}\t{}\t{}",
+                "{}\t{}\t{}\tstopped",
                 status.id,
                 status.label,
-                if status.enabled { "enabled" } else { "disabled" },
-                "stopped",
+                if status.enabled {
+                    "enabled"
+                } else {
+                    "disabled"
+                },
             );
         }
     }
@@ -321,7 +315,13 @@ async fn run_platform_restart(paths: &GQYPaths, name: &str) -> Result<()> {
             )
         );
     }
-    let (_, data) = send_ipc_admin(paths, IpcCommand::RestartPlatform { id: name.to_string() }).await?;
+    let (_, data) = send_ipc_admin(
+        paths,
+        IpcCommand::RestartPlatform {
+            id: name.to_string(),
+        },
+    )
+    .await?;
     let status = data
         .pointer("/platform")
         .cloned()
@@ -335,10 +335,7 @@ async fn run_platform_restart(paths: &GQYPaths, name: &str) -> Result<()> {
             listen_port: None,
             connected_accounts: Vec::new(),
         });
-    println!(
-        "{} {name}",
-        t("restarted platform", "已重启平台")
-    );
+    println!("{} {name}", t("restarted platform", "已重启平台"));
     print_platform_status(&status);
     Ok(())
 }

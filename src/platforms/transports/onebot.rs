@@ -48,16 +48,14 @@ impl PlatformTransport for OneBotTransport {
         })
     }
 
-    fn status<'a>(&'a self, state: &'a DaemonState) -> BoxFuture<'a, Result<PlatformRuntimeStatus>> {
+    fn status<'a>(
+        &'a self,
+        state: &'a DaemonState,
+    ) -> BoxFuture<'a, Result<PlatformRuntimeStatus>> {
         Box::pin(async move {
             let config = onebot_config(state);
             let port = state.platforms.qq_listener.active_port();
-            let accounts = state
-                .platforms
-                .onebot
-                .lock()
-                .unwrap()
-                .connected_accounts();
+            let accounts = state.platforms.onebot.lock().unwrap().connected_accounts();
             Ok(PlatformRuntimeStatus {
                 id: PLATFORM_ID_ONEBOT.to_string(),
                 label: "QQ".to_string(),
@@ -77,20 +75,21 @@ impl PlatformTransport for OneBotTransport {
     ) -> BoxFuture<'a, Result<crate::platforms::SendReceipt>> {
         Box::pin(async move {
             let (account_id, target) = match &message.target {
-                TransportTarget::Private { account_id, user_id } => {
-                    (*account_id, Target::Private { user_id: *user_id })
-                }
-                TransportTarget::Group { account_id, group_id } => {
-                    (*account_id, Target::Group { group_id: *group_id })
-                }
+                TransportTarget::Private {
+                    account_id,
+                    user_id,
+                } => (*account_id, Target::Private { user_id: *user_id }),
+                TransportTarget::Group {
+                    account_id,
+                    group_id,
+                } => (
+                    *account_id,
+                    Target::Group {
+                        group_id: *group_id,
+                    },
+                ),
             };
-            let Some(handle) = state
-                .platforms
-                .onebot
-                .lock()
-                .unwrap()
-                .handle(account_id)
-            else {
+            let Some(handle) = state.platforms.onebot.lock().unwrap().handle(account_id) else {
                 anyhow::bail!("the QQ account is not connected");
             };
             let adapter = crate::platforms::onebot::OneBotAdapter {

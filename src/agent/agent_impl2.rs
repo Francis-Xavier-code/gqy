@@ -106,39 +106,42 @@ impl Agent {
         // 保持"瞬态永远在用户消息之后"。
         let tail_fossils = messages.split_off(redo_user_index + 1);
         let _ = messages.pop();
-        let replay_start;
-        let fossil_start;
-        let base_tool_reports;
-        let initial_tool_rounds;
-        let initial_question_rounds;
-        match candidate.input_kind {
+        let (
+            replay_start,
+            fossil_start,
+            base_tool_reports,
+            initial_tool_rounds,
+            initial_question_rounds,
+        ) = match candidate.input_kind {
             RedoInputKind::Initial => {
                 let (_, input) = prepared.pop().context("redo input is empty")?;
                 messages.push(input.message);
-                fossil_start = messages.len();
+                let fossil_start = messages.len();
                 messages.extend(tail_fossils);
-                replay_start = messages.len();
+                let replay_start = messages.len();
                 messages.extend(input.hints);
-                base_tool_reports = Vec::new();
-                initial_tool_rounds = 0;
-                initial_question_rounds = 0;
+                (replay_start, fossil_start, Vec::new(), 0, 0)
             }
             RedoInputKind::Followup => {
                 let checkpoint = redo.checkpoint.context("redo checkpoint is unavailable")?;
                 messages.push(self.turn_user_message(&current_turn));
-                fossil_start = messages.len();
+                let fossil_start = messages.len();
                 messages.extend(tail_fossils);
-                replay_start = messages.len();
+                let replay_start = messages.len();
                 messages.extend(checkpoint.replay_messages);
                 for (_, input) in prepared {
                     messages.push(input.message);
                     messages.extend(input.hints);
                 }
-                base_tool_reports = checkpoint.prefix_tool_reports;
-                initial_tool_rounds = checkpoint.tool_rounds;
-                initial_question_rounds = checkpoint.question_rounds;
+                (
+                    replay_start,
+                    fossil_start,
+                    checkpoint.prefix_tool_reports,
+                    checkpoint.tool_rounds,
+                    checkpoint.question_rounds,
+                )
             }
-        }
+        };
         // Redo rewrites the turn, so refresh its fossilized tail to match what
         // this generation actually sends (new runtime stamp + replayed tail).
         self.state.set_turn_context_messages(
