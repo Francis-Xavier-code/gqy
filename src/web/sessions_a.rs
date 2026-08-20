@@ -432,10 +432,10 @@ pub async fn run(paths: GQYPaths, args: WebArgs) -> Result<()> {
     }
     let context = cold_context(&config, &state_store)?;
 
-    // Default binds all interfaces so the WebUI is reachable from the LAN;
-    // `--bind 127.0.0.1` restricts it to this machine. Access URLs matching
-    // the effective bind are printed below.
-    let bind_ip = args.bind.unwrap_or(IpAddr::V4(Ipv4Addr::UNSPECIFIED));
+    // Default binds loopback so the WebUI is only reachable from this
+    // machine; `--bind 0.0.0.0` exposes it on the LAN (pair with `-p` to set
+    // a password). Access URLs matching the effective bind are printed below.
+    let bind_ip = args.bind.unwrap_or(IpAddr::V4(Ipv4Addr::LOCALHOST));
     let listener = match tokio::net::TcpListener::bind(SocketAddr::new(bind_ip, args.port)).await {
         Ok(listener) => listener,
         Err(error)

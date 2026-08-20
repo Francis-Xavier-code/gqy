@@ -37,7 +37,7 @@ fn main() {
             .enumerate()
             .map(|(index, byte)| byte ^ PROMPT_MASK[index % PROMPT_MASK.len()])
             .collect::<Vec<_>>();
-        base64_encode(&encoded)
+        general_purpose::STANDARD.encode(&encoded)
     };
     let prompt = obfuscate("src/prompts/GQY.md");
     let hint = obfuscate("src/prompts/GQY.hint.md");
@@ -127,27 +127,4 @@ fn build_o200k_vocab() {
     let destination =
         PathBuf::from(env::var_os("OUT_DIR").expect("OUT_DIR")).join("o200k_base.bin");
     fs::write(destination, output).expect("write compact o200k vocabulary");
-}
-
-fn base64_encode(bytes: &[u8]) -> String {
-    const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut output = String::with_capacity(bytes.len().div_ceil(3) * 4);
-    for chunk in bytes.chunks(3) {
-        let first = chunk[0];
-        let second = chunk.get(1).copied().unwrap_or(0);
-        let third = chunk.get(2).copied().unwrap_or(0);
-        output.push(TABLE[(first >> 2) as usize] as char);
-        output.push(TABLE[(((first & 0b0000_0011) << 4) | (second >> 4)) as usize] as char);
-        if chunk.len() > 1 {
-            output.push(TABLE[(((second & 0b0000_1111) << 2) | (third >> 6)) as usize] as char);
-        } else {
-            output.push('=');
-        }
-        if chunk.len() > 2 {
-            output.push(TABLE[(third & 0b0011_1111) as usize] as char);
-        } else {
-            output.push('=');
-        }
-    }
-    output
 }

@@ -20,7 +20,8 @@ src/
 ├── web.rs, web/       # 内置 Web 服务（axum）
 ├── render/            # 终端渲染器
 ├── tools/             # 工具注册表与各工具实现
-│   ├── brew.rs        # Homebrew 查询/安装审查
+│   ├── brew.rs        # Homebrew 官方包搜索/详情
+│   ├── package_advisor.rs  # Homebrew 包审查与安装
 │   ├── man.rs         # man 手册查询
 │   └── applegamingwiki_query.rs
 ├── transfer/          # 数据单元/传输定义

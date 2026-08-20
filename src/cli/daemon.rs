@@ -318,7 +318,7 @@ pub(crate) fn web_launch_config(
 pub(crate) fn daemon_web_access_urls(info: &ipc::DaemonInfo) -> Vec<String> {
     let bind = info
         .web_bind
-        .unwrap_or(std::net::IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED));
+        .unwrap_or(std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST));
     ipc::web_access_urls_for(bind, info.web_port)
 }
 
