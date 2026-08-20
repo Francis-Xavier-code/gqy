@@ -1,4 +1,4 @@
-//! persona_assets — 个人头像与用户资产（自 src/web/sessions2.rs 拆分）。
+//! persona_assets — 个人头像与用户资产（自 src/web/sessions.rs 拆分）。
 
 pub(crate) use super::*;
 

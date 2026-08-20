@@ -1,4 +1,4 @@
-//! auth — WebUI 登录、健康检查与引导数据（自 src/web/sessions2.rs 拆分）。
+//! auth — WebUI 登录、健康检查与引导数据（自 src/web/sessions.rs 拆分）。
 
 pub(crate) use super::*;
 

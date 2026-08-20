@@ -1,4 +1,4 @@
-//! store_impl — 自 src/memory/mod.rs 拆分。
+//! store — MemoryStore 实现（原 store_impl）。
 
 pub(crate) use super::*;
 

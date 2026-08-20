@@ -19,14 +19,14 @@ use std::time::{Duration, Instant};
 
 mod core;
 pub(crate) use core::*;
-mod client_impl;
+mod stream_handlers;
 
-mod client_impl2;
+mod chat_client;
 
 mod providers;
 pub(crate) use providers::*;
-mod providers2;
-pub(crate) use providers2::*;
+mod accumulators;
+pub(crate) use accumulators::*;
 mod api;
 pub(crate) use api::*;
 #[cfg(test)]

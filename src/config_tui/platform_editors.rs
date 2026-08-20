@@ -1,4 +1,4 @@
-//! fields2 — 自 src/config_tui/fields.rs 拆分。
+//! platform_editors — 配置 TUI 平台/模型/关键词编辑（原 fields2）。
 
 pub(crate) use super::*;
 

@@ -1,5 +1,4 @@
-// ponytail: 与 src/agent/tasks.rs（后台任务调度）易混淆：本文件是子代理工具（subagent_runner 封装）；
-// 改名（如 subagent_task.rs）后删除本注释。
+//! subagent_task — 子代理任务工具注册（原 tools/task.rs）。
 use super::subagent_runner::{ProgressMode, SubagentProgress, SubagentRunner, SubagentStats};
 use super::{ToolRegistry, ToolSpec};
 use crate::config::{AppConfig, ModelTier};

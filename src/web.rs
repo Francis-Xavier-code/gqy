@@ -60,12 +60,12 @@ use crate::platforms::{self, PlatformRuntime};
 
 mod defs;
 pub(crate) use defs::*;
-mod sessions_a;
-pub(crate) use sessions_a::*;
-mod sessions_b;
-pub(crate) use sessions_b::*;
-mod sessions2;
-pub(crate) use sessions2::*;
+mod server;
+pub(crate) use server::*;
+mod ipc_handlers;
+pub(crate) use ipc_handlers::*;
+mod sessions;
+pub(crate) use sessions::*;
 mod routes;
 pub(crate) use routes::*;
 mod assets_handlers;

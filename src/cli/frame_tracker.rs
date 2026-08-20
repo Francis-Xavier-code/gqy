@@ -1,4 +1,4 @@
-//! live — 自 src/cli.rs 拆分。
+//! frame_tracker — 终端帧跟踪与实时输出渲染（原 live）。
 
 pub(crate) use super::*;
 

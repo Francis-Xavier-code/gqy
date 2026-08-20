@@ -15,13 +15,13 @@ pub(crate) use core::*;
 mod conversation_db;
 mod migrations;
 pub use migrations::DEFAULT_SESSION_ID;
-mod state_impl;
+mod session_access;
 pub(crate) mod usage;
 
-mod state_impl2;
+mod turn_ops;
 
-mod sessions;
-pub(crate) use sessions::*;
+mod session_store;
+pub(crate) use session_store::*;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

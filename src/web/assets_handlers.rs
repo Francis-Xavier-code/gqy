@@ -1,4 +1,4 @@
-//! assets_handlers — 静态资源与媒体流（自 src/web/sessions2.rs 拆分）。
+//! assets_handlers — 静态资源与媒体流（自 src/web/sessions.rs 拆分）。
 
 pub(crate) use super::*;
 

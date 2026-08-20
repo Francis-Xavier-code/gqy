@@ -1,4 +1,4 @@
-//! routes — WebUI 路由（自 src/web/sessions2.rs 拆分）。
+//! routes — WebUI 路由（自 src/web/sessions.rs 拆分）。
 
 pub(crate) use super::*;
 

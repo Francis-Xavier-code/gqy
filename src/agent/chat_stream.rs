@@ -1,4 +1,4 @@
-//! agent_impl2 — 自 src/agent/agent_impl.rs 拆分。
+//! chat_stream — Agent 对话/redo 流式处理（原 agent_impl2）。
 
 pub(crate) use super::*;
 

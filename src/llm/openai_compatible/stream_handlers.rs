@@ -1,4 +1,4 @@
-//! client_impl — 自 src/llm/openai_compatible.rs 拆分。
+//! stream_handlers — OpenAI 兼容流解析与供应商判定（原 client_impl）。
 
 #![allow(clippy::obfuscated_if_else)]
 pub(crate) use super::*;

@@ -14,7 +14,7 @@ use std::io::{self, IsTerminal, Write};
 mod core;
 pub(crate) use core::*;
 pub(crate) mod math;
-mod render_impl;
+mod stream_renderer;
 pub(crate) mod wait_spinner;
 
 mod widgets;

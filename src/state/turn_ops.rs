@@ -1,4 +1,4 @@
-//! state_impl2 — 自 src/state/state_impl.rs 拆分。
+//! turn_ops — StateStore 轮次、队列与记忆操作（原 state_impl2）。
 
 #![allow(clippy::too_many_arguments)]
 pub(crate) use super::*;

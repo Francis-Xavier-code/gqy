@@ -1,7 +1,4 @@
-//! sessions2 — 自 src/web.rs 拆分。
-
-// ponytail: 与 sessions_a.rs/sessions_b.rs 同属一次拆分但后缀风格混用（a/b vs 2）；
-// 统一后缀（如全改 sessions2/3/4）后删除本注释。
+//! sessions — WebUI 会话 CRUD、IPC turn 与会话相关 API（自 src/web.rs 拆分，原 sessions2）。
 #![allow(clippy::too_many_arguments)]
 pub(crate) use super::*;
 

@@ -1,4 +1,4 @@
-//! agent_impl4 — 自 src/agent/agent_impl2.rs 拆分。
+//! tool_loop — Agent 工具调用循环与消息构建（原 agent_impl4）。
 
 #![allow(
     clippy::cloned_ref_to_slice_refs,
