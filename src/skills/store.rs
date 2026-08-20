@@ -439,6 +439,27 @@ pub(crate) fn copy_tree(source: &Path, destination: &Path) -> Result<()> {
     result
 }
 
+/// 把 `source` 的内容复制进一个**已存在**的目录 `destination`（不创建
+/// destination 本身），用于把本地 skill 目录覆盖进已建好的草稿目录。
+pub(crate) fn copy_tree_into(source: &Path, destination: &Path) -> Result<()> {
+    let mut stats = PackageStats {
+        directories: 1,
+        ..PackageStats::default()
+    };
+    let result = (|| {
+        secure_directory(destination)?;
+        copy_tree_inner(source, destination, 0, &mut stats)?;
+        if let Some(parent) = destination.parent() {
+            File::open(parent)?.sync_all()?;
+        }
+        Ok(())
+    })();
+    if result.is_err() {
+        let _ = fs::remove_dir_all(destination);
+    }
+    result
+}
+
 pub(crate) fn copy_tree_inner(
     source: &Path,
     destination: &Path,

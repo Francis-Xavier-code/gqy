@@ -120,6 +120,18 @@ daemon 全局选项:`--port <PORT>` 指定 WebUI TCP 端口。
 | `gqy skills remove <NAME>` | 移除 skill |
 | `gqy skills stats` | 显示 skill 统计 |
 | `gqy skills prune` | 清理已禁用的自动 skills |
+| `gqy skills import <PATH>` | 从本地路径导入 skill 目录（先审查后安装；`--force` 跳过审查直接安装，危险） |
+
+> **安全模型**：`review_skill` / `review_script` 把脚本与 SKILL.md 内容交给 AI 审计，记录
+> `allow` / `caution` / `block` 结论；`publish_skill` / `register_script` 只有在存在非 block
+> 审查结论且用户明确确认后才放行。审查与安装必须分属不同轮次（guard 强制）。
+
+## 资源审查 resources
+
+| 子命令 | 说明 |
+| --- | --- |
+| `gqy resources status` | 查看脚本/Skill 的审查与安装状态 |
+| `gqy resources prune` | 清理过期的审查与安装记录（审查 7 天过期） |
 
 ## 终端无缝集成
 

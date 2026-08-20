@@ -5,13 +5,13 @@
 
 <p align="center">
   <a href="https://cnb.cool/xynrin.ptt/GQY/-/releases">
-    <img alt="release" src="https://img.shields.io/github/v/release/Francis-Xavier-code/gqy?color=blue&label=release" />
+    <img alt="release" src="https://cnb.cool/xynrin.ptt/GQY/-/badge/release" />
   </a>
   <a href="https://cnb.cool/xynrin.ptt/GQY/-/pipelines">
-    <img alt="tests" src="https://img.shields.io/github/actions/workflow/status/Francis-Xavier-code/gqy/release.yml?label=CI" />
+    <img alt="CI" src="https://cnb.cool/xynrin.ptt/GQY/-/badge/git/latest/ci/status/push?branch=main" />
   </a>
-  <a href="LICENSE">
-    <img alt="license" src="https://img.shields.io/github/license/Francis-Xavier-code/gqy" />
+  <a href="https://cnb.cool/xynrin.ptt/GQY/-/blob/main/LICENSE">
+    <img alt="license" src="https://img.shields.io/badge/license-MIT-8A2BE2" />
   </a>
   <img alt="platform" src="https://img.shields.io/badge/platform-macOS-333333?logo=apple&logoColor=white" />
   <img alt="rust" src="https://img.shields.io/badge/Rust-1.89+-orange?logo=rust&logoColor=white" />
@@ -33,6 +33,7 @@ commands, and maintaining a knowledge base.
 - [安装 Installation](#安装-installation)
 - [快速开始 Quick start](#快速开始-quick-start)
 - [配置 Configuration](#配置-configuration)
+- [Skill 与脚本安全 Skill & script safety](#skill-与脚本安全-skill--script-safety)
 - [文档 Documentation](#文档-documentation)
 - [开发 Development](#开发-development)
 - [许可 License](#许可-license)
@@ -48,6 +49,7 @@ commands, and maintaining a knowledge base.
 | 🧰 | **工具调用** | 知识库、网页搜索、Todo、后台任务、命令执行、Homebrew 查询、AppleGamingWiki、man 手册等。<br>*KB search, web search, todos, background jobs, shell, Homebrew, AppleGamingWiki, man pages.* |
 | 🧠 | **长期记忆** | 记忆、日记、好感度、会话回放与压缩，聊得越久越了解你。<br>*Memory, diary, affection, session replay & compaction.* |
 | 📚 | **知识库** | 可更新的默认知识库（`kb/`），问答先查证再作答。<br>*Updatable default KB: verify before answering.* |
+| 🔐 | **Skill/脚本安全门** | 新 Skill 与脚本先由 AI 审查（`review_skill`/`review_script`），用户确认后才安装，审查与安装分轮强制。<br>*Skills & scripts are AI-reviewed, user-confirmed, then installed.* |
 | ⚙️ | **配置 TUI** | 模型、平台、QQ、快捷键一键设置。<br>*Interactive config TUI for models, platforms, QQ & hotkeys.* |
 
 ---
@@ -61,9 +63,12 @@ brew tap Francis-Xavier-code/gqy
 brew install gqy
 ```
 
+> 二进制资产托管在 CNB Release；tap 仓库保留在 GitHub（Homebrew 生态惯例）。
+> Binaries are hosted on CNB Releases; the tap stays on GitHub (Homebrew convention).
+
 ### 📦 从 Release 下载 From release
 
-在 [Releases](https://cnb.cool/xynrin.ptt/GQY/-/releases) 下载
+在 [CNB Releases](https://cnb.cool/xynrin.ptt/GQY/-/releases) 下载
 `gqy-<version>-<arch>-apple-darwin.tar.gz`（`aarch64` 为 Apple Silicon，
 `x86_64` 为 Intel），解压后放进 PATH：
 
@@ -79,7 +84,7 @@ PATH.
 
 ```sh
 git clone https://cnb.cool/xynrin.ptt/GQY.git
-cd gqy
+cd GQY
 cargo build --release
 # 产物在 target/release/gqy
 ```
@@ -126,12 +131,29 @@ Config lives at `~/.gqy/config/config.jsonc` (edit it visually with
 
 ---
 
+## Skill 与脚本安全 Skill & script safety
+
+GQY 的 Skill 与用户脚本采用「**AI 审查 → 用户确认 → 安装**」三步安全门：
+
+1. **审查**：新脚本/技能放进 `scripts/` 或作为 skill 草稿后，AI 会先调用
+   `review_script` / `review_skill` 阅读全部内容，给出 `allow`（安全）/
+   `caution`（中风险）/ `block`（危险）结论并记录原因。
+2. **确认**：只有用户看过审查并明确同意后，`register_script` /
+   `publish_skill` 才允许执行；审查与安装被强制分成不同轮次，不能一轮内
+   又审又装。
+3. **可追溯**：`gqy resources status` 查看所有审查与安装记录；
+   `gqy skills import <path>` 从本地导入 skill 目录走同一安全门。
+
+详见 [docs/cli.md](docs/cli.md) 与 [docs/architecture.md](docs/architecture.md)。
+
+---
+
 ## 文档 Documentation
 
-- [设计理念 Design philosophy](docs/理念.md) — 上下文与缓存设计（中文）
+- [架构概览 Architecture](docs/architecture.md) — 架构图 + 模块职责（中英）
 - [CLI 命令参考 CLI reference](docs/cli.md) — 全部命令、选项与环境变量
-- [缓存与提示词计划 Cache & prompt plan](docs/cache-and-prompt-plan.md)（中文）
-- [发布打包 Release packaging](packaging/README.md) — Homebrew formula 说明
+- [设计理念 Design philosophy](docs/理念.md) — 上下文与缓存设计（中文）
+- [发布打包 Release packaging](packaging/README.md) — CNB Release + Homebrew formula
 
 ---
 
@@ -143,12 +165,13 @@ cargo clippy --all-targets -- -D warnings  # Lint
 cargo test --all                         # 全量测试(~1400)
 ```
 
-推送 `v*` 标签会自动触发完整流水线：测试 → 双架构构建 → GitHub Release
-（二进制 + Homebrew formula 回写）。详见
-[.github/workflows/release.yml](.github/workflows/release.yml)。
+推送 `v*` 标签会自动触发 CNB 流水线（`.cnb.yml`）：测试 → 双架构 macOS
+构建 → 上传 [CNB Release](https://cnb.cool/xynrin.ptt/GQY/-/releases)
+（二进制 + Homebrew formula 回写）。macOS 构建需要组织自托管 macOS Runner
+（见 [packaging/README.md](packaging/README.md)）。
 
-Pushing a `v*` tag runs the full pipeline: tests → dual-arch builds →
-GitHub Release with binaries and a regenerated Homebrew formula.
+Pushing a `v*` tag runs the CNB pipeline: tests → dual-arch builds → CNB
+Release with binaries and a regenerated Homebrew formula.
 
 ---
 

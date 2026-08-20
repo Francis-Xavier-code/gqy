@@ -1,7 +1,7 @@
 {
   "name": "register_script",
   "display_name": "注册脚本",
-  "description": "注册或更新用户脚本为工具。脚本必须存在于 scripts 目录中。",
+  "description": "在已有非 block 的 review_script 审查结论且用户明确确认后，注册或更新用户脚本为工具。脚本必须存在于 scripts 目录中。此操作更新 index.json、设置可执行权限，并使脚本在后续工具调用轮次中立即可用。",
   "parameters": {
     "type": "object",
     "properties": {
@@ -33,11 +33,16 @@
       "always_loaded": {
         "type": "boolean",
         "description": "可选加载策略覆盖。默认有自定义 schema 的脚本按需加载，使用通用 stdin 的脚本始终可见。"
+      },
+      "user_confirmed": {
+        "type": "boolean",
+        "description": "仅当用户看过审查后明确确认注册时才置 true。"
       }
     },
     "required": [
       "id",
-      "path"
+      "path",
+      "user_confirmed"
     ]
   },
   "permission": "writes",

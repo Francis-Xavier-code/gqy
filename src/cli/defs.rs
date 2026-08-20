@@ -220,6 +220,87 @@ pub(crate) fn run_skills(paths: &GQYPaths, args: SkillsArgs) -> Result<()> {
             }
             println!("{}: {removed}", t("pruned skills", "已清理 skills"));
         }
+        SkillsCommand::Import(args) => run_skill_import(paths, &args)?,
+    }
+    Ok(())
+}
+
+/// `gqy skills import <path>`：把本地 skill 目录导入为草稿；草稿会在
+/// `gqy` 会话中被 AI 审查并最终发布。`--force` 直接安装（危险，不推荐）。
+pub(crate) fn run_skill_import(paths: &GQYPaths, args: &SkillImportArgs) -> Result<()> {
+    use crate::skills::SkillScope;
+    let source = args
+        .path
+        .canonicalize()
+        .with_context(|| format!("cannot resolve skill path: {}", args.path.display()))?;
+    if !source.join("SKILL.md").is_file() {
+        bail!(
+            "{}: {}",
+            t("not a skill directory", "不是有效的 skill 目录"),
+            source.display()
+        );
+    }
+    let raw = std::fs::read_to_string(source.join("SKILL.md"))?;
+    let metadata = crate::skills::parse_skill_metadata(&raw, None)?;
+    let name = metadata.name.clone();
+    let config = AppConfig::load_or_default(paths)?;
+
+    if args.force {
+        let target = paths.skills_dir.join(&name);
+        if target.exists() {
+            bail!("skill already exists: {name}");
+        }
+        std::fs::create_dir_all(&paths.skills_dir)?;
+        crate::skills::copy_tree(&source, &target)?;
+        println!("{}: {name}", t("force-imported skill", "已强制导入 skill"));
+        return Ok(());
+    }
+
+    // 先建草稿，随后进入 gqy 会话由 AI 审查并发布。
+    let draft = crate::skills::create_draft(
+        &config,
+        paths,
+        &name,
+        &metadata.description,
+        SkillScope::Global,
+    )?;
+    let skill_dir = PathBuf::from(&draft.skill_dir);
+    // 用源目录内容替换草稿的模板文件（SKILL.md 与资源）。
+    std::fs::remove_file(skill_dir.join("SKILL.md"))?;
+    for entry in std::fs::read_dir(&skill_dir)? {
+        let entry = entry?;
+        if entry.file_name().to_string_lossy().starts_with('.') {
+            continue;
+        }
+        if entry.path().is_file() {
+            std::fs::remove_file(entry.path())?;
+        }
+    }
+    crate::skills::copy_tree_into(&source, &skill_dir)?;
+    println!(
+        "{}: {name}\n{}",
+        t("imported skill draft", "已导入 skill 草稿"),
+        t(
+            "run `gqy` and ask the assistant to review and publish this skill draft",
+            "运行 gqy 让助手审查并发布该 skill 草稿"
+        )
+    );
+    Ok(())
+}
+
+/// `gqy resources`：查看/清理脚本与 Skill 的审查、安装记录。
+pub(crate) fn run_resources(paths: &GQYPaths, args: ResourcesArgs) -> Result<()> {
+    match args.command {
+        ResourcesCommand::Status => {
+            println!("{}", crate::skills::status_summary(paths)?);
+        }
+        ResourcesCommand::Prune => {
+            let removed = crate::skills::prune_review_state(paths)?;
+            println!(
+                "{}: {removed}",
+                t("pruned review records", "已清理审查记录")
+            );
+        }
     }
     Ok(())
 }
@@ -1147,6 +1228,11 @@ pub(crate) fn localize_subcommands(mut command: clap::Command) -> clap::Command 
         ("memory", "Manage assistant memory", "管理记忆"),
         ("skills", "Manage assistant skills", "管理助手 skills"),
         (
+            "resources",
+            "Show script/skill review & install status",
+            "查看脚本/Skill 审查与安装状态",
+        ),
+        (
             "reset",
             "Clear the terminal-integration session context",
             "清除终端集成会话上下文",
@@ -1208,6 +1294,7 @@ pub(crate) fn localize_subcommands(mut command: clap::Command) -> clap::Command 
         "kb",
         "memory",
         "skills",
+        "resources",
         "update-default-kb",
         "wipe",
         "paths",
@@ -1227,6 +1314,7 @@ pub(crate) fn localize_subcommands(mut command: clap::Command) -> clap::Command 
         .mut_subcommand("kb", localize_kb_command)
         .mut_subcommand("memory", localize_memory_command)
         .mut_subcommand("skills", localize_skills_command)
+        .mut_subcommand("resources", localize_resources_command)
         .mut_subcommand("config", localize_config_command)
         .mut_subcommand("web", localize_web_command)
         .mut_subcommand("daemon", localize_daemon_command)
@@ -1505,6 +1593,11 @@ pub(crate) fn localize_skills_command(mut command: clap::Command) -> clap::Comma
             "Remove disabled generated skills",
             "清理已禁用的自动 skills",
         ),
+        (
+            "import",
+            "Import a skill directory (review first, then install)",
+            "从本地路径导入 skill 目录（先审查后安装）",
+        ),
     ];
     for (name, en, zh) in descriptions {
         command = command.mut_subcommand(name, |subcommand| subcommand.about(t(en, zh)));
@@ -1513,6 +1606,33 @@ pub(crate) fn localize_skills_command(mut command: clap::Command) -> clap::Comma
         command = command.mut_subcommand(name, |subcommand| {
             subcommand.mut_arg("name", |arg| arg.help(t("Skill name", "skill 名称")))
         });
+    }
+    command = command.mut_subcommand("import", |subcommand| {
+        subcommand.mut_arg("path", |arg| {
+            arg.help(t(
+                "Skill directory path (must contain SKILL.md)",
+                "Skill 目录路径（必须包含 SKILL.md）",
+            ))
+        })
+    });
+    command
+}
+
+pub(crate) fn localize_resources_command(mut command: clap::Command) -> clap::Command {
+    let descriptions = [
+        (
+            "status",
+            "Show script/skill review & install status",
+            "查看脚本/Skill 的审查与安装状态",
+        ),
+        (
+            "prune",
+            "Prune expired review/install records",
+            "清理过期的审查与安装记录",
+        ),
+    ];
+    for (name, en, zh) in descriptions {
+        command = command.mut_subcommand(name, |subcommand| subcommand.about(t(en, zh)));
     }
     command
 }
@@ -1547,6 +1667,7 @@ pub enum Command {
     UpdateDefaultKb,
     Memory(MemoryArgs),
     Skills(SkillsArgs),
+    Resources(ResourcesArgs),
     Reset,
     #[command(name = "reset-memory")]
     ResetMemoryCli,
@@ -1786,6 +1907,12 @@ pub struct SkillsArgs {
     pub command: SkillsCommand,
 }
 
+#[derive(Debug, Args)]
+pub struct ResourcesArgs {
+    #[command(subcommand)]
+    pub command: ResourcesCommand,
+}
+
 #[derive(Debug, Subcommand)]
 pub enum SkillsCommand {
     List,
@@ -1794,6 +1921,26 @@ pub enum SkillsCommand {
     Disable(SkillNameArgs),
     Remove(SkillNameArgs),
     Stats,
+    Prune,
+    /// 从本地路径导入 skill 目录(先审查后安装)。
+    #[command(name = "import")]
+    Import(SkillImportArgs),
+}
+
+#[derive(Debug, Args)]
+pub struct SkillImportArgs {
+    /// 要导入的 skill 目录绝对路径(含 SKILL.md)。
+    pub path: PathBuf,
+    /// 跳过 AI 审查与用户确认,直接安装(危险,不推荐)。
+    #[arg(long)]
+    pub force: bool,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum ResourcesCommand {
+    /// 查看脚本/Skill 的审查与安装状态。
+    Status,
+    /// 清理过期的审查与安装记录。
     Prune,
 }
 

@@ -235,9 +235,11 @@ fn builtin_readable_tool_name(name: &str) -> Option<&'static str> {
         "update_skill" => t("Update skill draft", "更新技能草稿"),
         "delete_skill" => t("Delete skill", "删除技能"),
         "publish_skill" => t("Publish skill", "发布技能"),
+        "review_skill" => t("Review skill", "审查技能"),
         "list_skill_drafts" => t("Skill drafts", "技能草稿"),
         "load_tools" => t("Load", "加载"),
         "register_script" => t("Register script", "注册脚本"),
+        "review_script" => t("Review script", "审查脚本"),
         "unregister_script" => t("Unregister script", "注销脚本"),
         "todowrite" => t("Todo list", "任务列表"),
         "todoupdate" => t("Update todos", "更新任务"),
@@ -303,6 +305,27 @@ pub(crate) fn brew_review_install_guard() -> ToolGuard {
     })
 }
 
+/// 资源审查互斥：review_script/review_skill 与 register_script/publish_skill
+/// 不能在同一轮出现，逼一次"给用户看过审查再注册/发布"的确认。
+pub(crate) fn resource_review_install_guard() -> ToolGuard {
+    std::sync::Arc::new(|tool, _args, ctx| {
+        let (review_tool, install_tool) = match tool.name.as_str() {
+            "register_script" => ("review_script", "register_script"),
+            "publish_skill" => ("review_skill", "publish_skill"),
+            _ => return None,
+        };
+        ctx.used_tools
+            .iter()
+            .any(|name| name == review_tool)
+            .then(|| {
+                format!(
+                    "{install_tool} cannot run in the same turn as {review_tool}; \
+                     ask the user to confirm installation first"
+                )
+            })
+    })
+}
+
 /// run_command 命令拒绝子串(config.tools.command_deny)。命中即拒,
 /// 防提示注入与模型手滑;拒绝以 tool error 回给模型,轮次存活。
 pub(crate) fn command_deny_guard(patterns: Vec<String>) -> ToolGuard {
@@ -328,6 +351,7 @@ pub(crate) fn command_deny_guard(patterns: Vec<String>) -> ToolGuard {
 
 fn install_builtin_guards(registry: &mut ToolRegistry, config: &AppConfig) {
     registry.add_guard(brew_review_install_guard());
+    registry.add_guard(resource_review_install_guard());
     registry.add_guard(command_deny_guard(config.tools.command_deny.clone()));
 }
 

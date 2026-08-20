@@ -16,8 +16,9 @@ Create focused, reusable Agent Skills that follow the Agent Skills specification
 4. Use `create_skill` for a new skill or `update_skill` for an existing skill. Use the returned absolute `skill_file` and `skill_dir`; never guess a GQY home path.
 5. Use `apply_patch` to edit `SKILL.md` and add optional `scripts/`, `references/`, or `assets/` files below the returned draft directory.
 6. Keep `SKILL.md` concise. Put detailed reference material in supporting files and reference those files with paths relative to the skill root.
-7. Call `publish_skill` with the returned draft ID. Publishing performs structural validation and atomically installs the package.
-8. Load the published skill with `load_skill` to verify the final instructions and resource manifest.
+7. Call `review_skill` on the draft (pass `draft_id`): audit SKILL.md and every resource for malicious or surprising behavior, pick `allow` / `caution` / `block`, and record the verdict. After reviewing, ask the user whether to publish and stop — do not publish in the same turn.
+8. After the user confirms, call `publish_skill` with the returned draft ID and `user_confirmed=true`. Publishing enforces the recorded non-block review, performs structural validation, and atomically installs the package.
+9. Load the published skill with `load_skill` to verify the final instructions and resource manifest.
 
 ## Frontmatter
 

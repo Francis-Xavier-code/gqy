@@ -293,6 +293,22 @@ pub const UNITS: &[DataUnit] = &[
         why: "package advisor review ledger",
     },
     DataUnit {
+        id: "state.resource_review",
+        rel: "state/resource-review-state.json",
+        kind: UnitKind::File,
+        tier: Tier::Core,
+        secret: false,
+        why: "script/skill review ledger (AI-reviewed before install)",
+    },
+    DataUnit {
+        id: "state.resource_install_ledger",
+        rel: "state/resource-install-ledger.json",
+        kind: UnitKind::File,
+        tier: Tier::Core,
+        secret: false,
+        why: "script/skill install ledger",
+    },
+    DataUnit {
         id: "state.aur_review_legacy",
         rel: "state/aur-review-state.json",
         kind: UnitKind::File,

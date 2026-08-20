@@ -1,16 +1,17 @@
 # Homebrew formula for GQY(顾清影 GQY 人格桌面助手)。
 #
 # 发布流程见 packaging/README.md。发布资产与字体 sha256 在打 tag 时填入;
-# 字体资源用 :no_check 占位,正式发布前应固定版本与校验和。
+# 资产托管在 CNB Release(https://cnb.cool/xynrin.ptt/GQY/-/releases)。
+# 字体资源用 Noto CJK 上游固定版本 + sha256。
 
 class Gqy < Formula
   desc "GQY: desktop AI assistant with the GQY persona"
-  homepage "https://github.com/Francis-Xavier-code/gqy"
+  homepage "https://cnb.cool/xynrin.ptt/GQY"
   license "MIT"
 
   # 模板约定:URL 带 v(与 CI 资产命名 gqy-<tag>-<target>.tar.gz 一致),
   # sha256 为占位符,由 CI 的 Generate Homebrew formula 步骤替换。
-  url "https://github.com/Francis-Xavier-code/gqy/releases/download/v0.1.0/gqy-v0.1.0-aarch64-apple-darwin.tar.gz"
+  url "https://cnb.cool/xynrin.ptt/GQY/-/releases/download/v0.1.0/gqy-v0.1.0-aarch64-apple-darwin.tar.gz"
   sha256 "0000000000000000000000000000000000000000000000000000000000000000"
 
   # 长回复转图片的渲染字体(与旧 AUR 包装包一致,发布资产不含字体)。

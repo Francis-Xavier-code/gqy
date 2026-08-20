@@ -16,6 +16,8 @@ mod store;
 pub(crate) use store::*;
 mod install;
 pub(crate) use install::*;
+mod resource_safety;
+pub(crate) use resource_safety::*;
 #[cfg(test)]
 mod tests;
 /// Skills compiled into the binary: (name, raw SKILL.md). A user skill of
@@ -513,6 +515,14 @@ pub fn list_drafts(paths: &GQYPaths) -> Result<Vec<SkillDraft>> {
             .then(left.id.cmp(&right.id))
     });
     Ok(drafts)
+}
+
+/// 按草稿 ID 找到对应草稿（公开信息），不存在时给出错误。
+pub fn find_draft(paths: &GQYPaths, draft_id: &str) -> Result<SkillDraft> {
+    list_drafts(paths)?
+        .into_iter()
+        .find(|draft| draft.id == draft_id)
+        .ok_or_else(|| anyhow::anyhow!("skill draft not found: {draft_id}"))
 }
 
 pub fn prune_expired_drafts(paths: &GQYPaths) -> Result<usize> {

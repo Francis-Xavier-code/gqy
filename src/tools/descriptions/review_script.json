@@ -1,0 +1,28 @@
+{
+  "name": "review_script",
+  "display_name": "审查脚本",
+  "description": "准备对 scripts 目录中的脚本文件做安全审查：返回脚本内容供模型审计，并记录审查结论。只有存在非 block 的审查后 register_script 才会成功。审查后停下并询问用户是否注册，不要在同一轮调用 register_script。",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string",
+        "description": "用户 scripts 目录内的脚本文件名或路径。"
+      },
+      "verdict": {
+        "type": "string",
+        "enum": ["allow", "caution", "block"],
+        "description": "审计后的安全结论：allow（安全）、caution（中风险）、block（危险/禁止注册）。"
+      },
+      "reason": {
+        "type": "string",
+        "description": "支持该结论的具体发现。"
+      }
+    },
+    "required": ["path", "verdict", "reason"]
+  },
+  "permission": "writes",
+  "always_loaded": false,
+  "load_policy": "group",
+  "groups": ["scripting"]
+}

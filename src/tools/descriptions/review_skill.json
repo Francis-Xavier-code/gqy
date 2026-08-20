@@ -1,0 +1,32 @@
+{
+  "name": "review_skill",
+  "display_name": "审查技能",
+  "description": "准备对 skill 草稿或已安装 skill 的安全审查：返回 SKILL.md 与全部资源供模型审计，并记录审查结论。只有存在非 block 的审查后 publish_skill 才会成功。审查后停下并询问用户是否发布，不要在同一轮调用 publish_skill。",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "Skill 名称。"
+      },
+      "draft_id": {
+        "type": "string",
+        "description": "可选：待发布的草稿 id；省略则审查已安装的 skill。"
+      },
+      "verdict": {
+        "type": "string",
+        "enum": ["allow", "caution", "block"],
+        "description": "审计后的安全结论：allow（安全）、caution（中风险）、block（危险/禁止安装）。"
+      },
+      "reason": {
+        "type": "string",
+        "description": "支持该结论的具体发现。"
+      }
+    },
+    "required": ["name", "verdict", "reason"]
+  },
+  "permission": "writes",
+  "always_loaded": false,
+  "load_policy": "group",
+  "groups": ["skills"]
+}
