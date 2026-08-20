@@ -233,3 +233,49 @@ pub(crate) async fn prepare_platform_configs(
         prepared: qq,
     }])
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn registry_registers_onebot_and_reserves_extension_ids() {
+        let registry = PlatformTransportRegistry::new();
+        assert!(registry.get(PLATFORM_ID_ONEBOT).is_some());
+        assert_eq!(registry.ids(), vec![PLATFORM_ID_ONEBOT]);
+        assert!(is_known_platform("qq"));
+        assert!(is_known_platform("telegram"));
+        assert!(is_known_platform("qq_official"));
+        assert!(!is_known_platform("nope"));
+    }
+
+    #[test]
+    fn platform_enabled_maps_onebot_to_qq_section() {
+        let mut platforms = PlatformsConfig::default();
+        assert!(!platform_enabled(&platforms, "qq"));
+        platforms.qq.enabled = true;
+        assert!(platform_enabled(&platforms, "qq"));
+        // 预留平台读取 transports 段。
+        platforms.transports.insert(
+            "telegram".to_string(),
+            PlatformTransportConfig {
+                enabled: true,
+                port: Some(8443),
+            },
+        );
+        assert!(platform_enabled(&platforms, "telegram"));
+        assert!(!platform_enabled(&platforms, "wechat"));
+        assert!(!platform_enabled(&platforms, "unknown"));
+    }
+
+    #[test]
+    fn platform_config_section_maps_onebot_to_qq_fields() {
+        let mut config = AppConfig::default();
+        config.platforms.qq.enabled = true;
+        config.platforms.qq.reverse_ws_port = 8400;
+        let section = platform_config_section(&config, "qq").unwrap();
+        assert!(section.enabled);
+        assert_eq!(section.port, Some(8400));
+        assert!(platform_config_section(&config, "telegram").is_none());
+    }
+}

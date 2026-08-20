@@ -631,6 +631,52 @@ fn platforms_config_roundtrip_and_default_omission() {
 }
 
 #[test]
+fn platform_transport_config_roundtrip_and_default_omission() {
+    let config = AppConfig::default();
+    let json = serde_json::to_string(&config).unwrap();
+    // 未配置 transports 段时序列化保持为空。
+    assert!(!json.contains("transports"));
+
+    let parsed: AppConfig = serde_json::from_str(
+        r#"{
+            "active_provider": "opencode",
+            "providers": [],
+            "platforms": {
+                "transports": {
+                    "telegram": { "enabled": true, "port": 8443 }
+                }
+            }
+        }"#,
+    )
+    .unwrap();
+    let telegram = parsed.platforms.transports.get("telegram").unwrap();
+    assert!(telegram.enabled);
+    assert_eq!(telegram.port, Some(8443));
+
+    // 缺省字段回退到默认值。
+    let partial: AppConfig = serde_json::from_str(
+        r#"{
+            "active_provider": "opencode",
+            "providers": [],
+            "platforms": {
+                "transports": {
+                    "wechat": { "enabled": true }
+                }
+            }
+        }"#,
+    )
+    .unwrap();
+    let wechat = partial.platforms.transports.get("wechat").unwrap();
+    assert!(wechat.enabled);
+    assert_eq!(wechat.port, None);
+
+    // Round-trip 保持非默认配置。
+    let json = serde_json::to_string(&parsed).unwrap();
+    let reparsed: AppConfig = serde_json::from_str(&json).unwrap();
+    assert_eq!(reparsed.platforms, parsed.platforms);
+}
+
+#[test]
 fn qq_prompt_identity_options_default_on_and_roundtrip() {
     let defaults: OneBotConfig = serde_json::from_str("{}").unwrap();
     assert!(defaults.user_identification);
