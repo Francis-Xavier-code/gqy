@@ -1228,6 +1228,11 @@ pub(crate) fn localize_subcommands(mut command: clap::Command) -> clap::Command 
         ("memory", "Manage assistant memory", "管理记忆"),
         ("skills", "Manage assistant skills", "管理助手 skills"),
         (
+            "platform",
+            "Manage third-party communication platforms",
+            "管理第三方通信平台",
+        ),
+        (
             "resources",
             "Show script/skill review & install status",
             "查看脚本/Skill 审查与安装状态",
@@ -1294,6 +1299,7 @@ pub(crate) fn localize_subcommands(mut command: clap::Command) -> clap::Command 
         "kb",
         "memory",
         "skills",
+        "platform",
         "resources",
         "update-default-kb",
         "wipe",
@@ -1314,6 +1320,7 @@ pub(crate) fn localize_subcommands(mut command: clap::Command) -> clap::Command 
         .mut_subcommand("kb", localize_kb_command)
         .mut_subcommand("memory", localize_memory_command)
         .mut_subcommand("skills", localize_skills_command)
+        .mut_subcommand("platform", localize_platform_command)
         .mut_subcommand("resources", localize_resources_command)
         .mut_subcommand("config", localize_config_command)
         .mut_subcommand("web", localize_web_command)
@@ -1580,6 +1587,25 @@ pub(crate) fn localize_memory_command(mut command: clap::Command) -> clap::Comma
         })
 }
 
+pub(crate) fn localize_platform_command(mut command: clap::Command) -> clap::Command {
+    let descriptions = [
+        ("status", "Show all platform status", "查看所有平台状态"),
+        ("list", "List registered platforms", "列出已注册平台"),
+        ("show", "Show a platform's detail", "查看平台详情"),
+        ("enable", "Enable a platform", "启用平台"),
+        ("disable", "Disable a platform", "禁用平台"),
+        ("restart", "Restart a platform", "重启平台"),
+    ];
+    for (name, en, zh) in descriptions {
+        command = command.mut_subcommand(name, |subcommand| subcommand.about(t(en, zh)));
+    }
+    for name in ["show", "enable", "disable", "restart"] {
+        command = command.mut_subcommand(name, |subcommand| {
+            subcommand.mut_arg("name", |arg| arg.help(t("Platform id", "平台 id")))
+        });
+    }
+    command
+}
 pub(crate) fn localize_skills_command(mut command: clap::Command) -> clap::Command {
     let descriptions = [
         ("list", "List skills", "列出 skills"),
@@ -1668,6 +1694,8 @@ pub enum Command {
     Memory(MemoryArgs),
     Skills(SkillsArgs),
     Resources(ResourcesArgs),
+    /// 第三方通信平台管理（状态 / 启用 / 禁用 / 重启）。
+    Platform(PlatformArgs),
     Reset,
     #[command(name = "reset-memory")]
     ResetMemoryCli,
@@ -1911,6 +1939,34 @@ pub struct SkillsArgs {
 pub struct ResourcesArgs {
     #[command(subcommand)]
     pub command: ResourcesCommand,
+}
+
+#[derive(Debug, Args)]
+pub struct PlatformArgs {
+    #[command(subcommand)]
+    pub command: PlatformCommand,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum PlatformCommand {
+    /// 查看所有第三方通信平台状态。
+    Status,
+    /// 列出已注册的第三方通信平台。
+    List,
+    /// 查看指定平台的详细状态（如 `gqy platform show qq`）。
+    Show(PlatformNameArgs),
+    /// 启用指定平台。
+    Enable(PlatformNameArgs),
+    /// 禁用指定平台。
+    Disable(PlatformNameArgs),
+    /// 重启指定平台（要求 daemon 运行中）。
+    Restart(PlatformNameArgs),
+}
+
+#[derive(Debug, Args)]
+pub struct PlatformNameArgs {
+    /// 平台 id（如 `qq`）。
+    pub name: String,
 }
 
 #[derive(Debug, Subcommand)]

@@ -244,6 +244,11 @@ pub enum Command {
     Shutdown,
     ReloadConfig,
     GetStatus,
+    /// 重启一个第三方通信平台传输（`gqy platform restart`）。
+    RestartPlatform {
+        /// 平台 id（如 `qq`）。
+        id: String,
+    },
     /// Lightweight poll for the REPL background-command status strip.
     JobsOverview,
     /// Attach to a running daemon-initiated turn (background-command wake)

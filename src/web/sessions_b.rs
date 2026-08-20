@@ -90,10 +90,53 @@ pub(crate) async fn handle_ipc_connection(
             )
             .await?;
         }
+        IpcCommand::RestartPlatform { id } => {
+            let transport = state
+                .platforms
+                .transports
+                .get(&id)
+                .ok_or_else(|| anyhow::anyhow!("unknown platform: {id}"));
+            let transport = match transport {
+                Ok(transport) => transport,
+                Err(error) => {
+                    ipc::send(&mut stream, &IpcFrame::error(error.to_string())).await?;
+                    return Ok(());
+                }
+            };
+            let _ = transport.stop(&state).await;
+            if let Err(error) = transport.start(&state).await {
+                ipc::send(&mut stream, &IpcFrame::error(error.to_string())).await?;
+                return Ok(());
+            }
+            let status = transport.status(&state).await.unwrap_or_else(|_| {
+                crate::platforms::transports::PlatformRuntimeStatus {
+                    id: id.clone(),
+                    label: transport.label().to_string(),
+                    transport: transport.transport().to_string(),
+                    enabled: crate::platforms::transports::platform_enabled(
+                        &state.manager.lock().unwrap().config.platforms,
+                        &id,
+                    ),
+                    running: false,
+                    listen_port: None,
+                    connected_accounts: Vec::new(),
+                }
+            });
+            ipc::send(
+                &mut stream,
+                &IpcFrame::AdminResult {
+                    state: session_state(&state.manager, &state.state_store)?,
+                    data: json!({ "platform": status }),
+                },
+            )
+            .await?;
+        }
         IpcCommand::GetStatus => {
             let qq_enabled = state.manager.lock().unwrap().config.platforms.qq.enabled;
             let qq_port = state.platforms.qq_listener.active_port();
             let connected_accounts = state.platforms.onebot.lock().unwrap().connected_accounts();
+            let platform_statuses =
+                crate::platforms::transports::runtime_statuses(&state, None).await;
             ipc::send(
                 &mut stream,
                 &IpcFrame::AdminResult {
@@ -108,7 +151,8 @@ pub(crate) async fn handle_ipc_connection(
                                 "listen_port": qq_port,
                                 "connected_accounts": connected_accounts,
                             }
-                        }
+                        },
+                        "transports": platform_statuses,
                     }),
                 },
             )

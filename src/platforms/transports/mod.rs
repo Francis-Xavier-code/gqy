@@ -20,7 +20,7 @@ use crate::{ipc, web};
 
 use anyhow::Result;
 use futures_util::future::BoxFuture;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 
@@ -87,7 +87,7 @@ pub(crate) trait PlatformTransport: Send + Sync {
 }
 
 /// 平台运行时快照，供 CLI / WebUI 状态展示。字段名保持稳定。
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct PlatformRuntimeStatus {
     pub(crate) id: String,
     pub(crate) label: String,
