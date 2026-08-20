@@ -38,6 +38,10 @@ use vte::{Params as VteParams, Parser as VteParser, Perform as VtePerform};
 
 mod defs;
 pub(crate) use defs::*;
+mod run;
+pub(crate) use run::*;
+mod footer;
+pub(crate) use footer::*;
 mod daemon;
 pub(crate) use daemon::*;
 mod init;
