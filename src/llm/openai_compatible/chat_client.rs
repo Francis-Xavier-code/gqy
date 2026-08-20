@@ -1,4 +1,4 @@
-//! client_impl2 — 自 src/llm/openai_compatible/client_impl.rs 拆分。
+//! chat_client — OpenAI/Anthropic/Responses 聊天客户端实现（原 client_impl2）。
 
 pub(crate) use super::*;
 

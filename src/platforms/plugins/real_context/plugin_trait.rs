@@ -1,4 +1,4 @@
-//! platform_impl — 自 src/platforms/plugins/real_context/mod.rs 拆分。
+//! plugin_trait — RealContextPlugin 平台插件 trait 实现（原 platform_impl）。
 
 pub(crate) use super::*;
 

@@ -39,13 +39,13 @@ mod conversation;
 
 pub(crate) mod overflow;
 
-mod agent_impl;
+mod lifecycle;
 
-mod agent_impl2;
+mod chat_stream;
 
-mod agent_impl3;
+mod overflow_handling;
 
-mod agent_impl4;
+mod tool_loop;
 
 mod research;
 pub(crate) use research::*;

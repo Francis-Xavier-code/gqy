@@ -1,4 +1,4 @@
-//! agent_impl — 自 src/agent/mod.rs 拆分。
+//! lifecycle — Agent 生命周期、上下文与状态管理（原 agent_impl）。
 
 #![allow(clippy::too_many_arguments)]
 pub(crate) use super::*;

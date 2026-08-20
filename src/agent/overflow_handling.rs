@@ -1,4 +1,4 @@
-//! agent_impl3 — 自 src/agent/agent_impl2.rs 拆分。
+//! overflow_handling — 上下文溢出处理与视觉描述（原 agent_impl3）。
 
 pub(crate) use super::*;
 

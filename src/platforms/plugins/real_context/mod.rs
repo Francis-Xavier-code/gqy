@@ -2,10 +2,10 @@ pub(super) mod active_judgement_skip;
 
 mod core;
 pub(crate) use core::*;
-mod plugin_impl;
+mod plugin_methods;
 
-mod platform_impl;
-pub(crate) use platform_impl::*;
+mod plugin_trait;
+pub(crate) use plugin_trait::*;
 mod trigger;
 pub(crate) use trigger::*;
 mod runtime;

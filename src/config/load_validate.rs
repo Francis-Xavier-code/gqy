@@ -1,4 +1,4 @@
-//! app_impl — 自 src/config.rs 拆分。
+//! load_validate — AppConfig 加载、保存、校验与规范化（原 app_impl）。
 
 pub(crate) use super::*;
 

@@ -1,4 +1,4 @@
-//! app_impl2 — 自 src/config/app_impl.rs 拆分。
+//! models_persona — 活动模型切换、persona 与系统提示词（原 app_impl2）。
 
 pub(crate) use super::*;
 

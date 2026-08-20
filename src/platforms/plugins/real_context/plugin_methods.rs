@@ -1,4 +1,4 @@
-//! plugin_impl — 自 src/platforms/plugins/real_context/mod.rs 拆分。
+//! plugin_methods — RealContextPlugin 方法实现（原 plugin_impl）。
 
 #![allow(clippy::too_many_arguments)]
 pub(crate) use super::*;

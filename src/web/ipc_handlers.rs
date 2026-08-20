@@ -1,4 +1,4 @@
-//! sessions_b — 自 src/web.rs 拆分。
+//! ipc_handlers — daemon IPC 连接与 session 命令处理（自 src/web.rs 拆分，原 sessions_b）。
 
 pub(crate) use super::*;
 

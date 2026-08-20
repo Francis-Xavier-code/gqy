@@ -1,4 +1,4 @@
-//! providers2 — 自 src/llm/openai_compatible/providers.rs 拆分。
+//! accumulators — Anthropic/Responses/ToolCall 累积器与 SSE 解析（原 providers2）。
 
 #![allow(clippy::too_many_arguments)]
 pub(crate) use super::*;

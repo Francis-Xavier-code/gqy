@@ -1,5 +1,4 @@
-// ponytail: 与 src/memory/（记忆系统核心）易混淆：本文件是记忆相关工具的注册/实现；
-// 改名（如 memory_tools.rs）后删除本注释。
+//! memory_tools — 记忆相关工具注册（原 tools/memory.rs）。
 use super::{ToolRegistry, ToolSpec};
 use crate::config::AppConfig;
 use crate::i18n::agent_text as t;

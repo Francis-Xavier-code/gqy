@@ -1,4 +1,4 @@
-//! live2 — 自 src/cli/live.rs 拆分。
+//! live_input — REPL 实时输入渲染、原始模式与后台任务视图（原 live2）。
 
 pub(crate) use super::*;
 

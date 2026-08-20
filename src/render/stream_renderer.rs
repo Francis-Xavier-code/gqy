@@ -1,4 +1,4 @@
-//! render_impl — 自 src/render/mod.rs 拆分。
+//! stream_renderer — StreamRenderer 实现（原 render_impl）。
 
 pub(crate) use super::*;
 

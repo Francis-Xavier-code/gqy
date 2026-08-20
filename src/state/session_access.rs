@@ -1,4 +1,4 @@
-//! state_impl — 自 src/state/mod.rs 拆分。
+//! session_access — StateStore 会话/平台绑定与访问授权（原 state_impl）。
 
 #![allow(clippy::too_many_arguments)]
 pub(crate) use super::*;

@@ -1,4 +1,4 @@
-//! sessions_a — 自 src/web.rs 拆分。
+//! server — WebUI 服务入口与 QQ 群管理 API（自 src/web.rs 拆分，原 sessions_a）。
 
 pub(crate) use super::*;
 
