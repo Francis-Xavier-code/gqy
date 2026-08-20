@@ -27,6 +27,11 @@ RUN curl -fsSL "https://ziglang.org/download/${ZIG_VERSION}/zig-x86_64-linux-${Z
     && rm /tmp/zig.tar.xz \
     && ln -s /usr/local/zig/zig /usr/local/bin/zig
 
+# ── CI 工具组件：rustfmt（cargo fmt）与 clippy ──
+# rust:1.97-bookworm 基础镜像默认不含 rustfmt/clippy，缺失会导致
+# `cargo fmt --check` / `cargo clippy` 报 "component not installed"。
+RUN rustup component add rustfmt clippy
+
 # ── cargo-zigbuild：让 cargo 直接走 zig 交叉编译 ──
 RUN cargo install cargo-zigbuild --version 0.23.0 \
     && rustup target add aarch64-apple-darwin x86_64-apple-darwin
