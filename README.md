@@ -154,4 +154,4 @@ GitHub Release with binaries and a regenerated Homebrew formula.
 
 ## 许可 License
 
-[MIT](LICENSE) © 2026 Francis-Xavier-code
+[MIT](LICENSE) © 2026 [Black Cat](https://cnb.cool/u/cnb.c4eDIjcWgOA)
