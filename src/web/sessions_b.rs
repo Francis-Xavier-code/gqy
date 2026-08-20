@@ -90,10 +90,27 @@ pub(crate) async fn handle_ipc_connection(
             )
             .await?;
         }
+        IpcCommand::RestartPlatform { id } => match crate::daemon::restart(&state, &id).await {
+            Ok(status) => {
+                ipc::send(
+                    &mut stream,
+                    &IpcFrame::AdminResult {
+                        state: session_state(&state.manager, &state.state_store)?,
+                        data: json!({ "platform": status }),
+                    },
+                )
+                .await?;
+            }
+            Err(error) => {
+                ipc::send(&mut stream, &IpcFrame::error(error.to_string())).await?;
+            }
+        },
         IpcCommand::GetStatus => {
             let qq_enabled = state.manager.lock().unwrap().config.platforms.qq.enabled;
             let qq_port = state.platforms.qq_listener.active_port();
             let connected_accounts = state.platforms.onebot.lock().unwrap().connected_accounts();
+            let platform_statuses =
+                crate::platforms::transports::runtime_statuses(&state, None).await;
             ipc::send(
                 &mut stream,
                 &IpcFrame::AdminResult {
@@ -108,7 +125,8 @@ pub(crate) async fn handle_ipc_connection(
                                 "listen_port": qq_port,
                                 "connected_accounts": connected_accounts,
                             }
-                        }
+                        },
+                        "transports": platform_statuses,
                     }),
                 },
             )
@@ -207,23 +225,20 @@ pub(crate) async fn handle_ipc_connection(
                     return Ok(());
                 }
             };
-            let qq_listener = match state
-                .platforms
-                .qq_listener
-                .prepare(
-                    &state,
-                    Some(&current_config.platforms.qq),
-                    &next_config.platforms.qq,
-                )
-                .await
+            let prepared_platforms = match crate::platforms::transports::prepare_platform_configs(
+                &state,
+                Some(&current_config.platforms),
+                &next_config.platforms,
+            )
+            .await
             {
-                Ok(listener) => listener,
+                Ok(platforms) => platforms,
                 Err(error) => {
                     ipc::send(
                         &mut stream,
                         &IpcFrame::error(format!(
                             "Tencent QQ listener configuration failed: {}",
-                            safe_error_message(error)
+                            crate::web::safe_error_message(error)
                         )),
                     )
                     .await?;
@@ -263,7 +278,9 @@ pub(crate) async fn handle_ipc_connection(
             }
             match receiver.await {
                 Ok(Ok(())) => {
-                    qq_listener.commit();
+                    for platform in prepared_platforms {
+                        platform.commit();
+                    }
                     match session_state(&state.manager, &state.state_store) {
                         Ok(session) => {
                             ipc::send(

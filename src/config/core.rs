@@ -188,6 +188,26 @@ pub struct PlatformsConfig {
     pub commands: BTreeMap<String, PlatformCommandConfig>,
     #[serde(default, skip_serializing_if = "OneBotConfig::is_default")]
     pub qq: OneBotConfig,
+    /// 第三方平台通用配置段（平台 id → 配置）。OneBot 继续使用 `qq`
+    /// 段（历史兼容）；新增平台（telegram/qq_official/wechat…）在此
+    /// 注册，由 daemon 的 `transports` 统一托管。
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub transports: BTreeMap<String, PlatformTransportConfig>,
+}
+
+/// 第三方平台通用配置段。`enabled` 为总开关，`port` 等字段按平台
+/// 语义解释（当前仅 OneBot 使用 `qq` 段，故此处为扩展预留）。
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(default)]
+pub struct PlatformTransportConfig {
+    pub enabled: bool,
+    pub port: Option<u16>,
+}
+
+impl PlatformTransportConfig {
+    pub(crate) fn is_default(&self) -> bool {
+        *self == Self::default()
+    }
 }
 
 impl Default for PlatformsConfig {
@@ -196,6 +216,7 @@ impl Default for PlatformsConfig {
             command_prefix: default_platform_command_prefix(),
             commands: BTreeMap::new(),
             qq: OneBotConfig::default(),
+            transports: BTreeMap::new(),
         }
     }
 }
@@ -204,7 +225,6 @@ impl PlatformsConfig {
     pub fn is_empty(&self) -> bool {
         self == &Self::default()
     }
-
     pub fn command_permission(
         &self,
         command: &str,

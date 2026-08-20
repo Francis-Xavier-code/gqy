@@ -301,6 +301,7 @@
     addProviderButton: document.getElementById("addProviderButton"),
     modelPoolEditor: document.getElementById("modelPoolEditor"),
     pluginEditor: document.getElementById("pluginEditor"),
+    platformEditor: document.getElementById("platformEditor"),
     promptEditor: document.getElementById("promptEditor"),
     advancedConfigEditor: document.getElementById("advancedConfigEditor"),
     qqHistoryForm: document.getElementById("qqHistoryForm"),
@@ -1075,7 +1076,7 @@
   }
 
   function setSettingsView(view) {
-    const selected = ["interface", "prompts", "general", "providers", "models", "plugins", "advanced"].includes(view) ? view : "interface";
+    const selected = ["interface", "prompts", "general", "providers", "models", "plugins", "platforms", "advanced"].includes(view) ? view : "interface";
     state.settingsView = selected;
     elements.settingsNav.querySelectorAll("[data-settings-view]").forEach((button) => {
       const active = button.dataset.settingsView === selected;
@@ -2103,6 +2104,109 @@
     }
   }
 
+  function renderPlatforms() {
+    const editor = elements.platformEditor;
+    if (!editor) return;
+    editor.replaceChildren();
+    const platforms = state.configDraft?.platforms || {};
+    const cards = [
+      renderPlatformCard("qq", "QQ", "onebot-v11", {
+        enabled: platforms.qq?.enabled,
+        reverse_ws_port: platforms.qq?.reverse_ws_port,
+        access_token_set: state.secretStates["platforms.qq.access_token"],
+        access_token_changed: state.secretChanges["platforms.qq.access_token"],
+        admin_users: platforms.qq?.admin_users,
+        max_reply_chars: platforms.qq?.max_reply_chars
+      })
+    ];
+    // 预留平台扩展位：后续平台（telegram/qq_official/wechat…）在此追加卡片。
+    cards.forEach((card) => editor.appendChild(card));
+  }
+
+  function platformSecretEditor(key, labelText) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "secret-editor config-field";
+    const label = document.createElement("span");
+    label.className = "config-field-label";
+    label.textContent = labelText;
+    const status = document.createElement("small");
+    status.className = "secret-status";
+    status.textContent = state.secretChanges[key]?.action === "clear"
+      ? "将清空"
+      : state.secretChanges[key]?.action === "set"
+        ? "已输入新值"
+        : state.secretStates[key]
+          ? "已配置"
+          : "未配置";
+    const input = document.createElement("input");
+    input.className = "config-input";
+    input.type = "password";
+    input.placeholder = state.secretStates[key] ? "留空保留现有值" : "输入新值";
+    input.value = state.secretChanges[key]?.action === "set" ? state.secretChanges[key].value : "";
+    input.autocomplete = "new-password";
+    const actions = document.createElement("div");
+    actions.className = "secret-actions";
+    const clear = actionButton("清空", "text-button danger-text");
+    const preserve = actionButton("保留", "text-button");
+    actions.append(preserve, clear);
+    input.addEventListener("input", () => {
+      if (input.value) state.secretChanges[key] = { action: "set", value: input.value };
+      else delete state.secretChanges[key];
+      markConfigDirty();
+      status.textContent = input.value ? "已输入新值" : state.secretStates[key] ? "已配置" : "未配置";
+    });
+    clear.addEventListener("click", () => {
+      input.value = "";
+      state.secretChanges[key] = { action: "clear" };
+      status.textContent = "将清空";
+      markConfigDirty();
+    });
+    preserve.addEventListener("click", () => {
+      input.value = "";
+      delete state.secretChanges[key];
+      status.textContent = state.secretStates[key] ? "已配置" : "未配置";
+      markConfigDirty();
+    });
+    wrapper.append(label, status, input, actions);
+    return wrapper;
+  }
+
+  function renderPlatformCard(id, label, transport, values) {
+    const details = document.createElement("details");
+    details.className = "platform-card";
+    details.open = true;
+    const summary = document.createElement("summary");
+    const copy = document.createElement("span");
+    const title = document.createElement("strong");
+    title.textContent = label;
+    const technical = document.createElement("small");
+    technical.textContent = transport;
+    copy.append(title, technical);
+    const badge = document.createElement("span");
+    badge.className = `plugin-state${values.enabled ? " is-enabled" : ""}`;
+    badge.textContent = values.enabled ? "启用" : "禁用";
+    summary.append(copy, badge);
+    const body = document.createElement("div");
+    body.className = "platform-card-body";
+    const group = configGroup("连接", [
+      booleanConfigField("启用平台", `platforms.${id}.enabled`),
+      textConfigField("reverse WebSocket 端口", `platforms.${id}.reverse_ws_port`, {
+        type: "number", integer: true, inputType: "number", min: 1, max: 65535
+      }),
+      platformSecretEditor(`platforms.${id}.access_token`, "访问令牌"),
+      textConfigField("管理员账号（逗号分隔 QQ 号）", `platforms.${id}.admin_users`, { type: "numbers" }),
+      textConfigField("单条回复最大字符数", `platforms.${id}.max_reply_chars`, {
+        type: "number", integer: true, inputType: "number", min: 0
+      })
+    ]);
+    const hint = document.createElement("p");
+    hint.className = "settings-description";
+    hint.textContent = "启用后由 GQY daemon 托管监听；NapCat 以 reverse-WebSocket 客户端连接。其余细粒度设置可在「高级」JSON 编辑器里调整 platforms.qq.*。";
+    body.append(group, hint);
+    details.append(summary, body);
+    return details;
+  }
+
   function normalizedDocumentName(name) {
     const trimmed = String(name || "").trim().replace(/[\\/]/g, "-").replace(/\.md$/i, "");
     return trimmed ? `${trimmed}.md` : "";
@@ -2305,6 +2409,7 @@
     renderProviders();
     renderModelPools();
     renderPlugins();
+    renderPlatforms();
     renderPromptEditor();
     updateAdvancedConfigEditor();
     updateSettingsControls();

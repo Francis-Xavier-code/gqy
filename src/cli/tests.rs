@@ -1205,3 +1205,74 @@ mod repl_input_tests {
         }));
     }
 }
+
+#[cfg(test)]
+mod platform_command_tests {
+    use super::*;
+
+    #[test]
+    fn platform_is_a_cli_subcommand_tree() {
+        let cli = parse_args(["gqy", "platform", "status"].map(OsString::from).to_vec()).unwrap();
+        assert!(matches!(
+            cli.command,
+            Some(Command::Platform(PlatformArgs {
+                command: PlatformCommand::Status
+            }))
+        ));
+
+        let cli = parse_args(["gqy", "platform", "list"].map(OsString::from).to_vec()).unwrap();
+        assert!(matches!(
+            cli.command,
+            Some(Command::Platform(PlatformArgs {
+                command: PlatformCommand::List
+            }))
+        ));
+
+        let cli = parse_args(
+            ["gqy", "platform", "show", "qq"]
+                .map(OsString::from)
+                .to_vec(),
+        )
+        .unwrap();
+        assert!(
+            matches!(cli.command, Some(Command::Platform(PlatformArgs { command: PlatformCommand::Show(ref args) })) if args.name == "qq")
+        );
+
+        let cli = parse_args(
+            ["gqy", "platform", "enable", "qq"]
+                .map(OsString::from)
+                .to_vec(),
+        )
+        .unwrap();
+        assert!(
+            matches!(cli.command, Some(Command::Platform(PlatformArgs { command: PlatformCommand::Enable(ref args) })) if args.name == "qq")
+        );
+
+        let cli = parse_args(
+            ["gqy", "platform", "disable", "qq"]
+                .map(OsString::from)
+                .to_vec(),
+        )
+        .unwrap();
+        assert!(
+            matches!(cli.command, Some(Command::Platform(PlatformArgs { command: PlatformCommand::Disable(ref args) })) if args.name == "qq")
+        );
+
+        let cli = parse_args(
+            ["gqy", "platform", "restart", "qq"]
+                .map(OsString::from)
+                .to_vec(),
+        )
+        .unwrap();
+        assert!(
+            matches!(cli.command, Some(Command::Platform(PlatformArgs { command: PlatformCommand::Restart(ref args) })) if args.name == "qq")
+        );
+
+        assert!(parse_args(
+            ["gqy", "platform", "bogus", "qq"]
+                .map(OsString::from)
+                .to_vec()
+        )
+        .is_err());
+    }
+}

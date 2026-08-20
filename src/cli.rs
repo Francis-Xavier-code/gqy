@@ -60,6 +60,8 @@ mod live2;
 pub(crate) use live2::*;
 mod jobs;
 pub(crate) use jobs::*;
+mod platform;
+pub(crate) use platform::*;
 mod repl_ui;
 pub(crate) use repl_ui::*;
 mod keyboard_enhancement;

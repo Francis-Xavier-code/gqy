@@ -364,6 +364,7 @@
           <button type="button" data-settings-view="providers">供应商</button>
           <button type="button" data-settings-view="models">模型池</button>
           <button type="button" data-settings-view="plugins">插件</button>
+          <button type="button" data-settings-view="platforms">平台</button>
           <button type="button" data-settings-view="advanced">高级</button>
         </nav>
         <div class="settings-content">
@@ -447,6 +448,11 @@
              <div class="qq-history-output" id="qqHistoryOutput" hidden></div>
            </section>
            </section>
+          <section class="settings-section settings-panel" data-settings-panel="platforms" hidden>
+           <h2>第三方通信平台</h2>
+           <p class="settings-description">配置并管理 QQ/OneBot 等第三方通信平台；平台由 GQY daemon 统一托管运行。</p>
+           <div class="platform-editor" id="platformEditor"></div>
+          </section>
           <section class="settings-section settings-panel" data-settings-panel="advanced" hidden>
           <h2>完整配置</h2>
           <p class="settings-description">这里包含结构化表单未单独展示的所有配置项。应用到草稿后仍需保存。</p>
