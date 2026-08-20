@@ -62,4 +62,9 @@ ENV CARGO_HOME=/usr/local/cargo \
     LIBCLANG_PATH=/usr/lib/llvm-16/lib \
     PATH="/usr/local/cargo/bin:/usr/local/zig:${PATH}"
 
+# CNB 构建容器启用 userns（用户命名空间重映射），cargo 以非 root 用户运行；
+# 显式放开 cargo/rustup 目录写权限，避免 clippy/test 阶段无法写 registry 缓存。
+RUN chmod -R a+rwX /usr/local/cargo /usr/local/rustup \
+    && mkdir -p /workspace/target && chmod -R a+rwX /workspace
+
 WORKDIR /workspace
