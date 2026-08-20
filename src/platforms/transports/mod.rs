@@ -14,7 +14,6 @@ pub(crate) mod onebot;
 pub(crate) use onebot::*;
 
 use crate::config::{AppConfig, PlatformTransportConfig, PlatformsConfig};
-use crate::platforms::onebot::onebot_config;
 use crate::web::DaemonState;
 use crate::{ipc, web};
 
@@ -233,25 +232,4 @@ pub(crate) async fn prepare_platform_configs(
         id: PLATFORM_ID_ONEBOT.to_string(),
         prepared: qq,
     }])
-}
-
-/// 启动所有已注册且已启用的平台传输。daemon 启动路径调用；每个平台
-/// 的 `start` 内部自行判断配置是否启用。
-pub(crate) async fn start_platform_transports(state: &DaemonState) -> Result<()> {
-    for transport in state.platforms.transports.all() {
-        transport.start(state).await?;
-    }
-    Ok(())
-}
-
-/// 关闭所有第三方平台传输（daemon 退出路径）。
-pub(crate) async fn shutdown_platform_transports(state: &DaemonState) {
-    for transport in state.platforms.transports.all() {
-        let _ = transport.stop(state).await;
-    }
-}
-
-/// 便捷函数：当前 OneBot 配置的启用状态（供 CLI/WebUI 快速判断）。
-pub(crate) fn onebot_enabled(state: &DaemonState) -> bool {
-    onebot_config(state).enabled
 }

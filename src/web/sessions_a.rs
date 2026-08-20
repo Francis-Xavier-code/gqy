@@ -511,7 +511,7 @@ pub async fn run(paths: GQYPaths, args: WebArgs) -> Result<()> {
         .prepare(&state, None, &initial_qq)
         .await?
         .commit();
-    crate::platforms::transports::start_platform_transports(&state).await?;
+    crate::daemon::start_all(&state).await?;
     let (ipc_lease, ipc_task) = start_ipc_server(&state)?;
     install_background_job_hook(&state);
     let app = router(state.clone());
@@ -536,7 +536,7 @@ pub async fn run(paths: GQYPaths, args: WebArgs) -> Result<()> {
     };
     let _ = actor_tx.send(ActorCommand::Shutdown);
     tools::jobs::shutdown_all();
-    crate::platforms::transports::shutdown_platform_transports(&state).await;
+    crate::daemon::shutdown_all(&state).await;
     ipc_task.abort();
     let _ = ipc_task.await;
     let actor_result = tokio::task::spawn_blocking(move || actor_join.join())
