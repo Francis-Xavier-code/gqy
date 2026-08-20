@@ -18,6 +18,9 @@ mod registry;
 pub(crate) use registry::*;
 pub(crate) mod access_control;
 mod adapters;
+pub(crate) mod transports;
+#[allow(unused_imports)]
+pub(crate) use transports::*;
 pub(crate) mod assets;
 pub(crate) mod avatar;
 pub(crate) mod commands;

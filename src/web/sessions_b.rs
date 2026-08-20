@@ -207,23 +207,20 @@ pub(crate) async fn handle_ipc_connection(
                     return Ok(());
                 }
             };
-            let qq_listener = match state
-                .platforms
-                .qq_listener
-                .prepare(
-                    &state,
-                    Some(&current_config.platforms.qq),
-                    &next_config.platforms.qq,
-                )
-                .await
+            let prepared_platforms = match crate::platforms::transports::prepare_platform_configs(
+                &state,
+                Some(&current_config.platforms),
+                &next_config.platforms,
+            )
+            .await
             {
-                Ok(listener) => listener,
+                Ok(platforms) => platforms,
                 Err(error) => {
                     ipc::send(
                         &mut stream,
                         &IpcFrame::error(format!(
                             "Tencent QQ listener configuration failed: {}",
-                            safe_error_message(error)
+                            crate::web::safe_error_message(error)
                         )),
                     )
                     .await?;
@@ -263,7 +260,9 @@ pub(crate) async fn handle_ipc_connection(
             }
             match receiver.await {
                 Ok(Ok(())) => {
-                    qq_listener.commit();
+                    for platform in prepared_platforms {
+                        platform.commit();
+                    }
                     match session_state(&state.manager, &state.state_store) {
                         Ok(session) => {
                             ipc::send(

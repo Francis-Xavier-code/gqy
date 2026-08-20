@@ -40,20 +40,14 @@ pub(crate) async fn update_config(
     restore_config_secrets(&mut candidate, &current, &request.secrets)?;
     validate_config_candidate(&candidate)?;
     validate_prompt_documents(&candidate, &request.prompts)?;
-    let qq_listener = state
-        .platforms
-        .qq_listener
-        .prepare(&state, Some(&current.platforms.qq), &candidate.platforms.qq)
+    let prepared_platforms =
+        crate::platforms::transports::prepare_platform_configs(
+            &state,
+            Some(&current.platforms),
+            &candidate.platforms,
+        )
         .await
-        .map_err(|error| {
-            ApiError::new(
-                StatusCode::BAD_REQUEST,
-                format!(
-                    "Tencent QQ listener configuration failed: {}",
-                    safe_error_message(error)
-                ),
-            )
-        })?;
+        .map_err(|error| ApiError::new(StatusCode::BAD_REQUEST, safe_error_message(error)))?;
     let requested_prompts = request.prompts.clone();
     // Allowed while turns run: the ApplyConfig handler interrupts running
     // turns only for persona layout changes; everything else hot-applies.
@@ -76,7 +70,11 @@ pub(crate) async fn update_config(
         ));
     }
     match receiver.await {
-        Ok(Ok(())) => qq_listener.commit(),
+        Ok(Ok(())) => {
+            for platform in prepared_platforms {
+                platform.commit();
+            }
+        }
         Ok(Err(AdminFailure::Invalid(message))) => {
             return Err(ApiError::new(StatusCode::BAD_REQUEST, message));
         }

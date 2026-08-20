@@ -279,6 +279,8 @@ pub(crate) struct PlatformRuntime {
     http: Arc<OnceLock<std::result::Result<reqwest::Client, String>>>,
     pub(crate) onebot: Arc<Mutex<onebot::ConnectionRegistry>>,
     pub(crate) qq_listener: onebot::QqListenerManager,
+    /// 第三方平台传输统一注册表（daemon 托管平台生命周期）。
+    pub(crate) transports: crate::platforms::transports::PlatformTransportRegistry,
     pub(crate) rate: Arc<Mutex<RateWindow>>,
     pub(crate) plugins:
         Arc<OnceLock<std::result::Result<Arc<plugins::PlatformPluginRegistry>, String>>>,
@@ -295,6 +297,7 @@ impl PlatformRuntime {
             http: Arc::new(OnceLock::new()),
             onebot: Arc::new(Mutex::new(onebot::ConnectionRegistry::default())),
             qq_listener: onebot::QqListenerManager::default(),
+            transports: crate::platforms::transports::PlatformTransportRegistry::new(),
             rate: Arc::new(Mutex::new(RateWindow::new())),
             plugins: Arc::new(OnceLock::new()),
             assets: assets::AssetLeaseStore::new(),
