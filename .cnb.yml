@@ -23,9 +23,9 @@
       versionBy:
         - .cnb/Dockerfile
     volumes:
-      - cargo-registry:/usr/local/cargo/registry:rw
-      - cargo-git:/usr/local/cargo/git:rw
-      - target:/workspace/target:rw
+      - cargo-registry:/usr/local/cargo/registry:copy-on-write
+      - cargo-git:/usr/local/cargo/git:copy-on-write
+      - target:/workspace/target:copy-on-write
   env:
     CARGO_TERM_COLOR: always
     RUST_BACKTRACE: 1
