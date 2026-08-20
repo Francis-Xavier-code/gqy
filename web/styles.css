@@ -4989,6 +4989,7 @@ body[data-color-scheme="matugen"] .tool-card.is-command {
 .provider-editor,
 .model-pool-editor,
 .plugin-editor,
+.platform-editor,
 .prompt-editor {
   display: grid;
   gap: 11px;
@@ -5193,7 +5194,8 @@ textarea.config-input {
 }
 
 .provider-card,
-.plugin-card {
+.plugin-card,
+.platform-card {
   overflow: hidden;
   border: 0;
   border-radius: 8px;
@@ -5202,7 +5204,8 @@ textarea.config-input {
 }
 
 .provider-card > summary,
-.plugin-card > summary {
+.plugin-card > summary,
+.platform-card > summary {
   display: flex;
   min-height: 46px;
   align-items: center;
@@ -5214,19 +5217,22 @@ textarea.config-input {
 }
 
 .provider-card > summary::-webkit-details-marker,
-.plugin-card > summary::-webkit-details-marker {
+.plugin-card > summary::-webkit-details-marker,
+.platform-card > summary::-webkit-details-marker {
   display: none;
 }
 
 .provider-card > summary > span,
-.plugin-card > summary > span:first-child {
+.plugin-card > summary > span:first-child,
+.platform-card > summary > span:first-child {
   display: grid;
   min-width: 0;
   gap: 1px;
 }
 
 .provider-card summary strong,
-.plugin-card summary strong {
+.plugin-card summary strong,
+.platform-card summary strong {
   overflow: hidden;
   color: var(--text);
   font-size: var(--fs-ui);
@@ -5236,7 +5242,8 @@ textarea.config-input {
 }
 
 .provider-card summary small,
-.plugin-card summary small {
+.plugin-card summary small,
+.platform-card summary small {
   color: var(--text-faint);
   font-family: var(--font-mono);
   font-size: 10.5px;
@@ -5244,7 +5251,8 @@ textarea.config-input {
 }
 
 .provider-card-body,
-.plugin-card-body {
+.plugin-card-body,
+.platform-card-body {
   display: grid;
   padding: 11px 14px 14px;
   border-top: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
