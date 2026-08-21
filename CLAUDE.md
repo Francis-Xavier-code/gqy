@@ -33,9 +33,14 @@ Manual/e2e harnesses live in `testkit/` (Python, PTY-driven, real providers):
 18390), `testkit/persona-ab/run.py` (persona A/B, `GQY_DIRECT=1`, one home per
 conversation). Both deliberately avoid the live 8300 daemon.
 
-Release: pushing a `v*` tag runs `.github/workflows/release.yml` — fmt/clippy/test
-→ dual-arch macOS builds → GitHub Release with binaries + regenerated Homebrew
-formula (which is committed back to `main`).
+Release: pushing a `v*` tag runs the CNB pipeline `.cnb.yml` — fmt/clippy/test
+→ dual-arch macOS builds + dual-arch Linux static builds → CNB Release with
+binaries + regenerated Homebrew formula (which is committed back to `main`).
+
+This repo mirrors to three platforms: `origin`=CNB, `github`=`Francis-Xavier-code/gqy`,
+`gitee`=`Xynrin/GQY`. Use `bash scripts/sync-remotes.sh` to fetch/pull/push all
+three at once (run with no args to see divergence first). The three histories have
+diverged — confirm the canonical `main` before merging across remotes.
 
 ## Process model
 

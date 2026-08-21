@@ -89,6 +89,10 @@ cargo build --release
 # 产物在 target/release/gqy
 ```
 
+镜像仓库也可直接 clone（任一即可）：
+`https://github.com/Francis-Xavier-code/gqy.git` 或
+`https://gitee.com/Xynrin/GQY.git`。
+
 需要 Rust 1.89+。Requires Rust 1.89+.
 
 ---
@@ -178,6 +182,31 @@ cargo test --all                         # 全量测试(~1400)
 Pushing a `v*` tag runs the CNB pipeline: tests → dual-arch macOS builds
 + dual-arch Linux static builds → CNB Release with binaries and a
 regenerated Homebrew formula.
+
+### 多平台镜像 Multi-platform mirrors
+
+本仓库同时镜像在三个代码托管平台：CNB（`origin`）、GitHub、Gitee。
+
+| 平台 | 地址 | remote |
+| --- | --- | --- |
+| CNB | `https://cnb.cool/xynrin.ptt/GQY.git` | `origin` |
+| GitHub | `https://github.com/Francis-Xavier-code/gqy.git` | `github` |
+| Gitee | `https://gitee.com/Xynrin/GQY.git` | `gitee` |
+
+使用 [`scripts/sync-remotes.sh`](scripts/sync-remotes.sh) 一键拉取/推送三个远端：
+
+```sh
+bash scripts/sync-remotes.sh           # fetch 全部并显示三平台分歧摘要
+bash scripts/sync-remotes.sh pull      # 以 CNB 为准拉取合并到本地
+bash scripts/sync-remotes.sh push      # 把本地 main 推送到三个远端
+bash scripts/sync-remotes.sh tags      # 对比三平台 tag 差异
+```
+
+> ⚠️ 三个平台的 main 历史曾**各自分歧**（截至最近一次同步，Gitee 领先约
+> 400+ 提交、GitHub 停留在旧版本）。**跨平台合并前**请先跑
+> `bash scripts/sync-remotes.sh` 查看各平台领先/落后数，确认以哪个平台为
+> 准，再手动做合并——切勿盲目 `push` 覆盖。CI 发布流水线（`.cnb.yml`）
+> 当前仅在 CNB 上运行。
 
 ---
 
