@@ -867,4 +867,46 @@ mod tier_schema_probe {
             .contains("balanced=[mini-a, mini-b]"));
         assert!(task.function.description.contains("strong=["));
     }
+
+    /// ask_question 必须 always_loaded:否则 stub/hybrid 加载模式下 LLM
+    /// 看不到 questions 数组 schema,会把 questions 序列化成字符串,
+    /// 导致 QuestionRequest::parse 类型校验失败(issue #21)。
+    #[test]
+    fn ask_question_is_always_loaded_with_array_schema() {
+        use crate::tools::{ToolRegistry, register_ask_question};
+
+        let mut registry = ToolRegistry::new();
+        register_ask_question(&mut registry);
+
+        // always_loaded 必须为 true
+        let tool = registry.get("ask_question").unwrap();
+        assert!(tool.always_loaded, "ask_question must be always_loaded");
+
+        // stub 模式下也必须带完整 questions 数组 schema
+        let stub_defs = registry.stub_definitions();
+        let stub = stub_defs
+            .iter()
+            .find(|d| d.function.name == "ask_question")
+            .expect("ask_question in stub definitions");
+        assert_eq!(
+            stub.function.parameters["properties"]["questions"]["type"],
+            "array",
+            "stub must carry the questions array schema"
+        );
+
+        // 完整定义同样带 questions 数组 schema
+        let full_defs = registry.definitions();
+        let full = full_defs
+            .iter()
+            .find(|d| d.function.name == "ask_question")
+            .expect("ask_question in full definitions");
+        assert_eq!(
+            full.function.parameters["properties"]["questions"]["type"],
+            "array"
+        );
+        assert_eq!(
+            full.function.parameters["properties"]["questions"]["items"]["type"],
+            "object"
+        );
+    }
 }
