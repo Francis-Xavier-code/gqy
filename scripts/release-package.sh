@@ -29,14 +29,18 @@ echo "linux x86_64 sha: $(sha256sum "${LINUX_X86}" | cut -d' ' -f1)"
 echo "linux aarch64 sha: $(sha256sum "${LINUX_ARM}" | cut -d' ' -f1)"
 
 # 生成回填 sha256 的 formula，并提交回仓库（tag_push 为可信事件，
-# CNB_TOKEN 具备写权限）
+# CNB_TOKEN 具备写权限）。注意：此处推送到默认分支（main），而非当前
+# tag 分支——tag_push 事件下 CNB_BRANCH 是 tag 名，推到已存在的 tag 会被拒绝。
 bash scripts/update-formula.sh "$TAG" "$ARM_SHA" "$X86_SHA"
 git add packaging/brew/gqy.rb
 if ! git diff --cached --quiet; then
   git -c user.name="GQY CI" -c user.email="ci@cnb.cool" \
       commit -m "chore(brew): update formula to ${TAG}"
-  git -c credential.helper="store --file=/dev/null" \
-      push "https://cnb:${CNB_TOKEN}@cnb.cool/xynrin.ptt/GQY.git" \
-      HEAD:"$CNB_BRANCH"
+  # 回写 formula 到默认分支；push 失败仅告警，不阻断后续 Release 资产上传
+  if ! git -c credential.helper="store --file=/dev/null" \
+        push "https://cnb:${CNB_TOKEN}@cnb.cool/xynrin.ptt/GQY.git" \
+        HEAD:"${CNB_DEFAULT_BRANCH:-main}" 2>/dev/null; then
+    echo "warning: 回写 formula 到 ${CNB_DEFAULT_BRANCH:-main} 失败（不阻断发布）" >&2
+  fi
 fi
 echo "formula committed for ${TAG}"
