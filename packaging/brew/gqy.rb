@@ -12,7 +12,7 @@ class Gqy < Formula
   # 模板约定:URL 带 v(与 CI 资产命名 gqy-<tag>-<target>.tar.gz 一致),
   # sha256 为占位符,由 CI 的 Generate Homebrew formula 步骤替换。
   url "https://cnb.cool/xynrin.ptt/GQY/-/releases/download/v0.1.2/gqy-v0.1.2-aarch64-apple-darwin.tar.gz"
-  sha256 "9817d1dd2513e2c02b637abef83a92c522bcab987988909443da10e72c5380a1"
+  sha256 "8a2d6d2c7c775a229842e7db0eab5c954188edf1318661a6e9970dbaa5526479"
 
   # 长回复转图片的渲染字体(与旧 AUR 包装包一致,发布资产不含字体)。
   resource "noto-sans-cjk-sc" do
