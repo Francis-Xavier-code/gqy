@@ -5,8 +5,9 @@
 
 # GQY —— 顾清影
 
-> 一个挂着 AI 助手外壳的桌面人格——终端、网页、QQ 里都住着同一个顾清影。
-> A desktop AI assistant with a personality: the same GQY lives in your terminal, your browser, and in QQ.
+> 一个挂着 AI 助手外壳的桌面人格——终端、网页里都住着同一个顾清影。
+> A desktop AI assistant with a personality: the same GQY lives in your terminal, your browser.  
+> 关于GQY的详细介绍，请阅读[ABOUTGQY.md](ABOUTGQY.md)
 
 <p align="center">
   <a href="https://cnb.cool/xynrin.ptt/GQY/-/releases">
