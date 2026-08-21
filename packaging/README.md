@@ -58,6 +58,22 @@ Linux 发行版；alsa（cpal 音频后端）静态链接，无需系统依赖�
 | `share/gqy/fonts/` | 长回复转图片的渲染字体 | Noto CJK 上游(formula 下载;发布资产不含字体) |
 | 缺失字体时 | 长文转图静默退化为纯文本 | — |
 
+## 在线安装脚本
+
+`install.sh`（源码在 `scripts/install.sh`）随每次 Release 一并上传，作为公开
+资产（`https://cnb.cool/xynrin.ptt/GQY/-/releases/download/<tag>/install.sh`），
+供用户一条命令在线安装：
+
+```sh
+bash <(curl -fsSL "https://cnb.cool/xynrin.ptt/GQY/-/releases/download/$(\
+  curl -fsSL https://cnb.cool/xynrin.ptt/GQY/-/releases/latest \
+    | grep -oE 'releases/tag/v[0-9.]+' | head -1 | sed 's#.*/##')/install.sh")
+```
+
+脚本会自动检测最新版本、识别 macOS/Linux 与 aarch64/x86_64 架构，下载匹配的
+`gqy-<tag>-<triple>.tar.gz` 资产并安装到 `/usr/local/bin`（可用 `PREFIX` 覆盖）。
+可选设置 `CNB_TOKEN` 走 OpenAPI 校验 sha256。详见 `scripts/install.sh` 头部注释。
+
 ## 发布流水线（CNB）
 
 `v*` 标签触发 `.cnb.yml`：测试 → 双架构 macOS 交叉编译 + 双架构 Linux

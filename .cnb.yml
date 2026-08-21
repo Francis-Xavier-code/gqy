@@ -92,6 +92,10 @@ main:
         - name: package
           if: 'echo "$CNB_BRANCH" | grep -Eq "^v[0-9]+\."'
           script: bash scripts/release-package.sh
+        # ── 将在线安装脚本复制到根目录，随 Release 一并上传（公开下载） ──
+        - name: copy-install-script
+          if: 'echo "$CNB_BRANCH" | grep -Eq "^v[0-9]+\."'
+          script: cp scripts/install.sh ./install.sh && chmod +x ./install.sh
         # ── 发布 Release + 上传附件 ──
         - name: create-release
           if: 'echo "$CNB_BRANCH" | grep -Eq "^v[0-9]+\."'
@@ -107,3 +111,4 @@ main:
             tag: $CNB_BRANCH
             attachments:
               - "./gqy-*.tar.gz"
+              - "./install.sh"
