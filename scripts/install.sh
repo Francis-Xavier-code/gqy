@@ -134,6 +134,9 @@ fi
 BIN_DIR="${PREFIX}/bin"
 info "解压并安装到 ${BIN_DIR}…"
 mkdir -p "$BIN_DIR"
+if [[ ! -w "$BIN_DIR" ]]; then
+  die "${BIN_DIR} 不可写：请改用 sudo 运行本脚本，或指定 PREFIX=~/.local 安装到用户目录"
+fi
 tar -xzf "$TAR_FILE" -C "$TMP_DIR"
 PKG_DIR="${TMP_DIR}/gqy-${GQY_VERSION}-${TRIPLE}"
 
