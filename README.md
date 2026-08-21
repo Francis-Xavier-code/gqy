@@ -61,7 +61,31 @@ commands, and maintaining a knowledge base.
 
 ## 安装 Installation
 
-### 🍺 Homebrew（推荐 Recommended）
+### ⚡ 在线安装 Online install（推荐 Recommended）
+
+一条命令自动检测**最新版本**、识别当前**操作系统与 CPU 架构**（macOS / Linux
+× aarch64 / x86_64），下载匹配的预编译资产并安装到 `/usr/local/bin`：
+
+```sh
+bash <(curl -fsSL "https://cnb.cool/xynrin.ptt/GQY/-/releases/download/$(\
+  curl -fsSL https://cnb.cool/xynrin.ptt/GQY/-/releases/latest \
+    | grep -oE 'releases/tag/v[0-9.]+' | head -1 | sed 's#.*/##')/install.sh")
+```
+
+> 也可先从 [CNB Releases](https://cnb.cool/xynrin.ptt/GQY/-/releases) 下载
+> `install.sh`（随每次 Release 一并发布）再运行：
+> ```sh
+> curl -fsSL -o install.sh https://cnb.cool/xynrin.ptt/GQY/-/releases/download/v0.1.0/install.sh
+> bash install.sh
+> ```
+>
+> 常用选项（脚本内已自动检测最新版，通常无需指定）：
+> - `PREFIX=~/.local` 安装到自定义目录；
+> - `GQY_VERSION=v0.1.0` 锁定指定版本；
+> - `GQY_SKIP_VERIFY=1` 跳过 sha256 校验（不推荐）。
+> - 可选设置 `CNB_TOKEN` 走 OpenAPI 校验下载资产的 sha256。
+
+### 🍺 Homebrew
 
 ```sh
 brew tap Francis-Xavier-code/gqy
