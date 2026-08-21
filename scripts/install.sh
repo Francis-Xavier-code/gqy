@@ -150,6 +150,14 @@ if [[ -d "${PKG_DIR}/memes" ]]; then
   ok "已安装资源：${SHARE_DIR}/memes"
 fi
 
+# 内置脚本（闲鱼搜索等）安装到共享目录，gqy 启动时经注册机制扫描加载
+if [[ -d "${PKG_DIR}/scripts" ]]; then
+  SHARE_DIR="${PREFIX}/share/gqy"
+  mkdir -p "$SHARE_DIR"
+  cp -r "${PKG_DIR}/scripts" "$SHARE_DIR/scripts"
+  ok "已安装内置脚本：${SHARE_DIR}/scripts"
+fi
+
 # ── 7. 完成 ─────────────────────────────────────────────
 if ! echo ":$PATH:" | grep -q ":${BIN_DIR}:"; then
   warn "${BIN_DIR} 不在当前 PATH 中，请将其加入 PATH："

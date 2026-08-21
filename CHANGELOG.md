@@ -5,6 +5,14 @@
 
 ## [Unreleased]
 
+### Added
+
+- **内置脚本部署与注册**：`src/scripts/`（闲鱼搜索、游戏破解查询等）随安装包部署到
+  `<prefix>/share/gqy/scripts`，gqy 启动时经既有脚本注册机制（`index.json` + 扫描）加载——
+  不硬编码工具定义；用户可用 `~/.gqy/scripts` 覆盖或新增脚本。
+- **GQY 自我认知**：`check_os_info` 现返回 GQY 自身的安装前缀、share 目录（内置脚本/表情/字体）
+  与 home 数据/脚本目录，模型据此定位自己的存储，不再翻源码树。
+
 ### Fixed
 
 - 在线安装脚本：目标目录不可写时提示使用 `sudo` 或 `PREFIX=~/.local`，不再裸报错并残留临时文件。

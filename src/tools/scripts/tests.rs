@@ -664,3 +664,22 @@ fn make_executable_sets_x_bit() {
     let perms = std::fs::metadata(&script).unwrap().permissions();
     assert_ne!(perms.mode() & 0o111, 0);
 }
+
+#[test]
+fn builtin_scripts_scan_register_goofish_search() {
+    // src/scripts（含闲鱼搜索）必须能被扫描注册——这是安装后经 share
+    // 目录/注册机制交付内置脚本的保证（拒绝硬编码工具定义）。
+    let dev = share_scripts_dir().expect("dev fallback resolves src/scripts");
+    let scan = scan_scripts(&[dev.as_path()]).unwrap();
+    let goofish = scan
+        .entries
+        .iter()
+        .find(|entry| entry.id == "goofish_search")
+        .unwrap_or_else(|| panic!("goofish_search not registered"));
+    assert!(
+        goofish.description.contains("闲鱼"),
+        "description: {}",
+        goofish.description
+    );
+    assert!(scan.entries.iter().any(|entry| entry.id == "crack_search"));
+}

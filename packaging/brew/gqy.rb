@@ -33,6 +33,9 @@ class Gqy < Formula
     # 内置表情库(src/memes,随 release 资产打包)装到 share/gqy/memes,
     # 运行时按可执行文件相对路径解析(<prefix>/share/gqy/memes)。
     (share/"gqy").install "memes"
+    # 内置脚本(src/scripts:闲鱼搜索等,随 release 资产打包)装到
+    # share/gqy/scripts,启动时经脚本注册机制扫描加载。
+    (share/"gqy").install "scripts"
   end
 
   test do

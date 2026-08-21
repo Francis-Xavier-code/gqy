@@ -21,6 +21,7 @@ PKG="gqy-${TAG}-${TRIPLE}"
 mkdir -p "dist/${PKG}"
 cp "$BINARY" "dist/${PKG}/gqy"
 cp -r src/memes "dist/${PKG}/memes"
+cp -r src/scripts "dist/${PKG}/scripts"
 # 随包附带 brew formula 模板与说明，便于手动排查（可选）
 cp packaging/brew/gqy.rb "dist/${PKG}/gqy.rb" 2>/dev/null || true
 cp packaging/README.md "dist/${PKG}/README.md" 2>/dev/null || true

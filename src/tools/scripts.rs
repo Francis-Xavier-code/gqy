@@ -16,6 +16,22 @@ mod tests;
 const SCRIPT_TIMEOUT_SECS: u64 = 120;
 const MAX_SCRIPT_OUTPUT_CHARS: usize = 20_000;
 
+/// 安装前缀下的内置脚本目录（<prefix>/share/gqy/scripts），与 memes/字体
+/// 同一套相对解析：brew/install.sh 都落在 <prefix>/share/gqy。开发目录
+/// src/scripts 仅作 dev 兜底——已部署安装时不回退到源码树。
+fn share_scripts_dir() -> Option<PathBuf> {
+    if let Ok(executable) = std::env::current_exe() {
+        if let Some(prefix) = executable.parent().and_then(std::path::Path::parent) {
+            let rel = prefix.join("share/gqy/scripts");
+            if rel.is_dir() {
+                return Some(rel);
+            }
+        }
+    }
+    let dev = PathBuf::from("src/scripts");
+    dev.is_dir().then_some(dev)
+}
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 struct ScriptIndex {
     #[serde(default)]
@@ -75,10 +91,12 @@ struct ScriptDisplayNames {
 }
 
 pub fn register(registry: &mut ToolRegistry, paths: &GQYPaths) {
-    let dirs = [
-        paths.system_scripts_dir.as_path(),
-        paths.scripts_dir.as_path(),
-    ];
+    let share = share_scripts_dir();
+    let mut dirs = vec![paths.system_scripts_dir.as_path()];
+    if let Some(share) = share.as_deref() {
+        dirs.push(share);
+    }
+    dirs.push(paths.scripts_dir.as_path());
     match scan_scripts(&dirs) {
         Ok(scan) => {
             let specs = script_specs(&scan.entries, &paths.scripts_dir);
@@ -94,10 +112,12 @@ pub fn register(registry: &mut ToolRegistry, paths: &GQYPaths) {
 }
 
 pub fn rescan_scripts(registry: &mut ToolRegistry, paths: &GQYPaths) {
-    let dirs = [
-        paths.system_scripts_dir.as_path(),
-        paths.scripts_dir.as_path(),
-    ];
+    let share = share_scripts_dir();
+    let mut dirs = vec![paths.system_scripts_dir.as_path()];
+    if let Some(share) = share.as_deref() {
+        dirs.push(share);
+    }
+    dirs.push(paths.scripts_dir.as_path());
     let scan = match scan_scripts(&dirs) {
         Ok(scan) => scan,
         Err(error) => {

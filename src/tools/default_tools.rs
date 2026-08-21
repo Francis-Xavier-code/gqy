@@ -50,7 +50,7 @@ pub fn register_run_command(registry: &mut ToolRegistry, allow_command_execution
 pub fn register_readonly(registry: &mut ToolRegistry) {
     registry.register(ToolSpec::new(
         "check_os_info",
-        t("Check basic read-only macOS system context: OS version, shell, kernel, host, and package-manager state.", "查看只读基础系统信息，包括 macOS 版本、shell、内核、主机和包管理器状态。"),
+        t("Check basic read-only macOS system context: OS version, shell, kernel, host, package-manager state, and GQY's own install/data directories.", "查看只读基础系统信息，包括 macOS 版本、shell、内核、主机、包管理器状态，以及 GQY 自身的安装前缀与数据/脚本目录。"),
         json!({"type":"object","properties":{},"additionalProperties":false}),
         |_| async move { check_os_info() },
     ));
@@ -83,6 +83,10 @@ fn check_os_info() -> Result<String> {
             }
         }
     }
+    // GQY 自身安装与数据目录认知：让模型知道自己的存储位置，避免去翻
+    // 源码目录（src/）找资源。install_prefix/share 是内置资源（脚本/表情/
+    // 字体），home 下的 data/scripts 是用户可写数据。
+    let gqy_info = gqy_self_info();
     // Shared with the `<host-environment/>` prompt block so the two never
     // disagree about what OS this is.
     let macos_system_version = crate::host_info::macos_system_version_text();
@@ -105,11 +109,44 @@ fn check_os_info() -> Result<String> {
         "username": std::env::var("USER").ok().or_else(|| std::env::var("USERNAME").ok()),
         "hostname": hostname,
         "env": env,
+        "gqy": gqy_info,
         "package_manager_guess": package_manager_guess,
         "notes": [
             "This tool is read-only and does not execute shell commands."
         ],
     }))?)
+}
+
+/// GQY 自身安装与数据目录的认知快照。install_prefix/share 是内置资源
+/// （脚本/表情/字体）位置，home（GQY_HOME 或 ~/.gqy）下的 data/scripts 是
+/// 用户可写数据——模型据此定位自己的存储，不需要翻源码树（src/）。
+fn gqy_self_info() -> Value {
+    let install_prefix = std::env::current_exe().ok().and_then(|exe| {
+        exe.parent()
+            .and_then(std::path::Path::parent)
+            .map(Path::to_path_buf)
+    });
+    let home = std::env::var_os("GQY_HOME")
+        .map(PathBuf::from)
+        .or_else(|| directories::BaseDirs::new().map(|dirs| dirs.home_dir().join(".gqy")));
+    let prefix_text = |suffix: &str| {
+        install_prefix
+            .as_ref()
+            .map(|prefix| prefix.join(suffix).display().to_string())
+    };
+    let home_text = |suffix: &str| {
+        home.as_ref()
+            .map(|home| home.join(suffix).display().to_string())
+    };
+    json!({
+        "install_prefix": install_prefix.as_ref().map(|p| p.display().to_string()),
+        "share_dir": prefix_text("share/gqy"),
+        "memes_dir": prefix_text("share/gqy/memes"),
+        "home": home.as_ref().map(|h| h.display().to_string()),
+        "data_dir": home_text("data"),
+        "scripts_dir": home_text("scripts"),
+        "note": "这些是 GQY 自己的存储位置：share 目录放内置脚本/表情/字体，home 目录放用户脚本与数据。定位自己的资源时从这里找，不要翻源码树（src/）。"
+    })
 }
 
 fn package_manager_guess() -> Vec<&'static str> {
