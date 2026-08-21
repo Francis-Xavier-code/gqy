@@ -80,7 +80,15 @@ main:
               script: bash scripts/build-macos.sh aarch64-apple-darwin
             build-x86_64:
               script: bash scripts/build-macos.sh x86_64-apple-darwin
-        # ── 打包 + 生成 formula（等待两个架构都构建完成） ──
+        # ── 双架构 Linux 静态交叉编译（并行 job，musl） ──
+        - name: build-linux
+          if: 'echo "$CNB_BRANCH" | grep -Eq "^v[0-9]+\."'
+          jobs:
+            build-arm64:
+              script: bash scripts/build-linux.sh aarch64-unknown-linux-musl
+            build-x86_64:
+              script: bash scripts/build-linux.sh x86_64-unknown-linux-musl
+        # ── 打包 + 生成 formula（等待所有架构都构建完成） ──
         - name: package
           if: 'echo "$CNB_BRANCH" | grep -Eq "^v[0-9]+\."'
           script: |
@@ -96,6 +104,14 @@ main:
             X86_SHA="$(sha256sum "${X86_TAR}" | cut -d' ' -f1)"
             echo "arm64 sha: ${ARM_SHA}"
             echo "x86_64 sha: ${X86_SHA}"
+
+            # 打包 Linux 双架构静态资产（x86_64 + aarch64 musl）
+            LINUX_X86="gqy-${TAG}-x86_64-unknown-linux-musl.tar.gz"
+            LINUX_ARM="gqy-${TAG}-aarch64-unknown-linux-musl.tar.gz"
+            bash scripts/package-linux.sh "$TAG" x86_64-unknown-linux-musl target/x86_64-unknown-linux-musl/release/gqy
+            bash scripts/package-linux.sh "$TAG" aarch64-unknown-linux-musl target/aarch64-unknown-linux-musl/release/gqy
+            echo "linux x86_64 sha: $(sha256sum "${LINUX_X86}" | cut -d' ' -f1)"
+            echo "linux aarch64 sha: $(sha256sum "${LINUX_ARM}" | cut -d' ' -f1)"
 
             # 生成回填 sha256 的 formula，并提交回仓库（tag_push 为可信事件，
             # CNB_TOKEN 具备写权限）
@@ -116,7 +132,7 @@ main:
           options:
             tag: $CNB_BRANCH
             title: "GQY $CNB_BRANCH"
-            description: "GQY（顾清影）发布 $CNB_BRANCH：macOS 双架构预编译资产。\n详见 https://cnb.cool/xynrin.ptt/GQY"
+            description: "GQY（顾清影）发布 $CNB_BRANCH：macOS 双架构 + Linux 双架构预编译资产。\n详见 https://cnb.cool/xynrin.ptt/GQY"
         - name: upload-assets
           if: 'echo "$CNB_BRANCH" | grep -Eq "^v[0-9]+\."'
           image: cnbcool/attachments:latest

@@ -170,13 +170,14 @@ cargo test --all                         # 全量测试(~1400)
 ```
 
 推送 `v*` 标签会自动触发 CNB 流水线（`.cnb.yml`）：测试 → 双架构 macOS
-交叉编译（Linux 容器内 zig 产出）→ 上传
+交叉编译 + 双架构 Linux 静态交叉编译（Linux 容器内 zig 产出）→ 上传
 [CNB Release](https://cnb.cool/xynrin.ptt/GQY/-/releases)
 （二进制 + Homebrew formula 回写）。构建环境见
 [.cnb/Dockerfile](.cnb/Dockerfile) 与 [packaging/README.md](packaging/README.md)。
 
-Pushing a `v*` tag runs the CNB pipeline: tests → dual-arch builds → CNB
-Release with binaries and a regenerated Homebrew formula.
+Pushing a `v*` tag runs the CNB pipeline: tests → dual-arch macOS builds
++ dual-arch Linux static builds → CNB Release with binaries and a
+regenerated Homebrew formula.
 
 ---
 
