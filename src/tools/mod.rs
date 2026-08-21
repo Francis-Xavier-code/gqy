@@ -873,7 +873,7 @@ mod tier_schema_probe {
     /// 导致 QuestionRequest::parse 类型校验失败(issue #21)。
     #[test]
     fn ask_question_is_always_loaded_with_array_schema() {
-        use crate::tools::{ToolRegistry, register_ask_question};
+        use crate::tools::{register_ask_question, ToolRegistry};
 
         let mut registry = ToolRegistry::new();
         register_ask_question(&mut registry);
@@ -889,8 +889,7 @@ mod tier_schema_probe {
             .find(|d| d.function.name == "ask_question")
             .expect("ask_question in stub definitions");
         assert_eq!(
-            stub.function.parameters["properties"]["questions"]["type"],
-            "array",
+            stub.function.parameters["properties"]["questions"]["type"], "array",
             "stub must carry the questions array schema"
         );
 
