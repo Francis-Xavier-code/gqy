@@ -15,12 +15,11 @@ case "$TARGET" in
   *) echo "unknown target: $TARGET" >&2; exit 1 ;;
 esac
 
-# 静态链接 alsa（cpal 的 Linux 后端）。zig 自带 musl libc，
-# 无需额外 sysroot；alsa-lib 静态库由 .cnb/Dockerfile 预编译到 /opt/alsa-lib。
+# 静态链接 alsa（cpal 的 Linux 后端）。zig 自带 musl libc，无需额外 sysroot；
+# alsa-lib 静态库由 .cnb/Dockerfile 预编译到 /opt/alsa-lib/<triple>，
+# 其 alsa.pc 中的路径已是绝对路径，故只需附加 PKG_CONFIG_PATH。
 export ALSA_STATIC=true
 export PKG_CONFIG_ALLOW_CROSS=1
 export PKG_CONFIG_PATH="/opt/alsa-lib/${TARGET}/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
-export PKG_CONFIG_SYSROOT_DIR="/opt/alsa-lib/${TARGET}"
-export PKG_CONFIG_LIBDIR="/opt/alsa-lib/${TARGET}/lib/pkgconfig"
 
-cargo zigbuild --target "$TARGET" --release
+exec cargo zigbuild --target "$TARGET" --release

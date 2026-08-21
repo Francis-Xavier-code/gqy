@@ -43,22 +43,26 @@ RUN cargo install cargo-zigbuild --version 0.23.0 \
 # cpal 在 Linux 上强制链接 alsa，交叉编译静态 musl 目标时需要提供对应架构的
 # 静态 libasound.a。这里用 zig 分别交叉编译 aarch64/x86_64 的 alsa-lib，
 # 安装到 /opt/alsa-lib/<triple> 供 build-linux.sh 通过 PKG_CONFIG 引用。
+# 注意 zig 的 target 写法不带 Rust 的 `unknown` 段：aarch64-linux-musl / x86_64-linux-musl。
 ARG ALSA_VERSION=1.2.13
-RUN curl -fsSL "https://www.alsa-project.org/files/pub/lib/alsa-lib-${ALSA_VERSION}.tar.bz2" -o /tmp/alsa.tar.bz2 \
-    && tar -xjf /tmp/alsa.tar.bz2 -C /tmp \
-    && for triple in aarch64-unknown-linux-musl x86_64-unknown-linux-musl; do \
-         mkdir -p "/tmp/alsa-build/${triple}" "/opt/alsa-lib/${triple}"; \
-         cd "/tmp/alsa-build/${triple}"; \
-         CC="zig cc -target ${triple}" \
-         AR="zig ar" \
-         /tmp/alsa-lib-${ALSA_VERSION}/configure \
-           --host="${triple}" --disable-shared --enable-static \
-           --with-pic --prefix="/opt/alsa-lib/${triple}" \
-           >/dev/null; \
-         make -j$(nproc) >/dev/null; \
-         make install >/dev/null; \
-       done \
-    && rm -rf /tmp/alsa-lib-* /tmp/alsa-build /tmp/alsa.tar.bz2
+RUN set -eux; \
+    # ld shim：alsa-lib 的 configure 需要独立的 `ld`，zig 内嵌链接器无独立命令；
+    # 用一个调用 zig cc 的 shim 充当 ld（实际链接由 libtool 经 CC=zig cc 完成）
+    printf '#!/bin/sh\nexec zig cc "$@"\n' > /usr/local/bin/zigld && chmod +x /usr/local/bin/zigld; \
+    curl -fsSL "https://www.alsa-project.org/files/pub/lib/alsa-lib-${ALSA_VERSION}.tar.bz2" -o /tmp/alsa.tar.bz2; \
+    tar -xjf /tmp/alsa.tar.bz2 -C /tmp; \
+    for pair in "aarch64-linux-musl:aarch64-unknown-linux-musl" "x86_64-linux-musl:x86_64-unknown-linux-musl"; do \
+      zt="${pair%%:*}"; triple="${pair##*:}"; \
+      mkdir -p "/tmp/alsa-build/${triple}" "/opt/alsa-lib/${triple}"; \
+      cd "/tmp/alsa-build/${triple}"; \
+      CC="zig cc -target ${zt}" AR="zig ar" LD=/usr/local/bin/zigld \
+        /tmp/alsa-lib-${ALSA_VERSION}/configure \
+          --host="${zt}" --build=x86_64-linux-gnu --disable-shared --enable-static \
+          --prefix="/opt/alsa-lib/${triple}" >/dev/null; \
+      make -j$(nproc) >/dev/null; \
+      make install >/dev/null; \
+    done; \
+    rm -rf /tmp/alsa-lib-* /tmp/alsa-build /tmp/alsa.tar.bz2
 
 # ── macOS SDK（交叉编译 bindgen/链接所需头文件与 tbd 库）──
 # 解压后精简：仅保留编译 GQY 所需的系统 framework 与头文件，控制镜像体积。
