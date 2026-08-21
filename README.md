@@ -76,13 +76,13 @@ bash <(curl -fsSL "https://cnb.cool/xynrin.ptt/GQY/-/releases/download/$(\
 > 也可先从 [CNB Releases](https://cnb.cool/xynrin.ptt/GQY/-/releases) 下载
 > `install.sh`（随每次 Release 一并发布）再运行：
 > ```sh
-> curl -fsSL -o install.sh https://cnb.cool/xynrin.ptt/GQY/-/releases/download/v0.1.0/install.sh
+> curl -fsSL -o install.sh https://cnb.cool/xynrin.ptt/GQY/-/releases/download/v0.1.1/install.sh
 > bash install.sh
 > ```
 >
 > 常用选项（脚本内已自动检测最新版，通常无需指定）：
 > - `PREFIX=~/.local` 安装到自定义目录；
-> - `GQY_VERSION=v0.1.0` 锁定指定版本；
+> - `GQY_VERSION=v0.1.1` 锁定指定版本；
 > - `GQY_SKIP_VERIFY=1` 跳过 sha256 校验（不推荐）。
 > - 可选设置 `CNB_TOKEN` 走 OpenAPI 校验下载资产的 sha256。
 
@@ -103,8 +103,8 @@ brew install gqy
 `x86_64` 为 Intel），解压后放进 PATH：
 
 ```sh
-tar -xzf gqy-0.1.0-aarch64-apple-darwin.tar.gz
-sudo cp gqy-0.1.0-aarch64-apple-darwin/gqy /usr/local/bin/gqy
+tar -xzf gqy-0.1.1-aarch64-apple-darwin.tar.gz
+sudo cp gqy-0.1.1-aarch64-apple-darwin/gqy /usr/local/bin/gqy
 ```
 
 Download the matching archive from Releases, extract, and put `gqy` on your
