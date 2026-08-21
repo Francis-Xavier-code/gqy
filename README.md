@@ -45,7 +45,7 @@ commands, and maintaining a knowledge base.
 | | 功能 | 说明 |
 |---|---|---|
 | 💬 | **REPL 聊天** | 软换行、历史浏览、粘贴折叠、图片转文字、长回复转图片、可选的键盘增强协议。<br>*Soft wrapping, history, paste folding, image-to-text, long-reply rendering, keyboard enhancement.* |
-| 🌐 | **Web 界面** | 内置 HTTP 服务，浏览器里同样可以聊天。<br>*Built-in web server so you can chat from a browser too.* |
+| 🌐 | **Web 界面** | 内置 HTTP 服务，浏览器里同样可以聊天；「设置 → 平台」可管理第三方通信平台。<br>*Built-in web server so you can chat from a browser too, with a Platforms panel for chat platforms.* |
 | 🧰 | **工具调用** | 知识库、网页搜索、Todo、后台任务、命令执行、Homebrew 查询、AppleGamingWiki、man 手册等。<br>*KB search, web search, todos, background jobs, shell, Homebrew, AppleGamingWiki, man pages.* |
 | 🧠 | **长期记忆** | 记忆、日记、好感度、会话回放与压缩，聊得越久越了解你。<br>*Memory, diary, affection, session replay & compaction.* |
 | 📚 | **知识库** | 可更新的默认知识库（`kb/`），问答先查证再作答。<br>*Updatable default KB: verify before answering.* |
@@ -108,9 +108,13 @@ gqy help       # 全部命令
 First run walks you through model configuration (OpenAI-compatible API,
 DeepSeek, etc.).
 
-> **提示 Tip**：QQ 平台默认关闭。需要时在配置中开启
-> `platforms.qq.enabled` 并自行接入 NapCat（反向 WebSocket）。
-> QQ is off by default; enable it in config and connect NapCat yourself.
+> **提示 Tip**：第三方通信平台（QQ/OneBot）由后台 daemon 统一托管，默认关闭。
+> 需要时在配置（`platforms.transports` 或 WebUI「设置 → 平台」）中启用
+> `qq` 并自行接入 NapCat（反向 WebSocket）；也可用
+> `gqy platform enable qq` / `gqy platform status` 管理。
+> Third-party chat platforms (QQ/OneBot) are hosted by the daemon and off by
+> default. Enable `qq` in config (or WebUI Settings → Platforms) and connect
+> NapCat yourself; manage via `gqy platform ...`.
 
 ---
 
@@ -122,7 +126,7 @@ DeepSeek, etc.).
 | 配置段 | 说明 |
 | --- | --- |
 | `model` | 模型与提供商设置 Models & providers |
-| `platforms` | QQ / 终端 / Web 平台开关与权限 Platform switches & permissions |
+| `platforms` | 平台开关与权限；`transports` 段为第三方通信平台（daemon 托管）Platform switches & permissions; `transports` for daemon-hosted chat platforms |
 | `context` | 上下文窗口、压缩与缓存策略 Context, compaction & caching |
 | `plugins` | 工具与视觉插件 Tools & vision plugins |
 
@@ -166,9 +170,10 @@ cargo test --all                         # 全量测试(~1400)
 ```
 
 推送 `v*` 标签会自动触发 CNB 流水线（`.cnb.yml`）：测试 → 双架构 macOS
-构建 → 上传 [CNB Release](https://cnb.cool/xynrin.ptt/GQY/-/releases)
-（二进制 + Homebrew formula 回写）。macOS 构建需要组织自托管 macOS Runner
-（见 [packaging/README.md](packaging/README.md)）。
+交叉编译（Linux 容器内 zig 产出）→ 上传
+[CNB Release](https://cnb.cool/xynrin.ptt/GQY/-/releases)
+（二进制 + Homebrew formula 回写）。构建环境见
+[.cnb/Dockerfile](.cnb/Dockerfile) 与 [packaging/README.md](packaging/README.md)。
 
 Pushing a `v*` tag runs the CNB pipeline: tests → dual-arch builds → CNB
 Release with binaries and a regenerated Homebrew formula.

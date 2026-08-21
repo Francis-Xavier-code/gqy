@@ -50,6 +50,21 @@
 
 daemon 全局选项:`--port <PORT>` 指定 WebUI TCP 端口。
 
+## 第三方通信平台 platform
+
+| 子命令 | 说明 |
+| --- | --- |
+| `gqy platform status` | 查看所有已注册第三方通信平台的状态 |
+| `gqy platform list` | 列出已注册的第三方通信平台 |
+| `gqy platform show <NAME>` | 查看指定平台详细状态（如 `gqy platform show qq`） |
+| `gqy platform enable <NAME>` | 启用指定平台 |
+| `gqy platform disable <NAME>` | 禁用指定平台 |
+| `gqy platform restart <NAME>` | 重启指定平台（要求 daemon 运行中） |
+
+> 平台 id 如 `qq`。平台由 daemon 统一托管（`src/daemon/platforms.rs`），
+> 通过传输抽象层（`src/platforms/transports/`）调度；daemon 未运行时
+> `status`/`list` 回退到本地配置展示。
+
 ## Web 界面
 
 | 命令 | 说明 |

@@ -25,7 +25,7 @@ mod load_tools;
 mod man;
 mod mcp;
 pub(crate) mod memes;
-mod memory;
+mod memory_tools;
 mod moegirl;
 mod package_advisor;
 mod patch_preview;
@@ -34,7 +34,7 @@ pub(crate) mod repeat_reminder;
 mod scripts;
 mod skills;
 mod subagent_runner;
-mod task;
+mod subagent_task;
 mod todowrite;
 pub mod tool_descriptions;
 pub(crate) mod usage_query;
@@ -420,10 +420,10 @@ pub fn builtin_registry(config: &AppConfig, paths: &GQYPaths) -> ToolRegistry {
         diagnostics::register(&mut registry, config.clone());
     }
     if config.memory_config().enabled {
-        memory::register(&mut registry, config.clone(), paths.clone());
+        memory_tools::register(&mut registry, config.clone(), paths.clone());
     }
     let task_tools = registry.clone();
-    task::register(&mut registry, config.clone(), paths.clone(), task_tools);
+    subagent_task::register(&mut registry, config.clone(), paths.clone(), task_tools);
     scripts::register(&mut registry, paths);
     if config.mcp.enabled {
         mcp::register(&mut registry, config.clone());
@@ -471,7 +471,7 @@ pub(crate) fn rescope_platform_memory_tools(
         crate::memory::MemoryAccess::principal(principal.clone())
     };
     if readonly {
-        memory::register_readonly_with_context(
+        memory_tools::register_readonly_with_context(
             registry,
             config.clone(),
             paths.clone(),
@@ -480,7 +480,7 @@ pub(crate) fn rescope_platform_memory_tools(
             context.sender_display_name.clone(),
         );
     } else {
-        memory::register_with_context(
+        memory_tools::register_with_context(
             registry,
             config.clone(),
             paths.clone(),
@@ -536,10 +536,10 @@ pub fn dev_registry(config: &AppConfig, paths: &GQYPaths) -> ToolRegistry {
     if config.memory_config().enabled {
         // dev 独立记忆:同一套工具,库切到保留人格 "dev" 的命名空间,
         // 与默认人格的记忆互不可见(验收问题一:开发模式也要有记忆)。
-        memory::register(&mut registry, config.dev_scoped(), paths.clone());
+        memory_tools::register(&mut registry, config.dev_scoped(), paths.clone());
     }
     let task_tools = registry.clone();
-    task::register(&mut registry, config.clone(), paths.clone(), task_tools);
+    subagent_task::register(&mut registry, config.clone(), paths.clone(), task_tools);
     if config.mcp.enabled {
         mcp::register(&mut registry, config.clone());
     }

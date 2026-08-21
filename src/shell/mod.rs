@@ -503,6 +503,10 @@ mod tests {
         assert!(is_shell_command("./target/release/gqy hi", "fish"));
         assert!(is_shell_command("for item in a b", "fish"));
         assert!(is_shell_command("time cargo check", "fish"));
+        // brew 只在 macOS 存在;cargo 在 macOS/Linux 均普遍存在,两平台都可验证
+        // 「已安装命令 → 判定为 shell 命令」的语义。
+        assert!(is_shell_command("cargo build --release", "fish"));
+        #[cfg(target_os = "macos")]
         assert!(is_shell_command(
             "brew install --cask visual-studio-code",
             "fish"

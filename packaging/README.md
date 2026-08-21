@@ -43,6 +43,7 @@
 
 ## 发布流水线（CNB）
 
-`v*` 标签触发 `.cnb.yml`：测试 → 双架构 macOS 构建 → 上传 CNB Release 资产
-（`cnbcool/attachments` 插件）→ 回写 formula sha256。旧 GitHub Actions
-流水线保留在 `.github/workflows/release.yml`（归档，不再使用）。
+`v*` 标签触发 `.cnb.yml`：测试 → 双架构 macOS 交叉编译（Linux 容器内
+zig 产出）→ 上传 CNB Release 资产（`cnbcool/attachments` 插件）→ 回写
+formula sha256。旧 GitHub Actions 流水线 `.github/workflows/release.yml`
+已随迁移删除。

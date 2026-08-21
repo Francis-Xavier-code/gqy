@@ -1,83 +1,126 @@
-# GQY release pipeline (CNB)
+# GQY 云原生构建流水线（CNB）
 #
-# 推送 v* 标签触发一条流水线：测试 → 双架构 macOS 构建 → 上传 CNB Release
-# 资产 → 回写 Homebrew formula（含真实 sha256）并提交回 main。
+# 原 .github/workflows/release.yml（GitHub Actions）迁移而来。
+# CNB 云端构建环境为 Linux Docker 容器，通过 zig 交叉编译产出 macOS 二进制。
 #
-# 说明：
-# - 项目存在 macOS 专属测试（原子 skill 更新依赖 renameatx_np），因此
-#   test/build 必须跑在 macOS 上。这里使用组织自托管 macOS Runner
-#   （根组织设置 → 构建节点 接入后生效），接入前请把 tags 换成实际节点标签。
-# - Release 本体由 git:release 内置任务在 tag_push 事件下创建；
-#   资产上传用 cnbcool/attachments 插件。
+# 触发规则：
+#   main 分支 push        → CI（fmt + clippy + test）
+#   任意分支 PR           → CI（fmt + clippy + test）
+#   v* tag push           → 完整发布（CI + 双架构 macOS 交叉编译 + Release 发布）
+#
+# 构建环境见 .cnb/Dockerfile（rust + zig + cargo-zigbuild + macOS SDK），
+# 由 docker.build 引用并自动缓存镜像层。
 
+# ── CI 构建环境（共享模板） ─────────────────────────────
+.ci-env: &ci-env
+  docker:
+    build:
+      dockerfile: .cnb/Dockerfile
+      by:
+        - .cnb/Dockerfile
+        - Cargo.toml
+        - Cargo.lock
+      versionBy:
+        - .cnb/Dockerfile
+    volumes:
+      - cargo-registry:/usr/local/cargo/registry:copy-on-write
+      - cargo-git:/usr/local/cargo/git:copy-on-write
+      - target:/workspace/target:copy-on-write
+  env:
+    CARGO_TERM_COLOR: always
+    RUST_BACKTRACE: 1
+
+# ── CI 步骤（fmt + clippy + test，供 push / PR / tag 复用） ──
+.ci-stages: &ci-stages
+  - name: format
+    script: cargo fmt --all --check
+  - name: clippy
+    script: cargo clippy --all-targets -- -D warnings
+  - name: test
+    script: cargo test --all
+
+# ── main 分支 push：CI ─────────────────────────────────
+main:
+  push:
+    - name: ci
+      <<: *ci-env
+      stages: *ci-stages
+
+# ── 任意分支 PR：CI ────────────────────────────────────
+"**":
+  pull_request:
+    - name: pr-ci
+      <<: *ci-env
+      stages: *ci-stages
+
+# ── v* tag：完整发布 ───────────────────────────────────
 "$":
   tag_push:
     - name: release
-      runner:
-        namespace: group
-        tags: [macos, arm64]
+      <<: *ci-env
       stages:
-        - name: install-toolchain
-          script: |
-            rustup component add rustfmt clippy 2>/dev/null || true
+        # tag_push 为仓库级事件需放 $ 下；非 v* 标签不触发完整发布。
+        - name: gate
+          if: 'echo "$CNB_BRANCH" | grep -Eq "^v[0-9]+\."'
+          script: echo "release tag $CNB_BRANCH"
         - name: format
+          if: 'echo "$CNB_BRANCH" | grep -Eq "^v[0-9]+\."'
           script: cargo fmt --all --check
         - name: clippy
+          if: 'echo "$CNB_BRANCH" | grep -Eq "^v[0-9]+\."'
           script: cargo clippy --all-targets -- -D warnings
         - name: test
+          if: 'echo "$CNB_BRANCH" | grep -Eq "^v[0-9]+\."'
           script: cargo test --all
-        - name: build-aarch64
-          script: |
-            cargo build --release --target aarch64-apple-darwin
-            PKG=gqy-$CNB_BRANCH-aarch64-apple-darwin
-            mkdir -p dist/$PKG
-            cp target/aarch64-apple-darwin/release/gqy dist/$PKG/gqy
-            cp -r src/memes dist/$PKG/memes
-            tar -czf $PKG.tar.gz -C dist $PKG
-        - name: build-x86_64
-          script: |
-            cargo build --release --target x86_64-apple-darwin
-            PKG=gqy-$CNB_BRANCH-x86_64-apple-darwin
-            mkdir -p dist/$PKG
-            cp target/x86_64-apple-darwin/release/gqy dist/$PKG/gqy
-            cp -r src/memes dist/$PKG/memes
-            tar -czf $PKG.tar.gz -C dist $PKG
-        - name: compute-checksums
-          script: |
-            sha256sum gqy-$CNB_BRANCH-*-apple-darwin.tar.gz | tee checksums.txt
-        - name: create-release
-          type: git:release
-          options:
-            descriptionFromFile: checksums.txt
-        - name: upload-assets
-          image: cnbcool/attachments:latest
-          settings:
-            attachments:
-              - "./gqy-$CNB_BRANCH-aarch64-apple-darwin.tar.gz"
-              - "./gqy-$CNB_BRANCH-x86_64-apple-darwin.tar.gz"
-        - name: update-brew-formula
+        # ── 双架构 macOS 交叉编译（并行 job） ──
+        - name: build-macos
+          if: 'echo "$CNB_BRANCH" | grep -Eq "^v[0-9]+\."'
+          jobs:
+            build-arm64:
+              script: bash scripts/build-macos.sh aarch64-apple-darwin
+            build-x86_64:
+              script: bash scripts/build-macos.sh x86_64-apple-darwin
+        # ── 打包 + 生成 formula（等待两个架构都构建完成） ──
+        - name: package
+          if: 'echo "$CNB_BRANCH" | grep -Eq "^v[0-9]+\."'
           script: |
             set -euo pipefail
-            VERSION=${CNB_BRANCH#v}
-            SHA_ARM=$(sha256sum gqy-$CNB_BRANCH-aarch64-apple-darwin.tar.gz | cut -d' ' -f1)
-            cp packaging/brew/gqy.rb gqy.rb
-            python3 - "$VERSION" "$SHA_ARM" <<'PYEOF'
-            import sys, pathlib
-            version, sha = sys.argv[1], sys.argv[2]
-            p = pathlib.Path("gqy.rb")
-            t = p.read_text()
-            t = t.replace("v0.1.0", f"v{version}").replace("0.1.0", version)
-            t = t.replace("0000000000000000000000000000000000000000000000000000000000000000", sha)
-            p.write_text(t)
-            print("formula updated:", version, sha[:16])
-            PYEOF
-            git config user.name "cnb-actions[bot]"
-            git config user.email "41898282+users.noreply.cnb.cool"
-            cp gqy.rb packaging/brew/gqy.rb
+            TAG="$CNB_BRANCH"
+            ARM_TAR="gqy-${TAG}-aarch64-apple-darwin.tar.gz"
+            X86_TAR="gqy-${TAG}-x86_64-apple-darwin.tar.gz"
+
+            bash scripts/package-macos.sh "$TAG" aarch64-apple-darwin target/aarch64-apple-darwin/release/gqy
+            bash scripts/package-macos.sh "$TAG" x86_64-apple-darwin target/x86_64-apple-darwin/release/gqy
+
+            ARM_SHA="$(sha256sum "${ARM_TAR}" | cut -d' ' -f1)"
+            X86_SHA="$(sha256sum "${X86_TAR}" | cut -d' ' -f1)"
+            echo "arm64 sha: ${ARM_SHA}"
+            echo "x86_64 sha: ${X86_SHA}"
+
+            # 生成回填 sha256 的 formula，并提交回仓库（tag_push 为可信事件，
+            # CNB_TOKEN 具备写权限）
+            bash scripts/update-formula.sh "$TAG" "$ARM_SHA" "$X86_SHA"
             git add packaging/brew/gqy.rb
-            if git diff --cached --quiet; then
-              echo "formula unchanged"
-            else
-              git commit -m "chore(brew): update formula to $CNB_BRANCH"
-              git push origin HEAD:main
+            if ! git diff --cached --quiet; then
+              git -c user.name="GQY CI" -c user.email="ci@cnb.cool" \
+                  commit -m "chore(brew): update formula to ${TAG}"
+              git -c credential.helper="store --file=/dev/null" \
+                  push "https://cnb:${CNB_TOKEN}@cnb.cool/xynrin.ptt/GQY.git" \
+                  HEAD:"$CNB_BRANCH"
             fi
+            echo "formula committed for ${TAG}"
+        # ── 发布 Release + 上传附件 ──
+        - name: create-release
+          if: 'echo "$CNB_BRANCH" | grep -Eq "^v[0-9]+\."'
+          type: git:release
+          options:
+            tag: $CNB_BRANCH
+            title: "GQY $CNB_BRANCH"
+            description: "GQY（顾清影）发布 $CNB_BRANCH：macOS 双架构预编译资产。\n详见 https://cnb.cool/xynrin.ptt/GQY"
+        - name: upload-assets
+          if: 'echo "$CNB_BRANCH" | grep -Eq "^v[0-9]+\."'
+          image: cnbcool/attachments:latest
+          settings:
+            tag: $CNB_BRANCH
+            attachments:
+              - "./gqy-*.tar.gz"

@@ -2,911 +2,6 @@
 
 pub(crate) use super::*;
 
-pub(crate) fn run_history(paths: &GQYPaths, args: HistoryArgs) -> Result<()> {
-    let state = StateStore::new(paths)?;
-    run_history_with_state(&state, args)
-}
-
-pub(crate) fn run_history_with_state(state: &StateStore, args: HistoryArgs) -> Result<()> {
-    for entry in state.history(args.limit)? {
-        if args.raw {
-            println!("{}", serde_json::to_string(&entry)?);
-            continue;
-        }
-        let display_role = if entry.role.ends_with("_clarification") {
-            entry.role.trim_end_matches("_clarification")
-        } else {
-            entry.role.as_str()
-        };
-        println!("{} {display_role}", entry.timestamp);
-        if entry.role.starts_with("assistant") {
-            let response = crate::llm::ChatResult {
-                content: entry.content,
-                reasoning: if args.no_thinking {
-                    None
-                } else {
-                    entry.reasoning
-                },
-                usage: None,
-                usage_estimated: false,
-                tool_calls: Vec::new(),
-                provider_id: None,
-                model: None,
-                finish_reason: None,
-                thinking_signature: None,
-                last_request_usage: None,
-                responses_continuation: None,
-            };
-            render::print_assistant_response(&response, !args.no_thinking)?;
-        } else {
-            println!("{}", entry.content);
-        }
-        println!();
-    }
-    Ok(())
-}
-
-pub(crate) async fn run_kb(paths: &GQYPaths, args: KbArgs) -> Result<()> {
-    let config = AppConfig::load(paths)?;
-    let kb = tools::knowledge_base::KnowledgeBase::new(config, paths.clone())?;
-    match args.command {
-        KbCommand::Add(args) => {
-            let added = kb.add_path(&args.path).await?;
-            for path in added {
-                println!("{} {path}", t("added", "已添加"));
-            }
-        }
-        KbCommand::List => {
-            for file in kb.list()? {
-                println!("{}\t{} {}", file.name, file.size_bytes, t("bytes", "字节"));
-            }
-        }
-        KbCommand::Search(args) => {
-            let query = args.query.join(" ");
-            println!("{}", kb.search(&query, args.limit).await?);
-        }
-        KbCommand::Find(args) => {
-            let query = args.query.join(" ");
-            println!("{}", kb.find_by_name(&query, args.limit)?);
-        }
-        KbCommand::Read(args) => {
-            println!("{}", kb.read_file(&args.file, args.start, args.lines)?);
-        }
-        KbCommand::Remove(args) => {
-            kb.remove(&args.file)?;
-            println!("{} {}", t("removed", "已移除"), args.file);
-        }
-        KbCommand::Reindex => {
-            let files = kb.list()?;
-            println!(
-                "{}: {}",
-                t(
-                    "keyword index is rebuilt on demand; files tracked",
-                    "关键词索引会按需重建；已跟踪文件数",
-                ),
-                files.len()
-            );
-        }
-        KbCommand::Stats => {
-            let mut stats = kb.stats()?;
-            if let Some(object) = stats.as_object_mut() {
-                if let Ok(status) = crate::default_kb::status(paths) {
-                    object.insert(
-                        "default_kb_update_available".to_string(),
-                        serde_json::json!(status.has_update_notice),
-                    );
-                }
-            }
-            println!("{}", stats);
-        }
-        KbCommand::Embed(args) => match args.command {
-            KbEmbedCommand::Reindex(args) => {
-                kb.reindex_embeddings(args.quiet).await?;
-            }
-        },
-    }
-    Ok(())
-}
-
-pub(crate) async fn run_update_default_kb(paths: &GQYPaths) -> Result<()> {
-    let config = AppConfig::load_or_default(paths)?;
-    let state = crate::default_kb::update(paths, &config, |stage| {
-        let mut stderr = io::stderr().lock();
-        let _ = write_default_kb_update_progress(&mut stderr, stage);
-    })?;
-    println!(
-        "{}: {}",
-        t("updated default knowledge base", "已更新默认知识库"),
-        state.shorin_wiki_commit
-    );
-    Ok(())
-}
-
-pub(crate) fn write_default_kb_update_progress(
-    output: &mut impl Write,
-    stage: crate::default_kb::UpdateStage,
-) -> io::Result<()> {
-    writeln!(output, "[default-kb] {}", stage.message())?;
-    output.flush()
-}
-
-pub(crate) fn run_memory(paths: &GQYPaths, args: MemoryArgs) -> Result<()> {
-    let config = AppConfig::load_or_default(paths)?;
-    let store = MemoryStore::new(&config, paths);
-    match args.command {
-        MemoryCommand::Stats => println!("{}", store.stats()?),
-        MemoryCommand::Reset(args) => {
-            store.reset_all(args.include_skills)?;
-            println!("{}", t("cleared assistant memory", "已清空助手记忆"));
-        }
-        MemoryCommand::Search(args) => {
-            let query = join_message(args.query);
-            let limit = args.limit.unwrap_or(10);
-            println!("{}", store.recall_memories(&query, limit, args.forgotten)?);
-        }
-        MemoryCommand::Remember(args) => {
-            let content = join_message(args.content);
-            let id = store.remember_fact(&content, &args.source)?;
-            println!("{}: {id}", t("remembered fact", "已记住事实"));
-        }
-    }
-    Ok(())
-}
-
-pub(crate) fn run_skills(paths: &GQYPaths, args: SkillsArgs) -> Result<()> {
-    std::fs::create_dir_all(&paths.skills_dir)?;
-    match args.command {
-        SkillsCommand::List => {
-            for name in skill_names(paths)? {
-                let disabled = paths.skills_dir.join(&name).join(".disabled").exists();
-                println!(
-                    "{}{}",
-                    name,
-                    if disabled {
-                        t(" [disabled]", " [已禁用]")
-                    } else {
-                        ""
-                    }
-                );
-            }
-        }
-        SkillsCommand::Show(args) => {
-            let path = skill_dir(paths, &args.name)?.join("SKILL.md");
-            println!("{}", std::fs::read_to_string(path)?);
-        }
-        SkillsCommand::Enable(args) => {
-            let marker = skill_dir(paths, &args.name)?.join(".disabled");
-            if marker.exists() {
-                std::fs::remove_file(marker)?;
-            }
-            println!("{}: {}", t("enabled skill", "已启用 skill"), args.name);
-        }
-        SkillsCommand::Disable(args) => {
-            let marker = skill_dir(paths, &args.name)?.join(".disabled");
-            std::fs::write(marker, "disabled\n")?;
-            println!("{}: {}", t("disabled skill", "已禁用 skill"), args.name);
-        }
-        SkillsCommand::Remove(args) => {
-            let dir = skill_dir(paths, &args.name)?;
-            std::fs::remove_dir_all(dir)?;
-            println!("{}: {}", t("removed skill", "已移除 skill"), args.name);
-        }
-        SkillsCommand::Stats => {
-            let names = skill_names(paths)?;
-            let disabled = names
-                .iter()
-                .filter(|name| paths.skills_dir.join(name).join(".disabled").exists())
-                .count();
-            println!(
-                "{}",
-                serde_json::json!({
-                    "ok": true,
-                    "skills_dir": paths.skills_dir.display().to_string(),
-                    "skills": names.len(),
-                    "disabled": disabled,
-                    "enabled": names.len().saturating_sub(disabled),
-                })
-            );
-        }
-        SkillsCommand::Prune => {
-            let mut removed = 0usize;
-            for name in skill_names(paths)? {
-                let dir = paths.skills_dir.join(&name);
-                let raw = std::fs::read_to_string(dir.join("SKILL.md")).unwrap_or_default();
-                if crate::skills::is_generated_skill(&raw) && dir.join(".disabled").exists() {
-                    std::fs::remove_dir_all(dir)?;
-                    removed += 1;
-                }
-            }
-            println!("{}: {removed}", t("pruned skills", "已清理 skills"));
-        }
-        SkillsCommand::Import(args) => run_skill_import(paths, &args)?,
-    }
-    Ok(())
-}
-
-/// `gqy skills import <path>`：把本地 skill 目录导入为草稿；草稿会在
-/// `gqy` 会话中被 AI 审查并最终发布。`--force` 直接安装（危险，不推荐）。
-pub(crate) fn run_skill_import(paths: &GQYPaths, args: &SkillImportArgs) -> Result<()> {
-    use crate::skills::SkillScope;
-    let source = args
-        .path
-        .canonicalize()
-        .with_context(|| format!("cannot resolve skill path: {}", args.path.display()))?;
-    if !source.join("SKILL.md").is_file() {
-        bail!(
-            "{}: {}",
-            t("not a skill directory", "不是有效的 skill 目录"),
-            source.display()
-        );
-    }
-    let raw = std::fs::read_to_string(source.join("SKILL.md"))?;
-    let metadata = crate::skills::parse_skill_metadata(&raw, None)?;
-    let name = metadata.name.clone();
-    let config = AppConfig::load_or_default(paths)?;
-
-    if args.force {
-        let target = paths.skills_dir.join(&name);
-        if target.exists() {
-            bail!("skill already exists: {name}");
-        }
-        std::fs::create_dir_all(&paths.skills_dir)?;
-        crate::skills::copy_tree(&source, &target)?;
-        println!("{}: {name}", t("force-imported skill", "已强制导入 skill"));
-        return Ok(());
-    }
-
-    // 先建草稿，随后进入 gqy 会话由 AI 审查并发布。
-    let draft = crate::skills::create_draft(
-        &config,
-        paths,
-        &name,
-        &metadata.description,
-        SkillScope::Global,
-    )?;
-    let skill_dir = PathBuf::from(&draft.skill_dir);
-    // 用源目录内容替换草稿的模板文件（SKILL.md 与资源）。
-    std::fs::remove_file(skill_dir.join("SKILL.md"))?;
-    for entry in std::fs::read_dir(&skill_dir)? {
-        let entry = entry?;
-        if entry.file_name().to_string_lossy().starts_with('.') {
-            continue;
-        }
-        if entry.path().is_file() {
-            std::fs::remove_file(entry.path())?;
-        }
-    }
-    crate::skills::copy_tree_into(&source, &skill_dir)?;
-    println!(
-        "{}: {name}\n{}",
-        t("imported skill draft", "已导入 skill 草稿"),
-        t(
-            "run `gqy` and ask the assistant to review and publish this skill draft",
-            "运行 gqy 让助手审查并发布该 skill 草稿"
-        )
-    );
-    Ok(())
-}
-
-/// `gqy resources`：查看/清理脚本与 Skill 的审查、安装记录。
-pub(crate) fn run_resources(paths: &GQYPaths, args: ResourcesArgs) -> Result<()> {
-    match args.command {
-        ResourcesCommand::Status => {
-            println!("{}", crate::skills::status_summary(paths)?);
-        }
-        ResourcesCommand::Prune => {
-            let removed = crate::skills::prune_review_state(paths)?;
-            println!(
-                "{}: {removed}",
-                t("pruned review records", "已清理审查记录")
-            );
-        }
-    }
-    Ok(())
-}
-
-pub(crate) fn skill_names(paths: &GQYPaths) -> Result<Vec<String>> {
-    let mut names = Vec::new();
-    if !paths.skills_dir.exists() {
-        return Ok(names);
-    }
-    for entry in std::fs::read_dir(&paths.skills_dir)? {
-        let entry = entry?;
-        if entry.file_type()?.is_dir() && entry.path().join("SKILL.md").is_file() {
-            names.push(entry.file_name().to_string_lossy().to_string());
-        }
-    }
-    names.sort();
-    Ok(names)
-}
-
-pub(crate) fn skill_dir(paths: &GQYPaths, name: &str) -> Result<PathBuf> {
-    let clean = name.trim();
-    if clean.is_empty()
-        || clean.contains('/')
-        || clean.contains('\\')
-        || clean == "."
-        || clean == ".."
-    {
-        bail!("{}: {name}", t("invalid skill name", "无效 skill 名称"));
-    }
-    let dir = paths.skills_dir.join(clean);
-    if !dir.join("SKILL.md").is_file() {
-        bail!("{}: {name}", t("skill not found", "未找到 skill"));
-    }
-    Ok(dir)
-}
-
-pub(crate) async fn run_reset(paths: &GQYPaths) -> Result<()> {
-    let config = AppConfig::load_or_default(paths)?;
-    let state = StateStore::new(paths)?;
-    let memory = MemoryStore::new(&config, paths);
-    state.reset_conversation()?;
-    memory.clear_evicted_context()?;
-    memory.clear_pending_events()?;
-    tools::clear_brew_review_state(paths)?;
-    Ok(())
-}
-
-pub(crate) async fn run_reset_memory_command(paths: &GQYPaths) -> Result<()> {
-    if !io::stdin().is_terminal() {
-        bail!(
-            "{}",
-            t(
-                "reset-memory needs a terminal to confirm",
-                "reset-memory 需要在终端确认"
-            )
-        );
-    }
-    if !confirm_stdin(t(
-        "erase this persona's long-term memory (facts, diary, episodes)?",
-        "确认清空长期记忆（事实/日记/经历）？",
-    ))? {
-        println!("{}", t("cancelled", "已取消"));
-        return Ok(());
-    }
-    if ipc::daemon_info(paths).await.is_some() {
-        send_ipc_admin(paths, IpcCommand::ResetMemory { mode: None }).await?;
-    } else {
-        let config = AppConfig::load_or_default(paths)?;
-        MemoryStore::new(&config, paths).reset_all(false)?;
-    }
-    println!("{}", t("long-term memory erased", "长期记忆已清空"));
-    Ok(())
-}
-
-pub(crate) fn wipe_summary() -> &'static str {
-    t(
-        "This erases everything GQY has accumulated: memory, every conversation's contents, group-chat contexts, and auto-generated skills. It cannot be undone.",
-        "这会抹掉 GQY 积累的一切：记忆、所有会话的内容、群聊上下文、自动生成的技能。不可撤销。",
-    )
-}
-
-pub(crate) async fn run_wipe(paths: &GQYPaths, assume_yes: bool) -> Result<()> {
-    if !assume_yes {
-        if !io::stdin().is_terminal() {
-            bail!(
-                "{}",
-                t(
-                    "wipe needs a terminal to confirm; pass --yes to run it unattended",
-                    "wipe 需要在终端确认；非交互场景请加 --yes"
-                )
-            );
-        }
-        println!("{}", wipe_summary());
-        if !confirm_stdin(t("wipe everything?", "确认全部抹掉？"))? {
-            println!("{}", t("cancelled", "已取消"));
-            return Ok(());
-        }
-    }
-    if ipc::daemon_info(paths).await.is_some() {
-        send_ipc_admin(paths, IpcCommand::WipePersona).await?;
-    } else {
-        let config = AppConfig::load_or_default(paths)?;
-        let state = StateStore::new(paths)?;
-        let persona = config.active_persona_scope();
-        let bindings = state.platform_session_bindings(&persona, "onebot")?;
-        let plugins = crate::platforms::plugins::PlatformPluginRegistry::built_in()?;
-        plugins
-            .after_persona_reset(&crate::platforms::plugins::PlatformPersonaResetContext {
-                config: &config,
-                paths,
-                bindings: &bindings,
-            })
-            .await?;
-        state.reset_persona_contexts(&persona, "onebot")?;
-        state.reset_conversation_usage()?;
-        MemoryStore::new(&config, paths).reset_all(true)?;
-        tools::clear_brew_review_state(paths)?;
-    }
-    println!("{}", print_wipe_message());
-    Ok(())
-}
-
-pub(crate) fn print_wipe_message() -> &'static str {
-    t(
-        "erased all conversations, QQ contexts, memory, and generated skills for the current persona",
-        "已抹掉当前人格的全部会话内容、QQ 上下文、记忆和自动技能",
-    )
-}
-
-pub(crate) fn print_reset_message() {
-    let message = t("cleared current conversation history", "已清空当前会话历史");
-    println!("\x1b[2m{message}\x1b[0m\n");
-}
-
-pub(crate) fn join_message(parts: Vec<String>) -> String {
-    parts.join(" ").trim().to_string()
-}
-pub(crate) fn handle_agent_event(
-    renderer: &mut render::StreamRenderer,
-    event: AgentEvent,
-) -> Result<()> {
-    match event {
-        AgentEvent::TurnStarted { .. } => Ok(()),
-        AgentEvent::RawReasoning(_) => Ok(()),
-        AgentEvent::FlushJournal => Ok(()),
-        // 单次输出模式没有常驻 footer,逐请求计量快照无处可画。
-        AgentEvent::RoundUsage { .. } => Ok(()),
-        AgentEvent::Chunk(chunk) => {
-            renderer.write_chunk(chunk)?;
-            renderer.tick_spinner()
-        }
-        AgentEvent::ReasoningStart { received_at } => renderer.start_reasoning_phase(received_at),
-        AgentEvent::ReasoningReset { received_at } => renderer.reset_reasoning_phase(received_at),
-        AgentEvent::ReasoningPartStart { received_at } => {
-            renderer.start_reasoning_part(received_at)
-        }
-        AgentEvent::ReasoningPartEnd { received_at } => renderer.finish_reasoning_part(received_at),
-        AgentEvent::ReasoningTitle(title) => {
-            renderer.write_reasoning_title(&title)?;
-            renderer.tick_spinner()
-        }
-        AgentEvent::ToolCall {
-            name, arguments, ..
-        } => {
-            renderer.write_tool_call(&name, &arguments)?;
-            renderer.tick_spinner()
-        }
-        AgentEvent::ToolPreparing { name } => {
-            renderer.write_tool_preparing(&name)?;
-            renderer.tick_spinner()
-        }
-        AgentEvent::ToolResult {
-            name, ok, output, ..
-        } => {
-            renderer.write_tool_result(&name, ok, &output)?;
-            renderer.tick_spinner()
-        }
-        AgentEvent::ToolProgress { name, message, .. } => {
-            renderer.write_tool_progress(&name, &message)?;
-            renderer.tick_spinner()
-        }
-        AgentEvent::CommandOutput {
-            name,
-            stream,
-            chunk,
-            ..
-        } => {
-            renderer.write_command_output(&name, stream, &chunk)?;
-            renderer.tick_spinner()
-        }
-        AgentEvent::PrepareForExternalOutput { ready } => {
-            renderer.prepare_for_external_output()?;
-            let _ = ready.send(true);
-            Ok(())
-        }
-        AgentEvent::Image { .. } | AgentEvent::Artifact { .. } => Ok(()),
-        AgentEvent::AskQuestion {
-            request, responder, ..
-        } => {
-            renderer.prepare_for_external_output()?;
-            let response = crate::question_tui::ask(&request).unwrap_or_else(|err| {
-                crate::question::QuestionResponse::Unavailable(err.to_string())
-            });
-            if !matches!(&response, crate::question::QuestionResponse::Cancelled) {
-                renderer.start_waiting()?;
-            }
-            let _ = responder.send(response);
-            Ok(())
-        }
-        AgentEvent::QueuedPromptsConsumed { .. } => Ok(()),
-        AgentEvent::GenerationSuperseded { .. } => Ok(()),
-        AgentEvent::SpinnerTick => renderer.tick_spinner(),
-        AgentEvent::CompactStart => {
-            renderer.write_system_message(t("Compacting context...", "正在压缩上下文..."))?;
-            renderer.tick_spinner()
-        }
-        AgentEvent::CompactChunk(chunk) => {
-            renderer.write_compact_chunk(&chunk)?;
-            renderer.tick_spinner()
-        }
-        AgentEvent::CompactEnd => {
-            renderer.finish_compact()?;
-            renderer.tick_spinner()
-        }
-        AgentEvent::PopStart => renderer.tick_spinner(),
-        AgentEvent::PopEnd => renderer.tick_spinner(),
-        AgentEvent::Notice { text } => {
-            renderer.write_system_message(&text)?;
-            renderer.tick_spinner()
-        }
-    }
-}
-
-pub(crate) fn build_tool_registry(
-    config: &AppConfig,
-    paths: &GQYPaths,
-    mode: AgentMode,
-    interactive_questions: bool,
-) -> Result<tools::ToolRegistry> {
-    let mut registry = if config.tools.enabled {
-        match mode {
-            AgentMode::Normal => tools::builtin_registry(config, paths),
-            AgentMode::Dev => tools::dev_registry(config, paths),
-        }
-    } else {
-        tools::ToolRegistry::new()
-    };
-    if config.tools.enabled && config.skills.enabled {
-        tools::register_skills(&mut registry, config, paths)?;
-        if mode == AgentMode::Normal {
-            tools::register_skill_authoring(&mut registry, config.clone(), paths.clone());
-        }
-    }
-    if config.tools.enabled && interactive_questions {
-        tools::register_ask_question(&mut registry);
-    }
-    tools::register_script_display_names(&registry);
-    Ok(registry)
-}
-pub(crate) const REPL_MAX_VISIBLE_INPUT_ROWS: u16 = 12;
-pub(crate) const REPL_PASTE_PLACEHOLDER_MIN_LINES: usize = 3;
-pub(crate) const REPL_PASTE_PLACEHOLDER_MIN_CHARS: usize = 150;
-pub(crate) const RELOAD_MAX_ATTEMPTS: usize = 12;
-pub(crate) const RELOAD_RETRY_INTERVAL: Duration = Duration::from_secs(5);
-pub(crate) const RELOAD_RESPONSE_TIMEOUT: Duration = Duration::from_secs(60);
-#[derive(Clone, Debug)]
-pub(crate) struct PastedText {
-    pub(crate) text: String,
-}
-
-#[derive(Clone, Debug)]
-pub(crate) struct ReplFooterStatus {
-    pub(crate) provider: String,
-    pub(crate) model: String,
-    mixed_models: bool,
-    pub(crate) thinking: Option<String>,
-    pub(crate) token_usage: render::TokenMeter,
-}
-
-/// The daemon reports Σ as three flat numbers; regroup them for the meters.
-pub(crate) fn state_cumulative(state: &ipc::SessionState) -> TurnTokens {
-    TurnTokens {
-        total: state.cumulative_tokens,
-        prompt: state.cumulative_prompt_tokens,
-        cache_read: state.cumulative_cache_read_tokens,
-    }
-}
-
-/// Σ is hidden entirely when nothing has been spent yet, so an empty session
-/// does not carry a "Σ0" that means nothing.
-pub(crate) fn meter_cumulative(cumulative: TurnTokens) -> render::TokenMeter {
-    render::TokenMeter {
-        cumulative_tokens: (cumulative.total > 0).then_some(cumulative.total),
-        cumulative_prompt_tokens: cumulative.prompt,
-        cumulative_cached_tokens: cumulative.cache_read,
-        ..Default::default()
-    }
-}
-
-impl ReplFooterStatus {
-    pub(crate) fn from_config(
-        config: &AppConfig,
-        session_tokens: u64,
-        cumulative: TurnTokens,
-    ) -> Self {
-        let active = config.active_provider_model_choices();
-        let mixed_models = active.len() > 1;
-        let (provider_id, model) = match active.as_slice() {
-            [] => ("-".to_string(), t("None", "无").to_string()),
-            [choice] => (
-                choice.provider_id.clone(),
-                short_model_name(&choice.model, &choice.provider_id),
-            ),
-            _ => ("mixed".to_string(), t("Mixed", "混合").to_string()),
-        };
-
-        Self {
-            model,
-            provider: provider_id,
-            mixed_models,
-            thinking: None,
-            token_usage: render::TokenMeter {
-                session_tokens,
-                context_window: config.active_context_window().ok().flatten(),
-                ..meter_cumulative(cumulative)
-            },
-        }
-    }
-
-    pub(crate) fn update_token_usage(
-        &mut self,
-        result: &crate::llm::ChatResult,
-        session_tokens: u64,
-        context_window: Option<usize>,
-        cumulative: TurnTokens,
-    ) {
-        if result.usage.is_some() {
-            let turn = TurnTokens::from_usage(result.usage.as_ref());
-            self.set_token_usage_with_cache(turn, session_tokens, context_window, cumulative);
-        }
-    }
-
-    pub(crate) fn set_token_usage(
-        &mut self,
-        turn_tokens: u64,
-        session_tokens: u64,
-        context_window: Option<usize>,
-        cumulative: TurnTokens,
-    ) {
-        self.set_token_usage_with_cache(
-            TurnTokens {
-                total: turn_tokens,
-                ..TurnTokens::default()
-            },
-            session_tokens,
-            context_window,
-            cumulative,
-        );
-    }
-
-    pub(crate) fn set_token_usage_with_cache(
-        &mut self,
-        turn: TurnTokens,
-        session_tokens: u64,
-        context_window: Option<usize>,
-        cumulative: TurnTokens,
-    ) {
-        self.token_usage = render::TokenMeter {
-            turn_tokens: turn.total,
-            turn_prompt_tokens: turn.prompt,
-            turn_cached_tokens: turn.cache_read,
-            session_tokens,
-            context_window,
-            ..meter_cumulative(cumulative)
-        };
-    }
-
-    pub(crate) fn update_session_tokens(&mut self, session_tokens: u64) {
-        self.token_usage.session_tokens = session_tokens;
-    }
-
-    /// 回合中途的逐请求刷新:在(回合前的)基线上叠加回合累计。必须作用
-    /// 在基线快照的克隆上,同一回合内可重复调用而不重复相加。
-    pub(crate) fn apply_round_usage(&mut self, context_tokens: u64, turn: TurnTokens) {
-        let meter = &mut self.token_usage;
-        meter.turn_tokens = turn.total;
-        meter.turn_prompt_tokens = turn.prompt;
-        meter.turn_cached_tokens = turn.cache_read;
-        if context_tokens > 0 {
-            meter.session_tokens = context_tokens;
-        }
-        let cumulative = meter.cumulative_tokens.unwrap_or(0) + turn.total;
-        meter.cumulative_tokens = (cumulative > 0).then_some(cumulative);
-        meter.cumulative_prompt_tokens += turn.prompt;
-        meter.cumulative_cached_tokens += turn.cache_read;
-    }
-
-    pub(crate) fn update_context_window(&mut self, context_window: Option<usize>) {
-        self.token_usage.context_window = context_window;
-    }
-
-    /// Returns whether anything actually moved, so an idle tick only forces a
-    /// redraw when the numbers changed.
-    pub(crate) fn update_cumulative_tokens(&mut self, cumulative: TurnTokens) -> bool {
-        let meter = meter_cumulative(cumulative);
-        let changed = self.token_usage.cumulative_tokens != meter.cumulative_tokens
-            || self.token_usage.cumulative_prompt_tokens != meter.cumulative_prompt_tokens
-            || self.token_usage.cumulative_cached_tokens != meter.cumulative_cached_tokens;
-        self.token_usage.cumulative_tokens = meter.cumulative_tokens;
-        self.token_usage.cumulative_prompt_tokens = meter.cumulative_prompt_tokens;
-        self.token_usage.cumulative_cached_tokens = meter.cumulative_cached_tokens;
-        changed
-    }
-
-    pub(crate) fn reset_token_usage(&mut self, session_tokens: u64, context_window: Option<usize>) {
-        self.token_usage = render::TokenMeter {
-            session_tokens,
-            context_window,
-            ..Default::default()
-        };
-    }
-
-    pub(crate) fn update_thinking_variant(&mut self, variant: Option<&str>) {
-        self.thinking = if self.mixed_models {
-            None
-        } else {
-            variant.map(str::to_string)
-        };
-    }
-}
-
-pub(crate) fn short_model_name(model: &str, provider: &str) -> String {
-    model
-        .strip_prefix(&format!("{provider}/"))
-        .unwrap_or(model)
-        .rsplit('/')
-        .next()
-        .unwrap_or(model)
-        .to_string()
-}
-
-/// crossterm asks the terminal where the cursor is (`ESC[6n`) and gives up if
-/// the reply does not arrive within a fixed wait. Over a laggy SSH link that
-/// wait expires routinely, and every `?` on it used to take the whole REPL
-/// down with "The cursor position could not be read within a normal duration".
-/// The answer is only ever used to re-anchor a redraw, so a stale one costs a
-/// single imperfect frame — losing the session costs the session.
-pub(crate) fn cursor_position_or(fallback: (u16, u16)) -> (u16, u16) {
-    // 终端已挂断时 ESC[6n 永远等不到应答,而 crossterm 的应答等待对
-    // HUP fd 会无限自旋(超时失效)——直接用回退值,让退出路径走完。
-    if terminal_hangup() {
-        return fallback;
-    }
-    cursor::position().unwrap_or(fallback)
-}
-
-pub(crate) fn cursor_row_or(fallback: u16) -> u16 {
-    cursor_position_or((0, fallback)).1
-}
-
-pub(crate) fn cursor_col_or(fallback: u16) -> u16 {
-    cursor_position_or((fallback, 0)).0
-}
-
-pub(crate) fn repl_footer_line(mode: AgentMode, footer: &ReplFooterStatus, cols: usize) -> String {
-    let cols = cols.max(1);
-    let bar = input_prompt_bar(mode);
-    let bar_width = visible_width(&bar);
-    // The footer carries only the two standing gauges — how much context is
-    // left, and what the session has cost. The per-turn figure is transient and
-    // already has its own home in the `Token:` line printed after each reply;
-    // keeping it here cost 14 columns and pushed the whole footer past 80.
-    let usage = render::TokenMeter {
-        turn_tokens: 0,
-        ..footer.token_usage
-    };
-    // Narrow terminals: drop the cumulative total first, then the percent,
-    // so the core context meter survives as long as possible.
-    let mut right_plain = String::new();
-    for (with_cumulative, with_percent) in [(true, true), (false, true), (false, false)] {
-        let meter = render::TokenMeter {
-            cumulative_tokens: usage.cumulative_tokens.filter(|_| with_cumulative),
-            ..usage
-        };
-        right_plain = render::format_token_usage_inline_opts(&meter, with_percent);
-        let left_room = cols
-            .saturating_sub(bar_width)
-            .saturating_sub(visible_width(&right_plain));
-        if left_room >= 24 {
-            break;
-        }
-    }
-    let right = format!("\x1b[2m{right_plain}\x1b[0m");
-    let right_width = visible_width(&right);
-    let left_budget = cols.saturating_sub(bar_width.saturating_add(right_width).saturating_add(1));
-    let left = repl_footer_left(mode, footer, left_budget);
-    let gap = cols
-        .saturating_sub(
-            bar_width
-                .saturating_add(visible_width(&left))
-                .saturating_add(right_width),
-        )
-        .max(1);
-    format!("{bar}{left}{}{right}", " ".repeat(gap))
-}
-
-pub(crate) fn repl_footer_left(mode: AgentMode, footer: &ReplFooterStatus, width: usize) -> String {
-    let thinking = footer.thinking.as_deref().unwrap_or_default();
-    let colored_thinking = (!thinking.is_empty()).then(|| primary_footer_text(thinking));
-    let colored_thinking = colored_thinking.as_deref().unwrap_or_default();
-    let provider = format!("\x1b[2m{}\x1b[0m", footer.provider);
-    let mode = colored_footer_mode_label(mode);
-    let full = repl_footer_left_parts(&mode, &footer.model, Some(&provider), colored_thinking);
-    if visible_width(&full) <= width {
-        return full;
-    }
-
-    let compact = repl_footer_left_parts(&mode, &footer.model, None, colored_thinking);
-    if visible_width(&compact) <= width {
-        return compact;
-    }
-
-    let fixed_width =
-        visible_width(&mode)
-            .saturating_add(3)
-            .saturating_add(if thinking.is_empty() {
-                0
-            } else {
-                3 + visible_width(colored_thinking)
-            });
-    let model_budget = width.saturating_sub(fixed_width).max(1);
-    let model = truncate_display(&footer.model, model_budget);
-    repl_footer_left_parts(&mode, &model, None, colored_thinking)
-}
-
-pub(crate) fn repl_footer_left_parts(
-    mode: &str,
-    model: &str,
-    provider: Option<&str>,
-    thinking: &str,
-) -> String {
-    let mut endpoint = model.to_string();
-    if let Some(provider) = provider.filter(|provider| !provider.is_empty()) {
-        if !endpoint.is_empty() {
-            endpoint.push(' ');
-        }
-        endpoint.push_str(provider);
-    }
-    let mut parts = vec![mode.to_string(), endpoint];
-    if !thinking.is_empty() {
-        parts.push(thinking.to_string());
-    }
-    parts.join(" · ")
-}
-
-pub(crate) fn print_mixed_model_endpoint(
-    show: bool,
-    result: &crate::llm::ChatResult,
-    variant: Option<&str>,
-) {
-    if !show {
-        return;
-    }
-    let provider = result.provider_id.as_deref().unwrap_or("-");
-    let model = result.model.as_deref().unwrap_or("-");
-    println!(
-        "\x1b[2m{}\x1b[0m\n",
-        mixed_model_endpoint_label(provider, model, variant)
-    );
-}
-
-pub(crate) fn mixed_model_endpoint_label(
-    provider: &str,
-    model: &str,
-    variant: Option<&str>,
-) -> String {
-    let variant = variant
-        .filter(|variant| !variant.is_empty())
-        .map(|variant| format!(" · {variant}"))
-        .unwrap_or_default();
-    format!("{provider} / {model}{variant}")
-}
-
-pub(crate) fn show_mixed_model_endpoint(config: &AppConfig, interactive: bool) -> bool {
-    config.active_provider_model_choices().len() > 1
-        && match config.display.mixed_model_endpoint_display.as_str() {
-            "off" => false,
-            "all" => true,
-            _ => interactive,
-        }
-}
-
-pub(crate) fn colored_footer_mode_label(mode: AgentMode) -> String {
-    let label = mode.label();
-    match mode {
-        AgentMode::Normal => primary_footer_text(label),
-        // tertiary(35 酒红,与 render/webui 的 tertiary 一致),区别于普通
-        // 模式的 primary 蓝。
-        AgentMode::Dev => format!("\x1b[1m\x1b[35m{label}\x1b[0m"),
-    }
-}
-
-pub(crate) fn primary_footer_text(text: &str) -> String {
-    format!("\x1b[1m\x1b[34m{text}\x1b[0m")
-}
-
 #[derive(Debug, Parser)]
 #[command(name = "gqy", version, about = "GQY CLI AI Agent")]
 pub struct Cli {
@@ -1228,6 +323,11 @@ pub(crate) fn localize_subcommands(mut command: clap::Command) -> clap::Command 
         ("memory", "Manage assistant memory", "管理记忆"),
         ("skills", "Manage assistant skills", "管理助手 skills"),
         (
+            "platform",
+            "Manage third-party communication platforms",
+            "管理第三方通信平台",
+        ),
+        (
             "resources",
             "Show script/skill review & install status",
             "查看脚本/Skill 审查与安装状态",
@@ -1294,6 +394,7 @@ pub(crate) fn localize_subcommands(mut command: clap::Command) -> clap::Command 
         "kb",
         "memory",
         "skills",
+        "platform",
         "resources",
         "update-default-kb",
         "wipe",
@@ -1314,6 +415,7 @@ pub(crate) fn localize_subcommands(mut command: clap::Command) -> clap::Command 
         .mut_subcommand("kb", localize_kb_command)
         .mut_subcommand("memory", localize_memory_command)
         .mut_subcommand("skills", localize_skills_command)
+        .mut_subcommand("platform", localize_platform_command)
         .mut_subcommand("resources", localize_resources_command)
         .mut_subcommand("config", localize_config_command)
         .mut_subcommand("web", localize_web_command)
@@ -1580,6 +682,25 @@ pub(crate) fn localize_memory_command(mut command: clap::Command) -> clap::Comma
         })
 }
 
+pub(crate) fn localize_platform_command(mut command: clap::Command) -> clap::Command {
+    let descriptions = [
+        ("status", "Show all platform status", "查看所有平台状态"),
+        ("list", "List registered platforms", "列出已注册平台"),
+        ("show", "Show a platform's detail", "查看平台详情"),
+        ("enable", "Enable a platform", "启用平台"),
+        ("disable", "Disable a platform", "禁用平台"),
+        ("restart", "Restart a platform", "重启平台"),
+    ];
+    for (name, en, zh) in descriptions {
+        command = command.mut_subcommand(name, |subcommand| subcommand.about(t(en, zh)));
+    }
+    for name in ["show", "enable", "disable", "restart"] {
+        command = command.mut_subcommand(name, |subcommand| {
+            subcommand.mut_arg("name", |arg| arg.help(t("Platform id", "平台 id")))
+        });
+    }
+    command
+}
 pub(crate) fn localize_skills_command(mut command: clap::Command) -> clap::Command {
     let descriptions = [
         ("list", "List skills", "列出 skills"),
@@ -1668,6 +789,8 @@ pub enum Command {
     Memory(MemoryArgs),
     Skills(SkillsArgs),
     Resources(ResourcesArgs),
+    /// 第三方通信平台管理（状态 / 启用 / 禁用 / 重启）。
+    Platform(PlatformArgs),
     Reset,
     #[command(name = "reset-memory")]
     ResetMemoryCli,
@@ -1911,6 +1034,34 @@ pub struct SkillsArgs {
 pub struct ResourcesArgs {
     #[command(subcommand)]
     pub command: ResourcesCommand,
+}
+
+#[derive(Debug, Args)]
+pub struct PlatformArgs {
+    #[command(subcommand)]
+    pub command: PlatformCommand,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum PlatformCommand {
+    /// 查看所有第三方通信平台状态。
+    Status,
+    /// 列出已注册的第三方通信平台。
+    List,
+    /// 查看指定平台的详细状态（如 `gqy platform show qq`）。
+    Show(PlatformNameArgs),
+    /// 启用指定平台。
+    Enable(PlatformNameArgs),
+    /// 禁用指定平台。
+    Disable(PlatformNameArgs),
+    /// 重启指定平台（要求 daemon 运行中）。
+    Restart(PlatformNameArgs),
+}
+
+#[derive(Debug, Args)]
+pub struct PlatformNameArgs {
+    /// 平台 id（如 `qq`）。
+    pub name: String,
 }
 
 #[derive(Debug, Subcommand)]

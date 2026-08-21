@@ -152,6 +152,9 @@ fn update_draft_detects_concurrent_edits() {
     assert!(publish_draft(&paths, &update.id).is_err());
 }
 
+// 该并发发布语义依赖 macOS 的 renameatx_np 原子交换;非 macOS 平台
+// exchange_directories 明确报「不支持原子更新」,故仅在 macOS 上验证。
+#[cfg(target_os = "macos")]
 #[test]
 fn two_update_drafts_from_the_same_revision_cannot_both_publish() {
     let temp = tempfile::tempdir().unwrap();

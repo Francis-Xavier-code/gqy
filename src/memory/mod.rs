@@ -12,7 +12,7 @@ use std::sync::LazyLock;
 
 mod core;
 pub(crate) use core::*;
-mod store_impl;
+mod store;
 
 mod ops;
 pub(crate) use ops::*;
