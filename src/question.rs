@@ -85,7 +85,28 @@ impl QuestionExchange {
 
 impl QuestionRequest {
     pub fn parse(arguments: &str) -> Result<Self> {
-        let request: Self = serde_json::from_str(arguments)?;
+        let request: Self = serde_json::from_str(arguments).map_err(|err| {
+            // 模型侧常见序列化错误:整个参数或 questions 字段被包成了 JSON
+            // 字符串。给个可直接照抄的数组形态,省一轮重试。
+            if let Ok(value) = serde_json::from_str::<serde_json::Value>(arguments) {
+                if value.is_string() {
+                    anyhow::anyhow!(
+                        "the whole arguments is a JSON string; send ask_question arguments as a JSON object with a questions array, e.g. {{\"questions\":[...]}}"
+                    )
+                } else if value
+                    .get("questions")
+                    .is_some_and(|questions| !questions.is_array())
+                {
+                    anyhow::anyhow!(
+                        "questions must be a JSON array of question objects; send it as an array, e.g. [{{\"header\":\"...\",\"question\":\"...\",\"options\":[{{\"label\":\"...\",\"description\":\"...\"}}]}}]"
+                    )
+                } else {
+                    anyhow::Error::new(err)
+                }
+            } else {
+                anyhow::Error::new(err)
+            }
+        })?;
         request.validate()?;
         Ok(request)
     }
@@ -334,6 +355,21 @@ mod tests {
         let text = assistant_exchange_text(&exchange);
         assert!(text.contains("全部: 修改全部相关文件"));
         assert!(text.contains("可输入自定义答案"));
+    }
+
+    #[test]
+    fn parse_hints_when_questions_is_serialized_as_a_string() {
+        let err = QuestionRequest::parse(r#"{"questions":"[{\"header\":\"h\"}]"}"#).unwrap_err();
+        let text = err.to_string();
+        assert!(text.contains("questions must be a JSON array"), "{text}");
+
+        let err = QuestionRequest::parse(r#""{\"questions\":[{}]}""#).unwrap_err();
+        let text = err.to_string();
+        assert!(text.contains("whole arguments is a JSON string"), "{text}");
+
+        // 其他错误保持原始 serde 信息(如缺字段)。
+        let err = QuestionRequest::parse(r#"{"questions":[{"header":"h"}]}"#).unwrap_err();
+        assert!(!err.to_string().contains("must be a JSON array"));
     }
 
     #[test]
